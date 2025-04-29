@@ -1,4 +1,5 @@
 from fastapi import Depends
+from typing import Annotated
 from src.database import async_session_maker
 from src.utils.dbmanager import DBManager
 
@@ -8,3 +9,5 @@ async def get_db_manager() :
 async def get_db() :
     async with get_db_manager() as db :
         yield db
+
+DBDep = Annotated[DBManager, Depends(get_db)]

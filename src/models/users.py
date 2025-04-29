@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, Integer
 from src.database import Base
 
 class UsersOrm(Base) : 
@@ -12,7 +12,7 @@ class UsersOrm(Base) :
     name: Mapped[str] = mapped_column(String(50))
     surname: Mapped[str]
     nickname: Mapped[str] = mapped_column(String(30), unique=True)
-    phone: Mapped[int] 
+    phone: Mapped[int] = mapped_column(Integer(), unique=True)
     last_activity: Mapped[date]
     hashed_password: Mapped[str]
     registation_date: Mapped[date]

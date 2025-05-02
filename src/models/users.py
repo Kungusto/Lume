@@ -1,20 +1,15 @@
 from datetime import date
-from enum import Enum as pyEnum
 from sqlalchemy import Enum
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy import ForeignKey, String, Integer
 from src.database import Base
+from src.enums.users import AllUsersRolesEnum
 
-class RolesUsersEnum(pyEnum) :
-    USER = "USER"
-    AUTHOR = "AUTHOR"
-    ADMIN = "ADMIN"
-
-class UsersOrm(Base) : 
+class UsersORM(Base) : 
     __tablename__ = "Users"
 
     user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)    
-    role: Mapped[RolesUsersEnum] = mapped_column(Enum(RolesUsersEnum, name="user_role_unum"), nullable=False)
+    role: Mapped[AllUsersRolesEnum] = mapped_column(Enum(AllUsersRolesEnum, name="user_role_unum"), nullable=False)
     email: Mapped[str] = mapped_column(String(254), unique=True)
     name: Mapped[str] = mapped_column(String(50))
     surname: Mapped[str]

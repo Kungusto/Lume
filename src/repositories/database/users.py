@@ -1,13 +1,13 @@
 from sqlalchemy import insert, select
 from src.exceptions.exceptions import EmailAlreadyRegistratedException, NickAlreadyRegistratedException
-from src.repositories.base import BaseRepository
-from src.models.users import UsersOrm
+from repositories.database.base import BaseRepository
+from src.models.users import UsersORM
 from src.schemas.users import User, UserWithHashedPassword, UserRegistrate
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 
 class UsersRepository(BaseRepository) :
-    model = UsersOrm
+    model = UsersORM
     schema = User
 
     async def get_user_with_hashed_password(self, email) :

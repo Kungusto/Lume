@@ -6,6 +6,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.api.auth import router as auth_router
+from src.api.books import router as books_router
 
 app = FastAPI()
 
@@ -19,7 +20,7 @@ async def custom_swagger_ui_html():
          swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
      )
 app.include_router(auth_router)
-
+app.include_router(books_router)
 
 if __name__ == "__main__" : 
     uvicorn.run("main:app", reload=True)

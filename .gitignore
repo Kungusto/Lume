@@ -4,3 +4,4 @@ __pycache__
 src/migrations/*
 migrations
 alembic.ini
+src/static/*

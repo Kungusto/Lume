@@ -20,6 +20,8 @@ class BooksORM(Base) :
     title: Mapped[str]
     description: Mapped[str | None]
     language: Mapped[LanguagesEnum] = mapped_column(Enum(LanguagesEnum, name="language_enum"))
+    is_rendered: Mapped[bool] = mapped_column(default=False)
+    cover_link: Mapped[str | None] = mapped_column(default=None)
 
 class BooksTagsORM(Base) :
     __tablename__ = "Books_tags"

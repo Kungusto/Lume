@@ -11,13 +11,20 @@ class Page(BaseModel) :
     book_id: int
     page_number: int
     text: str
-    images: list[SourceImage] = list[None]
+    images: list[SourceImage] = []
+
+class BookAuthors(BaseModel) :
+    authors: list[int]
+    book_id: int
 
 class BookAdd(BaseModel) : 
     title: str
     age_limit: int
     description: str | None
-    language: LanguagesEnum    
+    language: LanguagesEnum  
+
+class BookAddWithAuthors(BookAdd) : 
+    authors: list[int] = []
 
 class Book(BaseModel) :
     book_id: int
@@ -27,6 +34,12 @@ class Book(BaseModel) :
     language: LanguagesEnum
     book_id: int
     date_publicated: date
+    is_rendered: bool = False
+    cover_link: str | None = None
+
+class BookPATCHOnPublication(BaseModel) :
+    is_rendered: bool | None = False
+    cover_link: str | None = None
 
 class BookData(Book) :
     pages_count: int

@@ -1,11 +1,12 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr, field_validator
-from src.enums.users import RolesUsersEnum
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from src.enums.users import AllUsersRolesEnum
 from src.exceptions.exceptions import TooShortPasswordHTTPException, TooLongPasswordHTTPException
+from typing import Literal
 
 class User(BaseModel) : 
     user_id: int
-    role: RolesUsersEnum
+    role: AllUsersRolesEnum
     email: EmailStr
     name: str
     surname: str
@@ -13,8 +14,12 @@ class User(BaseModel) :
     last_activity: date
     registation_date: date
 
+    model_config = ConfigDict(use_enum_values=True)
+
 class UserWithHashedPassword(User) :
     hashed_password: str
+    
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class UserLogin(BaseModel) :
@@ -22,12 +27,14 @@ class UserLogin(BaseModel) :
     password: str
 
 class UserRegistrate(BaseModel) :
-    role: RolesUsersEnum
+    role: AllUsersRolesEnum
     email: EmailStr
     name: str
     surname: str
     nickname: str
     password: str
+
+    model_config = ConfigDict(use_enum_values=True)
 
     @field_validator("password")
     @classmethod
@@ -39,12 +46,14 @@ class UserRegistrate(BaseModel) :
         return value
     
 class UserAdd(BaseModel) :
-    role: RolesUsersEnum
+    role: AllUsersRolesEnum
     email: EmailStr
     name: str
     surname: str
     nickname: str
     hashed_password: str
+
+    model_config = ConfigDict(use_enum_values=True)
 
 class UserPUT(BaseModel) :
     email: EmailStr

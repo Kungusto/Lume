@@ -20,3 +20,23 @@ class BaseS3Repository :
             Key=s3_path,
             Body=file.file
         )
+
+    async def check_file_by_path(self, s3_path: str) : 
+        try:
+            await self.client.head_object(
+                Bucket=self.bucket_name,
+                Key=s3_path
+            )
+            return True
+        except self.client.exceptions.NoSuchKey:
+            return False
+        except Exception:
+            return False
+
+    async def get_file_by_path(self, s3_path: str) :
+        response = await self.client.get_object(
+            Bucket=self.bucket_name,
+            Key=s3_path
+        )
+        async with response["Body"] as stream:
+            return await stream.read()

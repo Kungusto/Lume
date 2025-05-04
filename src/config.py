@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings): 
     DB_USER: str
@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
+
+    REDIS_HOST: str
+    REDIS_PORT: int
 
     S3_BUCKET_NAME: str
     S3_REGION: str
@@ -24,7 +27,10 @@ class Settings(BaseSettings):
     def S3_URL(self):
         return f"https://{self.S3_BUCKET_NAME}.s3.{self.S3_REGION}.{self.S3_DOMAIN}"
 
-    class Config:
-        env_file = ".env"
+    @property
+    def REDIS_URL(self):
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
+
+    model_config = SettingsConfigDict(env_file=".env")
         
 settings = Settings()

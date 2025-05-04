@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 import uvicorn
 from fastapi.openapi.docs import get_swagger_ui_html
+import logging
 import sys 
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.api.auth import router as auth_router
 from src.api.books import router as books_router
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 

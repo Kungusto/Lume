@@ -23,7 +23,17 @@ class BaseRepository :
         model = result.scalars().first()
         return self.schema.model_validate(model, from_attributes=True)
     
-    async def edit(self, data, is_patch=False) : ...
+    async def edit(self, data, is_patch=False, *filter, **filter_by) : 
+        edit_stmt = (
+            update(self.model)
+            .filter(*filter)
+            .filter_by(**filter_by)
+            .values(**data.model_dump(exclude_unset=is_patch))
+            .returning(self.model)
+        )
+        result = await self.session.execute(edit_stmt)
+        models = result.scalars().all()
+        return [self.schema.model_validate(model, from_attributes=True) for model in models]
 
     async def get_one(self, *filter, **filter_by) : 
         query = select(self.model).filter(*filter).filter_by(**filter_by)

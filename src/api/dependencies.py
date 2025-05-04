@@ -1,12 +1,13 @@
 from fastapi import Depends, Request
 from typing import Annotated
 from jwt.exceptions import ExpiredSignatureError
-from src.database import async_session_maker
+from src.database import async_session_maker, async_session_maker_null_pool
 from src.utils.dbmanager import DBManager
 from src.services.auth import AuthService
 from src.exceptions.exceptions import NotAuthentificatedHTTPException, ExpireTokenHTTPException
-from src.services.s3_manager import S3Client
+from src.utils.s3_manager import S3Client
 from src.config import settings
+from src.connectors.redis_connector import RedisManager
 
 def get_token(request: Request) : 
     access_token = request.cookies.get("access_token", None)
@@ -30,6 +31,13 @@ async def get_db() :
     async with get_db_manager() as db :
         yield db
 
+def get_db_manager_np() : 
+    return DBManager(session_factory=async_session_maker_null_pool)
+
+async def get_db_np() :
+    async with get_db_manager() as db :
+        yield db
+
 DBDep = Annotated[DBManager, Depends(get_db)]
 
 def get_s3client() :
@@ -44,3 +52,12 @@ async def get_session() :
         yield client
 
 S3Dep = Annotated[S3Client, Depends(get_session)]
+
+def get_redisMan() :
+    return RedisManager(host="localhost", port=6379) 
+
+async def get_session_redis() :
+    async with get_redisMan() as redis :
+        yield redis
+
+RedisDep = Annotated[RedisManager, Depends(get_session_redis)]

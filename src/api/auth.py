@@ -38,6 +38,7 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
     if request.cookies.get("access_token") :
         raise AlreadyAuthentificatedHTTPException
     user = (await db.users.get_user_with_hashed_password(email=data.email))
+    print(user)
     if not AuthService().verify_password(data.password, user.hashed_password) :
         return {"status": "error", "message": "неверный пароль"}
     access_token = AuthService().create_access_token({"user_id": user.user_id})

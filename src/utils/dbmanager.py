@@ -1,5 +1,6 @@
 from src.repositories.database.users import UsersRepository
 from src.repositories.database.books import BooksRepository
+from src.repositories.database.books_authors import BooksAuthorsRepository
 
 class DBManager : 
     def __init__(self, session_factory) :
@@ -10,7 +11,8 @@ class DBManager :
         
         self.users = UsersRepository(self.session)
         self.books = BooksRepository(self.session)
-        
+        self.books_authors = BooksAuthorsRepository(self.session)
+
         return self
 
     async def __aexit__(self, *args) :
@@ -19,4 +21,3 @@ class DBManager :
         
     async def commit(self) :
         await self.session.commit()
-        

@@ -1,6 +1,6 @@
 from sqlalchemy import insert, select
 from src.exceptions.exceptions import EmailAlreadyRegistratedException, NickAlreadyRegistratedException
-from repositories.database.base import BaseRepository
+from src.repositories.database.base import BaseRepository
 from src.models.users import UsersORM
 from src.schemas.users import User, UserWithHashedPassword, UserRegistrate
 from asyncpg.exceptions import UniqueViolationError

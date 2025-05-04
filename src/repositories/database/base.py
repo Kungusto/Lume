@@ -23,6 +23,10 @@ class BaseRepository :
         model = result.scalars().first()
         return self.schema.model_validate(model, from_attributes=True)
     
+    async def add_bulk(self, data) :
+        add_stmt = insert(self.model).values([item.model_dump() for item in data])
+        await self.session.execute(add_stmt)
+
     async def edit(self, data, is_patch=False, *filter, **filter_by) : 
         edit_stmt = (
             update(self.model)
@@ -43,3 +47,7 @@ class BaseRepository :
         except NoResultFound as ex:
             raise ObjectNotFoundException from ex
         return self.schema.model_validate(result, from_attributes=True)
+
+    async def delete(self, *filter, **filter_by) :
+        delete_stmt = delete(self.model).filter(*filter).filter_by(**filter_by)
+        await self.session.execute(delete_stmt)

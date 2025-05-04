@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy import ForeignKey, Enum
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from src.database import Base
 from src.enums.books import LanguagesEnum
 
@@ -22,6 +22,11 @@ class BooksORM(Base) :
     language: Mapped[LanguagesEnum] = mapped_column(Enum(LanguagesEnum, name="language_enum"))
     is_rendered: Mapped[bool] = mapped_column(default=False)
     cover_link: Mapped[str | None] = mapped_column(default=None)
+
+    authors: Mapped[list["UsersORM"]] = relationship( # type: ignore
+        back_populates="books", secondary="Books_authors"
+    ) 
+
 
 class BooksTagsORM(Base) :
     __tablename__ = "Books_tags"

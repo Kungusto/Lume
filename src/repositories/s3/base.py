@@ -40,3 +40,18 @@ class BaseS3Repository :
         )
         async with response["Body"] as stream:
             return await stream.read()
+        
+    async def delete_by_path(self, s3_path: str) :
+        await self.client.delete_object(
+            Bucket=self.bucket_name,
+            Key=s3_path
+        )
+
+    async def list_objects_by_prefix(self, prefix: str = "") :
+        print(self.bucket_name)
+        result = await self.client.list_objects(Bucket=self.bucket_name, Prefix="7/images/")
+        return result.get("Contents", [])
+
+
+
+

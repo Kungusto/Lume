@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy import Enum
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import ForeignKey, String, Integer
 from src.database import Base
 from src.enums.users import AllUsersRolesEnum
@@ -18,3 +18,6 @@ class UsersORM(Base) :
     hashed_password: Mapped[str]
     registation_date: Mapped[date] = mapped_column(default=lambda: date.today())
     
+    books: Mapped[list["BooksORM"]] = relationship( # type: ignore
+        back_populates="authors", secondary="Books_authors"
+    )

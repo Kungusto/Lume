@@ -19,8 +19,6 @@ class User(BaseModel) :
 class UserWithHashedPassword(User) :
     hashed_password: str
     
-    model_config = ConfigDict(use_enum_values=True)
-
 
 class UserLogin(BaseModel) :
     email: EmailStr
@@ -33,8 +31,6 @@ class UserRegistrate(BaseModel) :
     surname: str
     nickname: str
     password: str
-
-    model_config = ConfigDict(use_enum_values=True)
 
     @field_validator("password")
     @classmethod
@@ -53,14 +49,11 @@ class UserAdd(BaseModel) :
     nickname: str
     hashed_password: str
 
-    model_config = ConfigDict(use_enum_values=True)
-
 class UserPUT(BaseModel) :
     email: EmailStr
     name: str
     surname: str
     nickname: str
-    hashed_password: str
 
 class UserPATCH(BaseModel) :
     email: EmailStr | None

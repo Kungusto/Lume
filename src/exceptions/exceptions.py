@@ -77,4 +77,9 @@ class ObjectNotFoundHTTPException(LumeHTTPException) :
 
 class UserNotFoundHTTPException(ObjectNotFoundHTTPException) :
     detail = "Пользователь не найден"
+
+
+class CoverNotFoundHTTPException(ObjectNotFoundHTTPException) :
+    detail = "К этой книге пока нету обложек"
 # ---
+

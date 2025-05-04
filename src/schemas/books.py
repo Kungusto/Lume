@@ -1,6 +1,7 @@
 from datetime import date
 from pydantic import BaseModel
 from src.enums.books import LanguagesEnum
+from src.schemas.users import User
 
 # Для отрисовки картинок на сайте. 
 class SourceImage(BaseModel) :
@@ -36,6 +37,19 @@ class Book(BaseModel) :
     date_publicated: date
     is_rendered: bool = False
     cover_link: str | None = None
+
+class BookPATCH(BaseModel):
+    title: str | None = None
+    age_limit: int | None = None
+    description: str | None = None
+
+class BookPUT(BaseModel):
+    title: str = None
+    age_limit: int = None
+    description: str | None = None
+    
+class BookWithAuthors(Book) :
+    authors: list[User] 
 
 class BookPATCHOnPublication(BaseModel) :
     is_rendered: bool | None = False

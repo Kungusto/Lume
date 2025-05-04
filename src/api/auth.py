@@ -12,7 +12,7 @@ from src.exceptions.exceptions import (
     ObjectNotFoundException,
     ObjectNotFoundHTTPException
 )
-from src.schemas.users import UserRegistrate, UserAdd, UserLogin, UserPublicData
+from src.schemas.users import UserRegistrate, UserAdd, UserLogin, UserPublicData, UserPUT
 from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 
@@ -66,3 +66,10 @@ async def info_about_user(db: DBDep, user_id: int) :
         raise UserNotFoundHTTPException from ex
     user_public = UserPublicData(**all_data_about_user.model_dump())
     return user_public
+
+
+@router.put("/{user_id}")
+async def edit_user_data(db: DBDep, data: UserPUT, user_id: int) : 
+    await db.users.edit(user_id=user_id, data=data)
+    await db.commit()
+    return {"status": "OK"}

@@ -32,7 +32,7 @@ async def async_render(book_id: int) :
     logging.info(f'Рендеринг книги "{book.title}" завершен')
 
 
-@broker.task
-async def delete_book(book_id: int) :
-    async for s3 in get_session() :
-        s3.books.
+# @broker.task
+# async def delete_book(book_id: int) :
+#     async for s3 in get_session() :
+#         s3.books.

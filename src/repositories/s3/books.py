@@ -25,18 +25,32 @@ class BooksS3Repository(BaseS3Repository) :
     
     async def delete_all_files_with_prefix(self, prefix: str) :
         try :
-            objects_to_delete = []
-            paginator = self.client.get_paginator("list_objects_v2")
-            async for result in paginator.paginate(Buckket=self.bucket_name, Prefix=prefix) :
-                if "Contents" in result :
-                    objects_to_delete.extend(
-                            [{'Key': obj['Key']} for obj in result['Contents']]
-                        )
-                for i in range(0, len(objects_to_delete), 1000) :
-                    chunk = objects_to_delete[i, i+1000]
-                    await self.client.delete_objects(
-                        Bucket=self.bucket_name,
-                        Delete={"Objects": chunk}
-                    )                    
+            response = await self.client.list_objects_v2(
+                Bucket="books",
+                Prefix="7/"
+            )                        
+            print(response)
+            # async for page in paginator.paginate(
+            #     Bucket=self.bucket_name,
+            #     Prefix=prefix
+            # ) :
+            #     if "Contents" in page: 
+            #         for obj in page["Contents"] :
+            #             files.append(obj["Key"])
+                        
+            # print(files)
+            # print(paginator)
+            # async for result in paginator.paginate(Bucket=self.bucket_name, Prefix=prefix) :
+            #     if "Contents" in result :
+            #         objects_to_delete.extend(
+            #                 [{'Key': obj['Key']} for obj in result['Contents']]
+            #             )
+            #     for i in range(0, len(objects_to_delete), 1000) :
+            #         chunk = objects_to_delete[i, i+1000]
+            #         deleted = await self.client.delete_objects(
+            #             Bucket=self.bucket_name,
+            #             Delete={"Objects": chunk}
+            #         )         
+            #         print(deleted)           
         except Exception as e : 
             print(f"Произошла ошибка: {e}")

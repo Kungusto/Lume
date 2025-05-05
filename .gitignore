@@ -6,3 +6,4 @@ migrations
 alembic.ini
 static
 static/*
+dump.rdb

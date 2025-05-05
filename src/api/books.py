@@ -3,7 +3,7 @@ from src.exceptions.exceptions import CoverNotFoundHTTPException
 from src.api.dependencies import S3Dep, DBDep, UserIdDep
 from src.schemas.books import BookAdd, BookAddWithAuthors, BookPATCH
 from src.schemas.books import BookPATCHOnPublication
-from src.tasks.taskiq_tasks import async_render
+from src.tasks.taskiq_tasks import async_render, async_delete_book
 from src.schemas.books_authors import BookAuthorAdd
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг"])
@@ -24,6 +24,7 @@ async def add_cover(file: UploadFile, book_id: int, db: DBDep, s3: S3Dep) :
         is_patch=True,
         data=BookPATCHOnPublication(cover_link=cover_link)
           )
+    await db.commit()
     return {"status": "OK"}
 
 @router.put("/cover")
@@ -31,11 +32,12 @@ async def add_cover(file: UploadFile, book_id: int, db: DBDep, s3: S3Dep) :
     book = await db.books.get_one(book_id=book_id)
     if not book.cover_link :
         raise CoverNotFoundHTTPException
-    cover_link = await s3.books.save_cover(file=file, book_id=book_id)
+    await s3.books.save_cover(file=file, book_id=book_id)
     await db.books.edit(
         is_patch=True,
-        data=BookPATCHOnPublication(cover_link=cover_link)
+        data=BookPATCHOnPublication(cover_link=f"{book_id}/preview.png")
           )
+    await db.commit()
     return {"status": "OK"}
 
 @router.post("/content")
@@ -56,7 +58,18 @@ async def edit_bood_data(book_id: int, db: DBDep, data: BookPATCH) :
 
 @router.delete("")
 async def delete_book(book_id: int, db: DBDep, s3: S3Dep) :
+    book = await db.books.get_one(book_id=book_id)
     await db.books_authors.delete(book_id=book_id)
+    await async_delete_book.kiq(book_id=book_id)
+    if book.is_rendered :
+        await s3.books.delete_by_path(f"{book_id}/book.pdf")
+    if book.cover_link :
+        await s3.books.delete_by_path(f"{book_id}/preview.png")
+    await db.files.delete(book_id=book_id)
     await db.books.delete(book_id=book_id)
-    await s3.books.delete_all_files_with_prefix(f"{book_id}/images/")
+    await db.commit()
     return {"status": "OK"}
+
+@router.delete("/fjewio")
+async def test(s3: S3Dep, book_id: int) :
+    await s3.books.delete_by_path(f"{book_id}/preview")

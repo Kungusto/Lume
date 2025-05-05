@@ -1,6 +1,7 @@
 from src.repositories.database.users import UsersRepository
 from src.repositories.database.books import BooksRepository
 from src.repositories.database.books_authors import BooksAuthorsRepository
+from src.repositories.database.files_src_images import FilesRepository
 
 class DBManager : 
     def __init__(self, session_factory) :
@@ -12,6 +13,7 @@ class DBManager :
         self.users = UsersRepository(self.session)
         self.books = BooksRepository(self.session)
         self.books_authors = BooksAuthorsRepository(self.session)
+        self.files = FilesRepository(self.session)
 
         return self
 

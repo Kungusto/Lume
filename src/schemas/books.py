@@ -5,7 +5,12 @@ from src.schemas.users import User
 
 # Для отрисовки картинок на сайте. 
 class SourceImage(BaseModel) :
-    id: int
+    file_id: int
+    book_id: int
+    src: str
+
+class SourceImageAdd(BaseModel) :
+    book_id: int
     src: str
 
 class Page(BaseModel) : 

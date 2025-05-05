@@ -22,5 +22,21 @@ class BooksS3Repository(BaseS3Repository) :
             Body=file.file
         )
         return f"{self.bucket_name}/{book_id}/book.pdf"
-
-
+    
+    async def delete_all_files_with_prefix(self, prefix: str) :
+        try :
+            objects_to_delete = []
+            paginator = self.client.get_paginator("list_objects_v2")
+            async for result in paginator.paginate(Buckket=self.bucket_name, Prefix=prefix) :
+                if "Contents" in result :
+                    objects_to_delete.extend(
+                            [{'Key': obj['Key']} for obj in result['Contents']]
+                        )
+                for i in range(0, len(objects_to_delete), 1000) :
+                    chunk = objects_to_delete[i, i+1000]
+                    await self.client.delete_objects(
+                        Bucket=self.bucket_name,
+                        Delete={"Objects": chunk}
+                    )                    
+        except Exception as e : 
+            print(f"Произошла ошибка: {e}")

@@ -57,5 +57,5 @@ async def edit_bood_data(book_id: int, db: DBDep, data: BookPATCH) :
 @router.delete("")
 async def delete_book(book_id: int, db: DBDep, s3: S3Dep) :
     await db.books.delete(book_id=book_id)
-    await s3.books.list_objects_by_prefix()
+    await s3.books.delete_all_files_with_prefix(f"{book_id}/images/")
     return {"status": "OK"}

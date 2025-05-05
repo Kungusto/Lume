@@ -48,10 +48,12 @@ class BaseS3Repository :
         )
 
     async def list_objects_by_prefix(self, prefix: str = "") :
-        print(self.bucket_name)
         result = await self.client.list_objects(Bucket=self.bucket_name, Prefix="7/images/")
         return result.get("Contents", [])
 
-
-
-
+    async def delete_file(self, path: str) :
+        await self.client.delete_object(
+            Bucket=self.bucket_name,
+            Key=path
+        )
+    

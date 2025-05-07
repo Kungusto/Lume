@@ -27,7 +27,7 @@ class BooksS3Repository(BaseS3Repository) :
         try :
             response = await self.client.list_objects_v2(
                 Bucket="books",
-                Prefix="7/"
+                Prefix="7/images"
             )                        
             print(response)
             # async for page in paginator.paginate(

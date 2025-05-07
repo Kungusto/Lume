@@ -25,9 +25,9 @@ class BooksS3Repository(BaseS3Repository) :
     
     async def delete_all_files_with_prefix(self, prefix: str) :
         try :
-            response = await self.client.list_objects_v2(
-                Bucket="books",
-                Prefix="7/images"
+            response = await self.client.delete_object(
+                Bucket=self.bucket_name,
+                Key="7/images/page_1_img_1.png"
             )                        
             print(response)
             # async for page in paginator.paginate(

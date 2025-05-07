@@ -10,6 +10,10 @@ class GenresORM(Base) :
 
     genre_id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(unique=True)
+    
+    books: Mapped[list["BooksORM"]] = relationship( 
+        back_populates="genres", secondary="Books_genres"
+    )
 
 class BooksORM(Base) :
     __tablename__ = "Books"
@@ -26,6 +30,12 @@ class BooksORM(Base) :
     authors: Mapped[list["UsersORM"]] = relationship( # type: ignore
         back_populates="books", secondary="Books_authors"
     ) 
+    tags: Mapped[list["BooksTagsORM"]] = relationship ( # type: ignore
+        "BooksTagsORM", back_populates="books"
+    )
+    genres: Mapped[list["GenresORM"]] = relationship ( # type: ignore
+        back_populates="books", secondary="Books_genres"
+    )
 
 
 class BooksTagsORM(Base) :
@@ -34,6 +44,10 @@ class BooksTagsORM(Base) :
     id: Mapped[int] = mapped_column(primary_key=True)
     book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
     title_tag: Mapped[str]
+
+    books: Mapped[list["BooksORM"]] = relationship( # type: ignore
+        "BooksORM", back_populates="tags"
+    )
 
 class BooksGenresORM(Base) :
     __tablename__ = "Books_genres"

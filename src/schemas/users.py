@@ -1,8 +1,7 @@
 from datetime import date
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 from src.enums.users import AllUsersRolesEnum
 from src.exceptions.exceptions import TooShortPasswordHTTPException, TooLongPasswordHTTPException
-from typing import Literal
 
 class User(BaseModel) : 
     user_id: int
@@ -13,8 +12,6 @@ class User(BaseModel) :
     nickname: str
     last_activity: date
     registation_date: date
-
-    model_config = ConfigDict(use_enum_values=True)
 
 class UserWithHashedPassword(User) :
     hashed_password: str

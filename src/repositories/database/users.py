@@ -1,7 +1,9 @@
 from sqlalchemy import insert, select
+from sqlalchemy.orm import joinedload
 from src.exceptions.exceptions import EmailAlreadyRegistratedException, NickAlreadyRegistratedException
 from src.repositories.database.base import BaseRepository
 from src.models.users import UsersORM
+from src.schemas.books import UserWithBooks
 from src.schemas.users import User, UserWithHashedPassword, UserRegistrate
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
@@ -30,3 +32,13 @@ class UsersRepository(BaseRepository) :
 
         model = result.scalars().first()
         return self.schema.model_validate(model, from_attributes=True)
+    
+    async def get_books_by_user(self, user_id: int) :
+        query = (
+            select(self.model)
+            .options(joinedload(self.model.books))
+            .filter_by(user_id=user_id)
+        )
+        result = await self.session.execute(query)
+        models = result.unique().scalars().all()
+        return [UserWithBooks.model_validate(model, from_attributes=True) for model in models]

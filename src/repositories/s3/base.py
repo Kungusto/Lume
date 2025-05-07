@@ -57,3 +57,10 @@ class BaseS3Repository :
             Key=path
         )
     
+    async def delete_bulk(self, *args) :
+        for key in args :
+            await self.client.delete_object(
+                Bucket=self.bucket_name, 
+                Key=key
+            )
+        print("Удаление завершено!")

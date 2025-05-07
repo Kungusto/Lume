@@ -1,8 +1,9 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
 from src.repositories.database.base import BaseRepository
 from src.models.books import BooksORM, BooksTagsORM, GenresORM
-from src.schemas.books import Book, Tag, Genre, BookWithAuthors
+from src.schemas.books import Book, Tag, Genre, BookDataWithRels, GenresBook
+from src.models.books import BooksGenresORM
 
 class BooksRepository(BaseRepository) :
     model = BooksORM
@@ -33,10 +34,16 @@ class BooksRepository(BaseRepository) :
         return self.schema.model_validate(result, from_attributes=True)
 
     async def get_book_with_rels(self, **filter_by) : 
-        query = select(self.model).options(joinedload(self.model.authors)).filter_by(**filter_by)
+        query = (
+            select(self.model)
+            .options(joinedload(self.model.authors))
+            .options(joinedload(self.model.genres))
+            .options(joinedload(self.model.tags))
+            .filter_by(**filter_by)
+        )
         result = await self.session.execute(query)
         model = result.unique().scalar_one()
-        return BookWithAuthors.model_validate(model, from_attributes=True)
+        return BookDataWithRels.model_validate(model, from_attributes=True)
 
 class TagRepository(BaseRepository) :
     model = BooksTagsORM
@@ -45,3 +52,7 @@ class TagRepository(BaseRepository) :
 class GenreRepository(BaseRepository) :
     model = GenresORM
     schema = Genre
+
+class GenresBooksRepository(BaseRepository) :
+    model = BooksGenresORM
+    schema = GenresBook

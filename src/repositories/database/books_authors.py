@@ -5,3 +5,5 @@ from src.schemas.books_authors import BookAuthor
 class BooksAuthorsRepository(BaseRepository) :
     model = BooksAuthorsORM
     schema = BookAuthor
+
+    

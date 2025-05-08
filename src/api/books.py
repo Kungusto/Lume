@@ -102,8 +102,8 @@ async def delete_book(book_id: int, db: DBDep, s3: S3Dep) :
 
 @router.put("/content")
 async def edit_content(book_id: int, content: UploadFile, s3: S3Dep, db: DBDep) :
-    async_delete_book.kiq(book_id=book_id)    
+    await async_delete_book.kiq(book_id=book_id)    
     await s3.books.save_content(book_id=book_id, file=content)
-    await db.files.delete(book_id=book_id)
-    async_render.kiq(book_id=book_id)
+    await async_render.kiq(book_id=book_id)
+    await db.commit()
     return {"status": "OK"}

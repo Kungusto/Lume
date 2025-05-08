@@ -43,6 +43,7 @@ async def async_delete_book(book_id: int) :
     async for db in get_db_np() : 
         books = await db.files.get_filtered(book_id=book_id)
         await db.files.delete(book_id=book_id)
+        await db.commit()
     files = [book.src for book in books]
     async for s3 in get_session() :
         await s3.books.delete_bulk(*files)

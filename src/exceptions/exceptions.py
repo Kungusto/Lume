@@ -11,6 +11,12 @@ class ObjectNotFoundException(LumeException) :
 
 class UserNotFoundException(LumeException) :
     detail = "Пользователь не найден"
+
+class EmailNotFoundException(LumeException) :
+    detail = "Почта не найдена"
+
+class BookNotFoundException(LumeException) :
+    detail = "Книга не найдена"
 # ---
 
 class EmailAlreadyRegistratedException(LumeException) :
@@ -34,7 +40,10 @@ class AlreadyAuthentificatedException(LumeException) :
 class ExpireTokenException(LumeException) :
     detail = "Срок действия токена истек"
 
-# ---------------------------------------------------------------------------------
+class WrongPasswordOrEmailException(LumeException) :
+    detail = "Неправильная пароль, либо почта"
+
+# ------------------------------------ HTTP Exceptions ------------------------------------
 
 class LumeHTTPException(HTTPException) :
     detail = None
@@ -70,7 +79,7 @@ class ExpireTokenHTTPException(LumeHTTPException) :
     detail = "Срок действия токена истек"
     status_code = 401
 
-# --- Object not found
+# --- Object not found ---
 class ObjectNotFoundHTTPException(LumeHTTPException) :
     detail = "Сущность не найдена"
     status_code = 404
@@ -78,8 +87,21 @@ class ObjectNotFoundHTTPException(LumeHTTPException) :
 class UserNotFoundHTTPException(ObjectNotFoundHTTPException) :
     detail = "Пользователь не найден"
 
-
 class CoverNotFoundHTTPException(ObjectNotFoundHTTPException) :
     detail = "К этой книге пока нету обложек"
-# ---
 
+class BookNotFoundHTTPException(ObjectNotFoundHTTPException) :
+    detail = "Книга не найдена"
+
+# --- Permission Denied ---
+class PermissionDeniedHTTPException(LumeHTTPException) :
+    detail = "Недостаточно прав для совершения данной операции"
+
+class WrongPasswordOrEmailHTTPException(LumeHTTPException) :
+    detail = "Неправильная пароль, либо почта"
+
+class BookNotExistsOrYouNotOwnerHTTPException(LumeHTTPException) :
+    detail = "Книга не существует, либо у вас нет доступа к ее изменению"
+
+class ContentAlreadyExistsHTTPException(LumeHTTPException) :
+    detail = "Контент книги уже был опубликован"

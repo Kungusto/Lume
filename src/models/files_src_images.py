@@ -6,5 +6,5 @@ class FilesSrcORM(Base) :
     __tablename__ = "FilesSrc"
     
     file_id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id", ondelete="CASCADE"))
     src: Mapped[str]

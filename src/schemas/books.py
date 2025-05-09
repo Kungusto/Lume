@@ -2,7 +2,7 @@ from datetime import date
 from pydantic import BaseModel, EmailStr
 from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum
-from src.schemas.users import User
+from src.schemas.users import User, UserPublicData
 
 # Для отрисовки картинок на сайте. 
 class SourceImage(BaseModel) :
@@ -109,7 +109,7 @@ class BookData(Book) :
     pages_count: int
 
 class BookDataWithRels(Book) :
-    authors: list[User] # список авторов
+    authors: list[UserPublicData] # список авторов
     tags: list[Tag] # список тегов
     genres: list[Genre] # список жанров
 

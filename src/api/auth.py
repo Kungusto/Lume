@@ -7,10 +7,10 @@ from src.exceptions.exceptions import (
     InternalServerErrorHTTPException,
     NotAuthentificatedHTTPException,
     AlreadyAuthentificatedHTTPException, 
-    UserNotFoundException,
     UserNotFoundHTTPException,
     ObjectNotFoundException,
-    ObjectNotFoundHTTPException
+    WrongPasswordOrEmailHTTPException,
+    EmailNotFoundException
 )
 from src.schemas.users import UserRegistrate, UserAdd, UserLogin, UserPublicData, UserPUT
 from src.api.dependencies import DBDep, UserIdDep
@@ -37,11 +37,13 @@ async def registrate_users(data: UserRegistrate, db: DBDep) :
 async def login_user(data: UserLogin, db: DBDep, response: Response, request: Request) :
     if request.cookies.get("access_token") :
         raise AlreadyAuthentificatedHTTPException
-    user = (await db.users.get_user_with_hashed_password(email=data.email))
-    print(user)
+    try :
+        user = (await db.users.get_user_with_hashed_password(email=data.email))
+    except EmailNotFoundException as ex:
+        raise WrongPasswordOrEmailHTTPException from ex
     if not AuthService().verify_password(data.password, user.hashed_password) :
-        return {"status": "error", "message": "неверный пароль"}
-    access_token = AuthService().create_access_token({"user_id": user.user_id})
+        raise WrongPasswordOrEmailHTTPException
+    access_token = AuthService().create_access_token({"user_id": user.user_id, "role": str(user.role)})
     response.set_cookie(key="access_token", value=access_token)
     return {"access_token": access_token}
 

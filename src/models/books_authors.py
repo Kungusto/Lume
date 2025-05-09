@@ -7,5 +7,5 @@ class BooksAuthorsORM(Base) :
 
     id: Mapped[int] = mapped_column(primary_key=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("Users.user_id"))
-    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id", ondelete="CASCADE"))
     

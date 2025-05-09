@@ -1,9 +1,11 @@
 from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import NoResultFound
 from src.repositories.database.base import BaseRepository
 from src.models.books import BooksORM, BooksTagsORM, GenresORM
 from src.schemas.books import Book, Tag, Genre, BookDataWithRels, GenresBook
 from src.models.books import BooksGenresORM
+from src.exceptions.exceptions import BookNotFoundException
 
 class BooksRepository(BaseRepository) :
     model = BooksORM
@@ -44,6 +46,15 @@ class BooksRepository(BaseRepository) :
         result = await self.session.execute(query)
         model = result.unique().scalar_one()
         return BookDataWithRels.model_validate(model, from_attributes=True)
+    
+    async def get_one(self, *filter, **filter_by) : 
+        query = select(self.model).filter(*filter).filter_by(**filter_by)
+        model = await self.session.execute(query)
+        try :
+            result = model.scalar_one()
+        except NoResultFound as ex:
+            raise BookNotFoundException from ex
+        return self.schema.model_validate(result, from_attributes=True)
 
 class TagRepository(BaseRepository) :
     model = BooksTagsORM

@@ -42,7 +42,7 @@ class BooksTagsORM(Base) :
     __tablename__ = "Books_tags"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id", ondelete="CASCADE"))
     title_tag: Mapped[str]
 
     books: Mapped[list["BooksORM"]] = relationship( # type: ignore
@@ -53,5 +53,5 @@ class BooksGenresORM(Base) :
     __tablename__ = "Books_genres"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id", ondelete="CASCADE"))
     genre_id: Mapped[int] = mapped_column(ForeignKey("Genres.genre_id"))

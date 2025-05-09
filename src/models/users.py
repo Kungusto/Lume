@@ -1,9 +1,14 @@
 from datetime import date
 from sqlalchemy import Enum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import ForeignKey, String, Integer
+from sqlalchemy import String
 from src.database import Base
 from src.enums.users import AllUsersRolesEnum
+import typing
+
+if typing.TYPE_CHECKING :
+    from src.models.books import BooksORM
+
 
 class UsersORM(Base) : 
     __tablename__ = "Users"

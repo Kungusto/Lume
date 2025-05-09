@@ -44,7 +44,10 @@ class BooksRepository(BaseRepository) :
             .filter_by(**filter_by)
         )
         result = await self.session.execute(query)
-        model = result.unique().scalar_one()
+        try :
+            model = result.unique().scalar_one()
+        except NoResultFound as ex :
+            raise BookNotFoundException from ex
         return BookDataWithRels.model_validate(model, from_attributes=True)
     
     async def get_one(self, *filter, **filter_by) : 

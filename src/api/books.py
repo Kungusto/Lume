@@ -39,8 +39,11 @@ async def add_book(
     return {"status": "OK", "data": book}
 
 @router.get("/book")
-async def get_book_by_id(book_id: int, db: DBDep) : 
-    return await db.books.get_book_with_rels(book_id=book_id)
+async def get_book_by_id(book_id: int, db: DBDep) :
+    try : 
+        return await db.books.get_book_with_rels(book_id=book_id)
+    except BookNotFoundException as ex:
+        raise BookNotFoundHTTPException from ex
 
 @router.patch("/book")
 async def edit_bood_data(
@@ -50,7 +53,7 @@ async def edit_bood_data(
     user_id: int = authorize_and_return_user_id(2)
 ): 
     try :
-        book = await db.books.get_one(book_id=book_id)
+        await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id) # Проверяем, владеет ли пользователь этой книгой
@@ -124,7 +127,7 @@ async def add_cover(
     return {"status": "OK"}
 
 @router.put("/cover")
-async def add_cover(
+async def put_cover(
     file: UploadFile,
     book_id: int,
     db: DBDep,

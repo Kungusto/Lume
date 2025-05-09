@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 import jwt
 from src.utils.dbmanager import DBManager
 from src.config import settings
+from sqlalchemy.exc import NoResultFound
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -47,6 +48,6 @@ class AuthService :
         """Проверяем, действительно ли пользователь владеет книгой"""
         try :
             book = await db.books_authors.get_one(book_id=book_id, author_id=user_id)
-        except : 
+        except NoResultFound : 
             raise BookNotExistsOrYouNotOwnerHTTPException
         return book

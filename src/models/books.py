@@ -3,7 +3,10 @@ from sqlalchemy import ForeignKey, Enum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from src.database import Base
 from src.enums.books import LanguagesEnum
+import typing
 
+if typing.TYPE_CHECKING :
+    from src.models.users import UsersORM
 
 class GenresORM(Base) :
     __tablename__ = "Genres"

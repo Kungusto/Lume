@@ -4,7 +4,13 @@ from src.exceptions.books import (
     CoverNotFoundHTTPException,
     ContentAlreadyExistsHTTPException,
     BookNotFoundHTTPException,
-    BookNotFoundException,
+    BookNotFoundException
+)
+from src.exceptions.files import (
+    WrongFileExpensionException,
+    WrongCoverResolutionException,
+    WrongCoverResolutionHTTPException,
+    WrongFileExpensionHTTPException
 )
 from src.api.dependencies import S3Dep, DBDep, UserRoleDep, authorize_and_return_user_id
 from src.schemas.books import (
@@ -18,6 +24,7 @@ from src.schemas.books import (
 )
 from src.tasks.taskiq_tasks import async_render, async_delete_book
 from src.schemas.books_authors import BookAuthorAdd
+from src.validation.files import FileValidator 
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг"])
 
@@ -136,6 +143,13 @@ async def add_cover(
     user_id: int = authorize_and_return_user_id(2),
 ):
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    try :
+        FileValidator.check_expansion_images(file_name=file.filename)
+        await FileValidator.validate_cover(file_img=file)
+    except WrongCoverResolutionException as ex:
+        raise WrongCoverResolutionHTTPException from ex
+    except WrongFileExpensionException as ex :
+        raise WrongFileExpensionHTTPException from ex
     cover_link = await s3.books.save_cover(file=file, book_id=book_id)
     await db.books.edit(
         is_patch=True,
@@ -155,6 +169,13 @@ async def put_cover(
     user_id: int = authorize_and_return_user_id(2),
 ):
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    try :
+        FileValidator.check_expansion_images(file_name=file.filename)
+        await FileValidator.validate_cover(file_img=file)
+    except WrongCoverResolutionException as ex:
+        raise WrongCoverResolutionHTTPException from ex
+    except WrongFileExpensionException as ex :
+        raise WrongFileExpensionHTTPException from ex
     book = await db.books.get_one(book_id=book_id)
     if not book.cover_link:
         raise CoverNotFoundHTTPException
@@ -180,6 +201,10 @@ async def add_all_content(
     user_id: int = authorize_and_return_user_id(2),
 ):
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    try:
+        FileValidator.check_expansion_books(file_name=file.filename)
+    except WrongFileExpensionException as ex :
+        raise WrongFileExpensionHTTPException from ex
     if await s3.books.check_file_by_path(f"{book_id}/book.pdf"):
         raise ContentAlreadyExistsHTTPException
     await s3.books.save_content(book_id, file=file)
@@ -190,16 +215,20 @@ async def add_all_content(
 @router.put("/content")
 async def edit_content(
     book_id: int,
-    content: UploadFile,
+    file: UploadFile,
     s3: S3Dep,
     db: DBDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    try:
+        FileValidator.check_expansion_books(file_name=file.filename)
+    except WrongFileExpensionException as ex:
+        raise WrongFileExpensionHTTPException from ex
     if not await s3.books.check_file_by_path(f"{book_id}/book.pdf"):
         raise ContentAlreadyExistsHTTPException
     await async_delete_book.kiq(book_id=book_id)
-    await s3.books.save_content(book_id=book_id, file=content)
+    await s3.books.save_content(book_id=book_id, file=file)
     await async_render.kiq(book_id=book_id)
     await db.commit()
     return {"status": "OK"}

@@ -25,6 +25,9 @@ class AuthentificationException(LumeException):
     detail = "Ошибка аутентификации"
 
 
+class FileValidationException(LumeException):
+    detail = "Ошибка валидации файла"
+
 # ------------------------------------ HTTP Exceptions ------------------------------------
 
 
@@ -64,3 +67,8 @@ class ObjectNotFoundHTTPException(LumeHTTPException):
 class AlreadyExistsHTTPException(LumeHTTPException):
     detail = "Объект уже существует"
     status_code = 409
+
+
+class FileValidationHTTPException(LumeHTTPException):
+    detail = "Ошибка валидации файла"
+    status_code = 422

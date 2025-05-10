@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
     ObjectNotFoundException,
+    PermissionDeniedHTTPException
 )
 from src.exceptions.auth import (
     NickAlreadyRegistratedHTTPException,
@@ -53,6 +54,8 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
         raise WrongPasswordOrEmailHTTPException from ex
     if not AuthService().verify_password(data.password, user.hashed_password):
         raise WrongPasswordOrEmailHTTPException
+    await db.users.update_user_activity(user_id=user.user_id)
+    await db.commit()
     access_token = AuthService().create_access_token(
         {"user_id": user.user_id, "role": str(user.role)}
     )
@@ -61,8 +64,9 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
 
 
 @router.get("/me")
-async def info_about_current_user(id: UserIdDep, db: DBDep):
-    user = await db.users.get_one(user_id=id)
+async def info_about_current_user(user_id: UserIdDep, db: DBDep):
+    user = await db.users.get_one(user_id=user_id)
+    await db.commit()
     return user
 
 
@@ -81,11 +85,14 @@ async def info_about_user(db: DBDep, user_id: int):
     except ObjectNotFoundException as ex:
         raise UserNotFoundHTTPException from ex
     user_public = UserPublicData(**all_data_about_user.model_dump())
+    await db.commit()
     return user_public
 
 
 @router.put("/{user_id}")
-async def edit_user_data(db: DBDep, data: UserPUT, user_id: int):
+async def edit_user_data(db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep):
+    if user_id != curr_user_id :
+        raise PermissionDeniedHTTPException
     await db.users.edit(user_id=user_id, data=data)
     await db.commit()
     return {"status": "OK"}

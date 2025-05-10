@@ -1,4 +1,5 @@
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
+from datetime import date
 from sqlalchemy.orm import joinedload
 from src.exceptions.auth import (
     EmailAlreadyRegistratedException,
@@ -33,9 +34,9 @@ class UsersRepository(BaseRepository):
         except IntegrityError as exc:
             if isinstance(exc.orig.__cause__, UniqueViolationError):
                 msg = str(exc.orig)
-                if "Users_nickname_key" in msg:
+                if "Users_nickname_key" in msg: # ник уже занят
                     raise NickAlreadyRegistratedException
-                elif "Users_email_key" in msg:
+                elif "Users_email_key" in msg: # почта уже зарегестрирована
                     raise EmailAlreadyRegistratedException
 
         model = result.scalars().first()
@@ -53,3 +54,13 @@ class UsersRepository(BaseRepository):
             UserWithBooks.model_validate(model, from_attributes=True)
             for model in models
         ]
+
+    async def update_user_activity(self, user_id: int):
+        query = (
+            update(self.model)
+            .filter_by(user_id=user_id)
+            .values(last_activity=date.today())
+        )
+        result = await self.session.execute(query)
+        model = result.scalar_one()
+        return User.model_validate(model, from_attributes=True)

@@ -2,7 +2,7 @@ from sqlalchemy import select, update, delete, insert
 from pydantic import BaseModel
 from src.database import Base
 from sqlalchemy.exc import NoResultFound
-from src.exceptions.exceptions import ObjectNotFoundException
+from src.exceptions.base import ObjectNotFoundException
 
 
 class BaseRepository:

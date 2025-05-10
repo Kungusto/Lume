@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Request, Response
-from src.exceptions.exceptions import (
-    NickAlreadyRegistratedHTTPException,
-    EmailAlreadyRegistratedHTTPException,
-    NickAlreadyRegistratedException,
-    EmailAlreadyRegistratedException,
+from src.exceptions.base import (
     InternalServerErrorHTTPException,
+    ObjectNotFoundException,
+)
+from src.exceptions.auth import (
+    NickAlreadyRegistratedHTTPException,
+    NickAlreadyRegistratedException,
+    EmailAlreadyRegistratedHTTPException,
+    EmailAlreadyRegistratedException,
     NotAuthentificatedHTTPException,
     AlreadyAuthentificatedHTTPException,
     UserNotFoundHTTPException,
-    ObjectNotFoundException,
     WrongPasswordOrEmailHTTPException,
     EmailNotFoundException,
 )

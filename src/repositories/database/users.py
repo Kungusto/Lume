@@ -1,8 +1,9 @@
 from sqlalchemy import insert, select
 from sqlalchemy.orm import joinedload
-from src.exceptions.exceptions import (
+from src.exceptions.auth import (
     EmailAlreadyRegistratedException,
     NickAlreadyRegistratedException,
+    EmailNotFoundException
 )
 from src.repositories.database.base import BaseRepository
 from src.models.users import UsersORM
@@ -10,7 +11,6 @@ from src.schemas.books import UserWithBooks
 from src.schemas.users import User, UserWithHashedPassword, UserRegistrate
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from src.exceptions.exceptions import EmailNotFoundException
 
 
 class UsersRepository(BaseRepository):

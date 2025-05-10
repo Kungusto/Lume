@@ -4,9 +4,9 @@ from jwt.exceptions import ExpiredSignatureError
 from src.database import async_session_maker, async_session_maker_null_pool
 from src.utils.dbmanager import DBManager
 from src.services.auth import AuthService
-from src.exceptions.exceptions import (
+from src.exceptions.auth import (
     NotAuthentificatedHTTPException,
-    ExpireTokenHTTPException,
+    ExpireTokenHTTPException
 )
 from src.utils.s3_manager import S3Client
 from src.config import settings

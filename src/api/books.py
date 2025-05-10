@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile
 from src.services.auth import AuthService
-from src.exceptions.exceptions import (
+from src.exceptions.books import (
     CoverNotFoundHTTPException,
     ContentAlreadyExistsHTTPException,
     BookNotFoundHTTPException,
@@ -66,7 +66,7 @@ async def edit_bood_data(
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     await AuthService().verify_user_owns_book(
-        user_id=user_id, book_id=book_id
+        user_id=user_id, book_id=book_id, db=db
     )  # Проверяем, владеет ли пользователь этой книгой
     book_patch_data = BookPATCH(
         **data.model_dump(exclude_unset=True)

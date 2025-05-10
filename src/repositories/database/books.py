@@ -5,7 +5,7 @@ from src.repositories.database.base import BaseRepository
 from src.models.books import BooksORM, BooksTagsORM, GenresORM
 from src.schemas.books import Book, Tag, Genre, BookDataWithRels, GenresBook
 from src.models.books import BooksGenresORM
-from src.exceptions.exceptions import BookNotFoundException
+from src.exceptions.books import BookNotFoundException
 
 
 class BooksRepository(BaseRepository):

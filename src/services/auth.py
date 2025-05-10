@@ -1,6 +1,9 @@
-from src.exceptions.exceptions import (
+from src.exceptions.books import (
     BookNotExistsOrYouNotOwnerHTTPException,
+)
+from src.exceptions.base import (
     PermissionDeniedHTTPException,
+    ObjectNotFoundException
 )
 from src.enums.users import AllUsersRolesEnum
 from datetime import datetime, timedelta, timezone
@@ -52,6 +55,6 @@ class AuthService:
         """Проверяем, действительно ли пользователь владеет книгой"""
         try:
             book = await db.books_authors.get_one(book_id=book_id, author_id=user_id)
-        except NoResultFound:
+        except ObjectNotFoundException:
             raise BookNotExistsOrYouNotOwnerHTTPException
         return book

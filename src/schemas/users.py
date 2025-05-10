@@ -1,7 +1,7 @@
 from datetime import date
 from pydantic import BaseModel, EmailStr, field_validator
 from src.enums.users import AllUsersRolesEnum
-from src.exceptions.exceptions import (
+from src.exceptions.auth import (
     TooShortPasswordHTTPException,
     TooLongPasswordHTTPException,
 )

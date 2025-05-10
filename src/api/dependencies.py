@@ -6,7 +6,7 @@ from src.utils.dbmanager import DBManager
 from src.services.auth import AuthService
 from src.exceptions.auth import (
     NotAuthentificatedHTTPException,
-    ExpireTokenHTTPException
+    ExpireTokenHTTPException,
 )
 from src.utils.s3_manager import S3Client
 from src.config import settings

@@ -2,13 +2,14 @@ from src.exceptions.base import (
     AlreadyExistsException,
     ObjectNotFoundHTTPException,
     ObjectNotFoundException,
-    PasswordValidationException, 
+    PasswordValidationException,
     AuthentificationException,
     AlreadyExistsHTTPException,
-    AuthentificationHTTPException
+    AuthentificationHTTPException,
 )
 
 # =---=---=---=---=---= Base Exceptions =---=---=---=---=---= #
+
 
 # Ошибки валидации пароля
 class TooLongPasswordException(PasswordValidationException):
@@ -53,6 +54,7 @@ class EmailNotFoundException(ObjectNotFoundException):
 class UserNotFoundException(ObjectNotFoundException):
     detail = "Пользователь не найден"
 
+
 # =---=---=---=---=---= HTTP Exceptions =---=---=---=---=---= #
 
 
@@ -95,6 +97,5 @@ class UserNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Пользователь не найден"
 
 
-class EmailNotFoundHTTPException(ObjectNotFoundHTTPException) :
+class EmailNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Почта не найдена"
-

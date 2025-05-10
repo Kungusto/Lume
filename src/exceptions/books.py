@@ -1,8 +1,8 @@
 from src.exceptions.base import (
-    ObjectNotFoundHTTPException, 
-    AlreadyExistsHTTPException, 
+    ObjectNotFoundHTTPException,
+    AlreadyExistsHTTPException,
     PermissionDeniedHTTPException,
-    ObjectNotFoundException
+    ObjectNotFoundException,
 )
 
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import joinedload
 from src.exceptions.auth import (
     EmailAlreadyRegistratedException,
     NickAlreadyRegistratedException,
-    EmailNotFoundException
+    EmailNotFoundException,
 )
 from src.repositories.database.base import BaseRepository
 from src.models.users import UsersORM

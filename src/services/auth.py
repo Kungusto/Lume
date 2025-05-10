@@ -8,7 +8,6 @@ from passlib.context import CryptContext
 import jwt
 from src.utils.dbmanager import DBManager
 from src.config import settings
-from sqlalchemy.exc import NoResultFound
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

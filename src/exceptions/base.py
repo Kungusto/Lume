@@ -41,16 +41,19 @@ class InternalServerErrorHTTPException(LumeHTTPException):
     status_code = 500
 
 
-class AlreadyExistsHTTPException(LumeHTTPException):
-    detail = "Объект уже существует"
-
-
 class AuthentificationHTTPException(LumeHTTPException):
     detail = "Ошибка аутентификации"
+    status_code = 401
 
 
 class PasswordValidationHTTPException(LumeHTTPException):
     detail = "Ошибка валидации пароля"
+    status_code = 401
+
+
+class PermissionDeniedHTTPException(LumeHTTPException):
+    detail = "Недостаточно прав для совершения данной операции"
+    status_code = 403
 
 
 class ObjectNotFoundHTTPException(LumeHTTPException):
@@ -58,5 +61,6 @@ class ObjectNotFoundHTTPException(LumeHTTPException):
     status_code = 404
 
 
-class PermissionDeniedHTTPException(LumeHTTPException):
-    detail = "Недостаточно прав для совершения данной операции"
+class AlreadyExistsHTTPException(LumeHTTPException):
+    detail = "Объект уже существует"
+    status_code = 409

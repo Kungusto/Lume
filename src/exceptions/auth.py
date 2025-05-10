@@ -69,15 +69,18 @@ class NickAlreadyRegistratedHTTPException(AlreadyExistsHTTPException):
 
 class AlreadyAuthentificatedHTTPException(AlreadyExistsHTTPException):
     detail = "Вы уже аутентифицированы"
+    status_code = 400
 
 
 # Ошибка аутентификации
 class TooLongPasswordHTTPException(AuthentificationHTTPException):
     detail = "Пароль должен быть длинее, чем 50 символов"
+    status_code = 422
 
 
 class TooShortPasswordHTTPException(AuthentificationHTTPException):
     detail = "Пароль должен быть короче, чем 5 символов"
+    status_code = 422
 
 
 class WrongPasswordOrEmailHTTPException(AuthentificationHTTPException):

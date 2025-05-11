@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
@@ -84,6 +84,11 @@ class BookAddWithAuthorsTagsGenres(BookAdd):
     genres: list[int]
     tags: list[str]
 
+    @field_validator("tags")
+    @classmethod
+    def tags_to_lower(cls, values: list[str]) -> list[str] : 
+        return [val.lower() for val in values]
+
 
 class Book(BaseModel):
     book_id: int
@@ -102,7 +107,12 @@ class BookPATCHWithRels(BaseModel):
     age_limit: int | None = None
     description: str | None = None
     genres: list[int] | None = None
+    tags: list[str] | None = None
 
+    @field_validator("tags")
+    @classmethod
+    def tags_to_lower(cls, values: list[str] | None = None) -> list[str] | None : 
+        return [val.lower() for val in values] if values else None
 
 class BookPATCH(BaseModel):
     title: str | None = None

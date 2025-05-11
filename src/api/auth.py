@@ -54,8 +54,6 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
         raise WrongPasswordOrEmailHTTPException from ex
     if not AuthService().verify_password(data.password, user.hashed_password):
         raise WrongPasswordOrEmailHTTPException
-    await db.users.update_user_activity(user_id=user.user_id)
-    await db.commit()
     access_token = AuthService().create_access_token(
         {"user_id": user.user_id, "role": str(user.role)}
     )

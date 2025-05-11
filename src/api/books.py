@@ -20,10 +20,11 @@ from src.schemas.books import (
     BookPATCHOnPublication,
     TagAdd,
     GenresBooksAdd,
-    BookPATCH,
+    BookPATCH
 )
 from src.tasks.taskiq_tasks import async_render, async_delete_book
 from src.schemas.books_authors import BookAuthorAdd
+from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator 
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг"])
@@ -83,14 +84,29 @@ async def edit_bood_data(
     genres = await db.books_genres.get_filtered(
         book_id=book_id
     )  # Получаем все жанры книги
+    tags = await db.tags.get_filtered(
+        book_id=book_id
+    )
     genres_ids_in_db = [genre.id for genre in genres]
-    new_tags = data.genres
-    same_els = set(genres_ids_in_db) & set(new_tags)
-    genres_to_add = set(new_tags) - same_els
-    genres_to_delete = set(genres_ids_in_db) - same_els
+    tags_titles_in_db = [tag.title_tag for tag in tags]
+    # Вычисление нужных и НЕ нужных нам жанров
+    new_genres = data.genres
+    same_els_genres = set(genres_ids_in_db) & set(new_genres)
+    genres_to_add = set(new_genres) - same_els_genres
+    genres_to_delete = set(genres_ids_in_db) - same_els_genres
+    # Вычисление нужных и НЕ нужных нам тегов
+    new_tags = data.tags
+    same_els_tags = set(tags_titles_in_db) & set(new_tags)
+    tags_to_add = set(new_tags) - same_els_tags
+    tags_to_delete = set(tags_titles_in_db) - same_els_tags
+
     data_to_add_genres = [
         GenresBooksAdd(genre_id=gen_book_id, book_id=book_id)
         for gen_book_id in genres_to_add
+    ]
+    data_to_add_tags = [
+        TagAdd(title_tag=tag_book_title, book_id=book_id)
+        for tag_book_title in tags_to_add
     ]
 
     # --- Изменение жанров внутри базы данных ---
@@ -98,6 +114,10 @@ async def edit_bood_data(
         await db.books_genres.delete_bulk_by_ids(genres_to_delete, book_id=book_id)
     if genres_to_add:
         await db.books_genres.add_bulk(data_to_add_genres)
+    if tags_to_delete:
+        await db.tags.delete(BooksTagsORM.title_tag.in_(tags_to_delete), book_id=book_id)
+    if tags_to_add:
+        await db.tags.add_bulk(data_to_add_tags)
     if book_patch_data.model_dump(exclude_unset=True):
         await db.books.edit(data=book_patch_data, is_patch=True, book_id=book_id)
     await db.commit()

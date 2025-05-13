@@ -1,6 +1,7 @@
 from enum import Enum as pyEnum
 
-class LanguagesEnum(pyEnum) : 
+
+class LanguagesEnum(pyEnum):
     ENGLISH = "English"
     RUSSIAN = "Russian"
     SPANISH = "Spanish"

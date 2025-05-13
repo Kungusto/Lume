@@ -1,21 +1,24 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum
-from src.schemas.users import User
+from src.schemas.users import User, UserPublicData
 
-# Для отрисовки картинок на сайте. 
-class SourceImage(BaseModel) :
+
+# Для отрисовки картинок на сайте.
+class SourceImage(BaseModel):
     file_id: int
     book_id: int
     src: str
 
+
 # Добавление путей для файлов
-class SourceImageAdd(BaseModel) :
+class SourceImageAdd(BaseModel):
     book_id: int
     src: str
 
-class Page(BaseModel) : 
+
+class Page(BaseModel):
     book_id: int
     page_number: int
     text: str
@@ -23,55 +26,71 @@ class Page(BaseModel) :
 
 
 # Теги
-class Tag(BaseModel) :
+class Tag(BaseModel):
     id: int
     book_id: int
     title_tag: str
 
-class TagAdd(BaseModel) :
+
+class TagAdd(BaseModel):
     book_id: int
     title_tag: str
 
-class TagEdit(BaseModel) :
+
+class TagEdit(BaseModel):
     title_tag: str
+
 
 # Жанры
-class Genre(BaseModel) :
+class Genre(BaseModel):
     genre_id: int
     title: str
 
-class GenreAdd(BaseModel) :
+
+class GenreAdd(BaseModel):
     title: str
 
-class GenreEdit(GenreAdd) : ...
+
+class GenreEdit(GenreAdd): ...
+
 
 # M2M Жанров и книг
-class GenresBook(BaseModel) :
+class GenresBook(BaseModel):
     id: int
     genre_id: int
     book_id: int
 
-class GenresBooksAdd(BaseModel) : 
+
+class GenresBooksAdd(BaseModel):
     genre_id: int
     book_id: int
 
+
 # Книги
-class BookAuthors(BaseModel) :
+class BookAuthors(BaseModel):
     authors: list[int]
     book_id: int
 
-class BookAdd(BaseModel) : 
+
+class BookAdd(BaseModel):
     title: str
     age_limit: int
     description: str | None
-    language: LanguagesEnum  
+    language: LanguagesEnum
 
-class BookAddWithAuthorsTagsGenres(BookAdd) : 
+
+class BookAddWithAuthorsTagsGenres(BookAdd):
     authors: list[int] = []
-    genres: list[int] 
-    tags: list[str]     
+    genres: list[int]
+    tags: list[str]
 
-class Book(BaseModel) :
+    @field_validator("tags")
+    @classmethod
+    def tags_to_lower(cls, values: list[str]) -> list[str] : 
+        return [val.lower() for val in values]
+
+
+class Book(BaseModel):
     book_id: int
     title: str
     age_limit: int
@@ -82,49 +101,64 @@ class Book(BaseModel) :
     is_rendered: bool = False
     cover_link: str | None = None
 
+
 class BookPATCHWithRels(BaseModel):
     title: str | None = None
     age_limit: int | None = None
     description: str | None = None
     genres: list[int] | None = None
+    tags: list[str] | None = None
 
-class BookPATCH(BaseModel) :
+    @field_validator("tags")
+    @classmethod
+    def tags_to_lower(cls, values: list[str] | None = None) -> list[str] | None : 
+        return [val.lower() for val in values] if values else None
+
+class BookPATCH(BaseModel):
     title: str | None = None
     age_limit: int | None = None
     description: str | None = None
+
 
 class BookPUT(BaseModel):
     title: str = None
     age_limit: int = None
     description: str | None = None
-    
-class BookWithAuthors(Book) :
-    authors: list[User] 
 
-class BookPATCHOnPublication(BaseModel) :
+
+class BookWithAuthors(Book):
+    authors: list[User]
+
+
+class BookPATCHOnPublication(BaseModel):
     is_rendered: bool | None = False
     cover_link: str | None = None
 
-class BookData(Book) :
+
+class BookData(Book):
     pages_count: int
 
-class BookDataWithRels(Book) :
-    authors: list[User] # список авторов
-    tags: list[Tag] # список тегов
-    genres: list[Genre] # список жанров
 
-class BookDataWithTagRel(BookData) :
-    tags: list[int] # список тегов
-
-class BookDataWithGenresRel(BookData) :
-    genres: list[int] # список жанров
+class BookDataWithRels(Book):
+    authors: list[UserPublicData]  # список авторов
+    tags: list[Tag]  # список тегов
+    genres: list[Genre]  # список жанров
 
 
-class FullDataAboutBook(BookData) :
+class BookDataWithTagRel(BookData):
+    tags: list[int]  # список тегов
+
+
+class BookDataWithGenresRel(BookData):
+    genres: list[int]  # список жанров
+
+
+class FullDataAboutBook(BookData):
     count_readers: int
 
+
 # Авторы
-class UserWithBooks(BaseModel) :
+class UserWithBooks(BaseModel):
     user_id: int
     role: AllUsersRolesEnum
     email: EmailStr

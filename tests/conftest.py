@@ -1,4 +1,5 @@
 import pytest
+from src.database import async_session_maker_null_pool
 
 import sys
 from pathlib import Path
@@ -20,3 +21,12 @@ settings = Settings()
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     assert settings.MODE == "TEST"
+
+
+async def get_db_null_pull() :
+    return DBManager(session_factory=async_session_maker_null_pool)
+
+async def db() :
+    async for db in get_db_null_pull() :
+        yield db
+        

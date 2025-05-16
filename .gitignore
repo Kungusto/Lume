@@ -8,3 +8,5 @@ static
 static/*
 dump.rdb
 .env-test
+awscli_env
+aiobotocore_env

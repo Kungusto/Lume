@@ -8,3 +8,9 @@ def test_access_token_service() :
     assert isinstance(jwt_token, str)
     assert decoded.get("user_id", None)
     assert decoded.get("user_id", None) == 1
+
+async def test_auth(ac) :
+    await ac.post(
+        json={}, url="",
+    )
+

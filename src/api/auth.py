@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
@@ -38,7 +39,8 @@ async def registrate_users(data: UserRegistrate, db: DBDep):
         raise NickAlreadyRegistratedHTTPException from ex
     except EmailAlreadyRegistratedException as ex:
         raise EmailAlreadyRegistratedHTTPException from ex
-    except Exception:
+    except Exception as ex:
+        logging.exception(ex)
         raise InternalServerErrorHTTPException
     await db.commit()
     return {"status": "OK", "data": result}

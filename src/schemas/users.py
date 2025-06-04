@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, constr
 from src.enums.users import AllUsersRolesEnum
 from src.exceptions.auth import (
     TooShortPasswordHTTPException,
@@ -30,9 +30,9 @@ class UserLogin(BaseModel):
 class UserRegistrate(BaseModel):
     role: AllUsersRolesEnum
     email: EmailStr
-    name: str
-    surname: str
-    nickname: str
+    name: constr(min_length=2) # type: ignore
+    surname: constr(min_length=2) # type: ignore
+    nickname: constr(min_length=5) # type: ignore
     password: str
 
     @field_validator("password")

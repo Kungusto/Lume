@@ -1,0 +1,26 @@
+[
+  {
+    "role": "USER",
+    "email": "alice@example.com",
+    "name": "Alice",
+    "surname": "Johnson",
+    "nickname": "ali_jo",
+    "hashed_password": "hashed_pass_123"
+  },
+  {
+    "role": "USER",
+    "email": "bob@example.com",
+    "name": "Bob",
+    "surname": "Smith",
+    "nickname": "bobby_s",
+    "hashed_password": "hashed_pass_456"
+  },
+  {
+    "role": "USER",
+    "email": "carol@example.com",
+    "name": "Carol",
+    "surname": "Davis",
+    "nickname": "carol_d",
+    "hashed_password": "hashed_pass_789"
+  }
+]

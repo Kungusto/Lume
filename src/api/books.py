@@ -4,13 +4,13 @@ from src.exceptions.books import (
     CoverNotFoundHTTPException,
     ContentAlreadyExistsHTTPException,
     BookNotFoundHTTPException,
-    BookNotFoundException
+    BookNotFoundException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
     WrongCoverResolutionException,
     WrongCoverResolutionHTTPException,
-    WrongFileExpensionHTTPException
+    WrongFileExpensionHTTPException,
 )
 from src.api.dependencies import S3Dep, DBDep, UserRoleDep, authorize_and_return_user_id
 from src.schemas.books import (
@@ -20,12 +20,12 @@ from src.schemas.books import (
     BookPATCHOnPublication,
     TagAdd,
     GenresBooksAdd,
-    BookPATCH
+    BookPATCH,
 )
 from src.tasks.taskiq_tasks import async_render, async_delete_book
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
-from src.validation.files import FileValidator 
+from src.validation.files import FileValidator
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг"])
 
@@ -84,9 +84,7 @@ async def edit_bood_data(
     genres = await db.books_genres.get_filtered(
         book_id=book_id
     )  # Получаем все жанры книги
-    tags = await db.tags.get_filtered(
-        book_id=book_id
-    )
+    tags = await db.tags.get_filtered(book_id=book_id)
     genres_ids_in_db = [genre.id for genre in genres]
     tags_titles_in_db = [tag.title_tag for tag in tags]
     # Вычисление нужных и НЕ нужных нам жанров
@@ -115,7 +113,9 @@ async def edit_bood_data(
     if genres_to_add:
         await db.books_genres.add_bulk(data_to_add_genres)
     if tags_to_delete:
-        await db.tags.delete(BooksTagsORM.title_tag.in_(tags_to_delete), book_id=book_id)
+        await db.tags.delete(
+            BooksTagsORM.title_tag.in_(tags_to_delete), book_id=book_id
+        )
     if tags_to_add:
         await db.tags.add_bulk(data_to_add_tags)
     if book_patch_data.model_dump(exclude_unset=True):
@@ -163,12 +163,12 @@ async def add_cover(
     user_id: int = authorize_and_return_user_id(2),
 ):
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
-    try :
+    try:
         FileValidator.check_expansion_images(file_name=file.filename)
         await FileValidator.validate_cover(file_img=file)
     except WrongCoverResolutionException as ex:
         raise WrongCoverResolutionHTTPException from ex
-    except WrongFileExpensionException as ex :
+    except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
     cover_link = await s3.books.save_cover(file=file, book_id=book_id)
     await db.books.edit(
@@ -189,12 +189,12 @@ async def put_cover(
     user_id: int = authorize_and_return_user_id(2),
 ):
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
-    try :
+    try:
         FileValidator.check_expansion_images(file_name=file.filename)
         await FileValidator.validate_cover(file_img=file)
     except WrongCoverResolutionException as ex:
         raise WrongCoverResolutionHTTPException from ex
-    except WrongFileExpensionException as ex :
+    except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
     book = await db.books.get_one(book_id=book_id)
     if not book.cover_link:
@@ -223,7 +223,7 @@ async def add_all_content(
     await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
-    except WrongFileExpensionException as ex :
+    except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
     if await s3.books.check_file_by_path(f"{book_id}/book.pdf"):
         raise ContentAlreadyExistsHTTPException

@@ -30,9 +30,9 @@ class UserLogin(BaseModel):
 class UserRegistrate(BaseModel):
     role: AllUsersRolesEnum
     email: EmailStr
-    name: constr(min_length=2) # type: ignore
-    surname: constr(min_length=2) # type: ignore
-    nickname: constr(min_length=5) # type: ignore
+    name: constr(min_length=2)  # type: ignore
+    surname: constr(min_length=2)  # type: ignore
+    nickname: constr(min_length=5)  # type: ignore
     password: str
 
     @field_validator("password")

@@ -86,7 +86,7 @@ class BookAddWithAuthorsTagsGenres(BookAdd):
 
     @field_validator("tags")
     @classmethod
-    def tags_to_lower(cls, values: list[str]) -> list[str] : 
+    def tags_to_lower(cls, values: list[str]) -> list[str]:
         return [val.lower() for val in values]
 
 
@@ -111,8 +111,9 @@ class BookPATCHWithRels(BaseModel):
 
     @field_validator("tags")
     @classmethod
-    def tags_to_lower(cls, values: list[str] | None = None) -> list[str] | None : 
+    def tags_to_lower(cls, values: list[str] | None = None) -> list[str] | None:
         return [val.lower() for val in values] if values else None
+
 
 class BookPATCH(BaseModel):
     title: str | None = None

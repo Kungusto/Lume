@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
     ObjectNotFoundException,
-    PermissionDeniedHTTPException
+    PermissionDeniedHTTPException,
 )
 from src.exceptions.auth import (
     NickAlreadyRegistratedHTTPException,
@@ -90,8 +90,10 @@ async def info_about_user(db: DBDep, user_id: int):
 
 
 @router.put("/{user_id}")
-async def edit_user_data(db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep):
-    if user_id != curr_user_id :
+async def edit_user_data(
+    db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep
+):
+    if user_id != curr_user_id:
         raise PermissionDeniedHTTPException
     await db.users.edit(user_id=user_id, data=data)
     await db.commit()

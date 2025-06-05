@@ -34,9 +34,9 @@ class UsersRepository(BaseRepository):
         except IntegrityError as exc:
             if isinstance(exc.orig.__cause__, UniqueViolationError):
                 msg = str(exc.orig)
-                if "Users_nickname_key" in msg: # ник уже занят
+                if "Users_nickname_key" in msg:  # ник уже занят
                     raise NickAlreadyRegistratedException
-                elif "Users_email_key" in msg: # почта уже зарегестрирована
+                elif "Users_email_key" in msg:  # почта уже зарегестрирована
                     raise EmailAlreadyRegistratedException
 
         model = result.scalars().first()

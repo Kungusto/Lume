@@ -28,6 +28,7 @@ class AuthentificationException(LumeException):
 class FileValidationException(LumeException):
     detail = "Ошибка валидации файла"
 
+
 # ------------------------------------ HTTP Exceptions ------------------------------------
 
 

@@ -1,3 +1,5 @@
+# ruff: noqa: E402
+
 import json
 from dotenv import load_dotenv
 import os
@@ -19,7 +21,8 @@ from src.utils.dbmanager import DBManager
 from src.config import settings, Settings
 from src.main import app
 
-settings = Settings()
+settings = Settings()  # noqa: F811
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
@@ -33,77 +36,77 @@ async def setup_database():
         with open("tests/mock_users.json", "r", encoding="utf-8") as file:
             data = [UserAdd(**user) for user in json.load(file)]
             await _db.users.add_bulk(data)
-        await _db.commit()  
+        await _db.commit()
+
 
 async def get_db_null_pool():
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
 
+
 @pytest.fixture(scope="function")
-async def db() :
-    async for db in get_db_null_pool() :
+async def db():
+    async for db in get_db_null_pool():
         yield db
+
 
 app.dependency_overrides[get_db] = get_db_null_pool
 
+
 @pytest.fixture(scope="session")
-async def ac() :
+async def ac():
     async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
-        
+
+
 @pytest.fixture(scope="session")
-async def register_user(ac) :
+async def register_user(ac):
     response = await ac.post(
-       url="/auth/register",
-       json={
+        url="/auth/register",
+        json={
             "role": "USER",
             "email": "user@user.com",
             "name": "string",
             "surname": "string",
             "nickname": "user1",
-            "password": "string"
-       } 
-    ) 
+            "password": "string",
+        },
+    )
     assert response.status_code == 200
-        
+
 
 @pytest.fixture(scope="session")
-async def auth_ac_user(ac, register_user) :
+async def auth_ac_user(ac, register_user):
     response = await ac.post(
-        url="/auth/login", json={
-            "email": "user@user.com",
-            "password": "string"
-        }
+        url="/auth/login", json={"email": "user@user.com", "password": "string"}
     )
     assert response.status_code == 200
     assert ac.cookies
     yield ac
 
+
 @pytest.fixture(scope="session")
-async def register_author(ac) :
+async def register_author(ac):
     response = await ac.post(
         url="/auth/register",
-            json={
-                "role": "AUTHOR",
-                "email": "author@author.com",
-                "name": "string",
-                "surname": "string",
-                "nickname": "author",
-                "password": "string"
-            }
-    ) 
+        json={
+            "role": "AUTHOR",
+            "email": "author@author.com",
+            "name": "string",
+            "surname": "string",
+            "nickname": "author",
+            "password": "string",
+        },
+    )
     assert response.status_code == 200
 
 
 @pytest.fixture(scope="session")
-async def auth_ac_author(ac, register_author) :
+async def auth_ac_author(ac, register_author):
     response = await ac.post(
-        url="/auth/login", json={
-            "email": "author@author.com",
-            "password": "string"
-        }
+        url="/auth/login", json={"email": "author@author.com", "password": "string"}
     )
     assert response.status_code == 200
     assert ac.cookies

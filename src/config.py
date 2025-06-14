@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int
 
     S3_BUCKET_NAME: str
+    S3_STATIC_BUCKET_NAME: str # бакет с контетном для тестов
     S3_REGION: str
     S3_DOMAIN: str
     S3_ACCESS_KEY: str
@@ -29,7 +30,7 @@ class Settings(BaseSettings):
 
     @property
     def S3_URL(self):
-        return f"https://{self.S3_BUCKET_NAME}.s3.{self.S3_REGION}.{self.S3_DOMAIN}"
+        return f"https://s3.{self.S3_REGION}.{self.S3_DOMAIN}"
 
     @property
     def REDIS_URL(self):

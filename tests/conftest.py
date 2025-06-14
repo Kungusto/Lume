@@ -20,6 +20,7 @@ from src.database import async_session_maker_null_pool, engine_null_pool, Base
 from src.utils.dbmanager import DBManager
 from src.config import settings, Settings
 from src.main import app
+from src.utils.s3_manager import S3Client
 
 settings = Settings()  # noqa: F811
 
@@ -37,6 +38,9 @@ async def setup_database():
             data = [UserAdd(**user) for user in json.load(file)]
             await _db.users.add_bulk(data)
         await _db.commit()
+
+
+    
 
 
 async def get_db_null_pool():
@@ -59,6 +63,29 @@ async def ac():
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
+
+
+def get_s3client():
+    return S3Client(
+        access_key=settings.S3_ACCESS_KEY,
+        secret_key=settings.S3_SECRET_KEY,
+        endpoint_url=settings.S3_URL,
+        region_name=settings.S3_REGION
+    )
+
+
+@pytest.fixture(scope="session")
+async def s3():
+    async with get_s3client() as client:
+        yield client
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def setup_s3(s3):
+    assert settings.MODE == "TEST"
+    assert settings.S3_BUCKET_NAME.endswith("test")
+    file_names = await s3.books.list_objects_by_prefix("")
+    await s3.books.delete_bulk(*file_names)
 
 
 @pytest.fixture(scope="session")

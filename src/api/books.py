@@ -26,6 +26,7 @@ from src.tasks.taskiq_tasks import async_render, async_delete_book
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
+from src.config import settings
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг"])
 
@@ -254,7 +255,13 @@ async def edit_content(
     return {"status": "OK"}
 
 
-@router.get("/__test__")
-async def test(role: UserRoleDep, user_id: int = authorize_and_return_user_id(2)):
-    print("УСПЕШНО!")
-    return {"status": "OK", "user_id": user_id}
+@router.post("/__test__")
+async def test(
+    s3: S3Dep,
+    file: UploadFile
+):  
+    await s3.client.put_object(
+        Bucket="lume-s3-test",
+        Key="books/1/book.pdf",
+        Body=file.file
+    )

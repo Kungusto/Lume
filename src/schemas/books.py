@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
@@ -81,8 +81,8 @@ class BookAdd(BaseModel):
 
 class BookAddWithAuthorsTagsGenres(BookAdd):
     authors: list[int] = []
-    genres: list[int]
-    tags: list[str]
+    genres: list[int] = Field(min_items=1)
+    tags: list[str] 
 
     @field_validator("tags")
     @classmethod

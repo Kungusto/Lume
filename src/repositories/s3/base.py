@@ -27,8 +27,12 @@ class BaseS3Repository:
         except Exception:
             return False
 
-    async def get_file_by_path(self, s3_path: str):
-        response = await self.client.get_object(Bucket=self.bucket_name, Key=s3_path)
+    async def get_file_by_path(self, s3_path: str, test = False):
+        if test:
+            bucket_name = settings.S3_STATIC_BUCKET_NAME
+        else:
+            bucket_name = settings.S3_BUCKET_NAME
+        response = await self.client.get_object(Bucket=bucket_name, Key=s3_path)
         async with response["Body"] as stream:
             return await stream.read()
 
@@ -42,11 +46,15 @@ class BaseS3Repository:
         for key in args:
             await self.client.delete_object(Bucket=self.bucket_name, Key=key)
 
-    async def list_objects_by_prefix(self, prefix: str = "") -> list[str]:
+    async def list_objects_by_prefix(self, prefix: str = "", test = False) -> list[str]:
         """Вернуть список всех ключей (имён файлов), соответствующих префиксу."""
+        if test:
+            bucket_name = settings.S3_STATIC_BUCKET_NAME
+        else:
+            bucket_name = self.bucket_name
         response = await self.client.list_objects_v2(
             Prefix=prefix,
-            Bucket=self.bucket_name
+            Bucket=bucket_name
         )
         contents = response.get("Contents", [])
         result = [file["Key"] for file in contents]

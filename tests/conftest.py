@@ -1,6 +1,7 @@
 # ruff: noqa: E402
 
 import json
+import logging
 from dotenv import load_dotenv
 import os
 
@@ -21,6 +22,7 @@ from src.utils.dbmanager import DBManager
 from src.config import settings, Settings
 from src.main import app
 from src.utils.s3_manager import S3Client
+from src.constants.files import RequiredFilesForTests
 
 settings = Settings()  # noqa: F811
 
@@ -78,6 +80,23 @@ def get_s3client():
 async def s3():
     async with get_s3client() as client:
         yield client
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def check_content(s3):
+    files_in_others = await s3.books.list_objects_by_prefix("other/", test=True)
+    need_files = RequiredFilesForTests.FILES # файлы, обязательные для тестов, имеющие префикс other/
+    missing_files = []
+    for need_file in need_files:
+        if need_file not in files_in_others:
+            missing_files.append(need_file)
+    if missing_files:
+        logging.warning(
+            f"Тесты, связанные с s3-хранилищем пропущены, т.к. отсутствуют обязательтые файлы: {", ".join(missing_files)}"
+        )
+        return False
+    else:
+        return True
 
 
 @pytest.fixture(scope="session", autouse=True)

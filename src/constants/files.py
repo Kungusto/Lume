@@ -4,6 +4,7 @@ class AllowedExtensions:
 
 
 class RequiredFilesForTests:
+    # обычные изображения для unit-тестов
     FILES = {
         "other/test_image_0.jpg",
         "other/test_image_1.jpg",

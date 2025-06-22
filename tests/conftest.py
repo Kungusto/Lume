@@ -1,7 +1,9 @@
 # ruff: noqa: E402
 
+import asyncio
 import json
 import logging
+from typing import Generator
 from dotenv import load_dotenv
 import os
 
@@ -28,6 +30,16 @@ settings = Settings()  # noqa: F811
 
 
 @pytest.fixture(scope="session", autouse=True)
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+    """Create and provide an event loop for async tests."""
+    logging.debug("Создание нового цикла событий")
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
+
+
+@pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     assert settings.MODE == "TEST"
 
@@ -40,9 +52,6 @@ async def setup_database():
             data = [UserAdd(**user) for user in json.load(file)]
             await _db.users.add_bulk(data)
         await _db.commit()
-
-
-    
 
 
 async def get_db_null_pool():
@@ -77,22 +86,28 @@ def get_s3client():
 
 
 @pytest.fixture(scope="session")
+async def s3_session():
+    async with get_s3client() as client:
+        yield client
+
+
+@pytest.fixture(scope="function")
 async def s3():
     async with get_s3client() as client:
         yield client
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def check_content(s3):
-    files_in_others = await s3.books.list_objects_by_prefix("other/", test=True)
-    need_files = RequiredFilesForTests.FILES # файлы, обязательные для тестов, имеющие префикс other/
+async def check_content(s3_session):
+    files_in_others = await s3_session.books.list_objects_by_prefix("other/", is_content_bucket=True)
+    need_files = RequiredFilesForTests.FILES # файлы, обязательные для тестов (имеющие префикс other/)
     missing_files = []
     for need_file in need_files:
         if need_file not in files_in_others:
             missing_files.append(need_file)
     if missing_files:
         logging.warning(
-            f"Тесты, связанные с s3-хранилищем пропущены, т.к. отсутствуют обязательтые файлы: {", ".join(missing_files)}"
+            f"Тесты, связанные с s3-хранилищем будут пропущены, т.к. отсутствуют обязательтые файлы: {", ".join(missing_files)}"
         )
         return False
     else:
@@ -100,11 +115,11 @@ async def check_content(s3):
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def setup_s3(s3):
+async def setup_s3(s3_session):
     assert settings.MODE == "TEST"
     assert settings.S3_BUCKET_NAME.endswith("test")
-    file_names = await s3.books.list_objects_by_prefix("")
-    await s3.books.delete_bulk(*file_names)
+    file_names = await s3_session.books.list_objects_by_prefix("")
+    await s3_session.books.delete_bulk(*file_names)
 
 
 @pytest.fixture(scope="session")

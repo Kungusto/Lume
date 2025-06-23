@@ -4,7 +4,7 @@ from src.repositories.database.books import (
     BooksRepository,
     GenresBooksRepository,
     TagRepository,
-    GenreRepository
+    GenreRepository,
 )
 from src.repositories.database.books_authors import BooksAuthorsRepository
 from src.repositories.database.files_src_images import FilesRepository
@@ -13,7 +13,7 @@ from src.repositories.database.files_src_images import FilesRepository
 class DBManager:
     """
     Дополнительный слой абстракции, Позволяющий удобно обращаться к базе данных
-    
+
     Пример использования:
     ```
     async with DBManager(session_factory=async_session_maker) as db:

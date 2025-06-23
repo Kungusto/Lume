@@ -1,5 +1,3 @@
-from sqlalchemy.exc import IntegrityError
-from asyncpg.exceptions import ForeignKeyViolationError
 from fastapi import APIRouter, UploadFile
 from src.services.auth import AuthService
 from src.exceptions.books import (
@@ -97,9 +95,9 @@ async def edit_bood_data(
         if input_genre not in all_ids:
             raise GenreNotFoundHTTPException
     new_genres = data.genres or set()
-    same_els_genres = set(genres_ids_in_db) & set(new_genres) 
-    genres_to_add = set(new_genres) - same_els_genres  
-    genres_to_delete = set(genres_ids_in_db) - same_els_genres 
+    same_els_genres = set(genres_ids_in_db) & set(new_genres)
+    genres_to_add = set(new_genres) - same_els_genres
+    genres_to_delete = set(genres_ids_in_db) - same_els_genres
     # Вычисление нужных и НЕ нужных нам тегов
     new_tags = data.tags or set()
     same_els_tags = set(tags_titles_in_db) & set(new_tags)
@@ -110,13 +108,13 @@ async def edit_bood_data(
         GenresBooksAdd(genre_id=gen_book_id, book_id=book_id)
         for gen_book_id in genres_to_add
     ]
-    
+
     data_to_add_tags = [
         TagAdd(title_tag=tag_book_title, book_id=book_id)
         for tag_book_title in tags_to_add
     ]
 
-    # --- Изменение жанров внутри базы данных --- 
+    # --- Изменение жанров внутри базы данных ---
     if genres_to_delete:
         await db.books_genres.delete_bulk_by_ids(genres_to_delete, book_id=book_id)
     if genres_to_add:
@@ -158,16 +156,6 @@ async def get_my_books(
     user_id: int = authorize_and_return_user_id(2),
 ):
     return await db.users.get_books_by_user(user_id=user_id)
-
-
-@router.get("/book")
-async def get_book_by_id(
-    book_id: int, db: DBDep
-) : 
-    try:
-        return await db.books.get_book_with_rels(book_id=book_id)
-    except BookNotFoundException as ex: 
-        raise BookNotFoundHTTPException
 
 
 # --- Обложки ---
@@ -274,12 +262,7 @@ async def edit_content(
 
 
 @router.post("/__test__")
-async def test(
-    s3: S3Dep,
-    file: UploadFile
-):  
+async def test(s3: S3Dep, file: UploadFile):
     await s3.client.put_object(
-        Bucket="lume-s3-test",
-        Key="books/1/book.pdf",
-        Body=file.file
+        Bucket="lume-s3-test", Key="books/1/book.pdf", Body=file.file
     )

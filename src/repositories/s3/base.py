@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from src.config import settings
 
+
 class BaseS3Repository:
     bucket_name: str = settings.S3_BUCKET_NAME
 
@@ -27,7 +28,7 @@ class BaseS3Repository:
         except Exception:
             return False
 
-    async def get_file_by_path(self, s3_path: str, is_content_bucket = False):
+    async def get_file_by_path(self, s3_path: str, is_content_bucket=False):
         if is_content_bucket:
             bucket_name = settings.S3_STATIC_BUCKET_NAME
         else:
@@ -46,29 +47,26 @@ class BaseS3Repository:
         for key in args:
             await self.client.delete_object(Bucket=self.bucket_name, Key=key)
 
-    async def list_objects_by_prefix(self, prefix: str = "", is_content_bucket = False) -> list[str]:
+    async def list_objects_by_prefix(
+        self, prefix: str = "", is_content_bucket=False
+    ) -> list[str]:
         """Вернуть список всех ключей (имён файлов), соответствующих префиксу."""
         if is_content_bucket:
             bucket_name = settings.S3_STATIC_BUCKET_NAME
         else:
             bucket_name = settings.S3_BUCKET_NAME
-        response = await self.client.list_objects_v2(
-            Prefix=prefix,
-            Bucket=bucket_name
-        )
+        response = await self.client.list_objects_v2(Prefix=prefix, Bucket=bucket_name)
         contents = response.get("Contents", [])
         result = [file["Key"] for file in contents]
         return result
 
-
-    async def get_files_by_prefix(self, prefix: str = "", is_content_bucket = False):
+    async def get_files_by_prefix(self, prefix: str = "", is_content_bucket=False):
         files_with_this_prefix = await self.list_objects_by_prefix(
             prefix=prefix, is_content_bucket=is_content_bucket
         )
         return await self.get_bulk(True, False, *files_with_this_prefix)
-    
 
-    async def get_bulk(self, is_content_bucket = False, only_content = False, *args):
+    async def get_bulk(self, is_content_bucket=False, only_content=False, *args):
         if is_content_bucket:
             bucket_name = settings.S3_STATIC_BUCKET_NAME
         else:
@@ -80,8 +78,5 @@ class BaseS3Repository:
             if only_content:
                 results.append(content)
             else:
-                results.append({
-                    "key": key,
-                    "content": content
-                })
+                results.append({"key": key, "content": content})
         return results

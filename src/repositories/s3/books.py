@@ -10,12 +10,16 @@ class BooksS3Repository(BaseS3Repository):
 
     async def save_cover(self, book_id: int, file: UploadFile):
         await self.client.put_object(
-            Bucket=self.bucket_name, Key=f"{self.prefix_name}/{book_id}/preview.png", Body=file.file
+            Bucket=self.bucket_name,
+            Key=f"{self.prefix_name}/{book_id}/preview.png",
+            Body=file.file,
         )
         return f"{self.prefix_name}/{book_id}/preview.png"
 
     async def save_content(self, book_id: int, file: UploadFile):
         await self.client.put_object(
-            Bucket=self.bucket_name, Key=f"{self.prefix_name}/{book_id}/book.pdf", Body=file.file
+            Bucket=self.bucket_name,
+            Key=f"{self.prefix_name}/{book_id}/book.pdf",
+            Body=file.file,
         )
         return f"{self.prefix_name}prefix_name/{book_id}/book.pdf"

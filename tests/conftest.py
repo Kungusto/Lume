@@ -46,18 +46,22 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 @pytest.fixture(scope="function")
 async def ping_taskiq():
     try:
-        await ping_task.kiq() 
+        await ping_task.kiq()
     except Exception as ex:
         logging.warning(f"Не удалось отправить задачу в Taskiq: {ex}")
-        pytest.skip("Taskiq не работает — тест пропущен. \
-                    \nЗапуск Taskiq: taskiq worker src.tasks.taskiq_tasks:broker --log-level INFO")
+        pytest.skip(
+            "Taskiq не работает — тест пропущен. \
+                    \nЗапуск Taskiq: taskiq worker src.tasks.taskiq_tasks:broker --log-level INFO"
+        )
 
     return True
 
 
 @pytest.fixture(scope="function")
-async def redis(): 
-    async with RedisManager(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis:
+async def redis():
+    async with RedisManager(
+        host=settings.REDIS_HOST, port=settings.REDIS_PORT
+    ) as redis:
         try:
             result = await redis.ping()
         except Exception as e:
@@ -94,12 +98,12 @@ async def setup_database():
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def mock_books(setup_database, auth_ac_author): 
-    with open("tests/mock_books.json", "r", encoding="utf-8") as file: 
+async def mock_books(setup_database, auth_ac_author):
+    with open("tests/mock_books.json", "r", encoding="utf-8") as file:
         for book in json.load(file):
             response = await auth_ac_author.post(
                 url="/author/book",
-                json=BookAddWithAuthorsTagsGenres(**book).model_dump(mode="json")
+                json=BookAddWithAuthorsTagsGenres(**book).model_dump(mode="json"),
             )
             assert response.status_code == 200
 
@@ -126,7 +130,6 @@ async def ac():
         yield ac
 
 
-
 @pytest.fixture(scope="session")
 async def ac_session():
     async with AsyncClient(
@@ -140,7 +143,7 @@ def get_s3client():
         access_key=settings.S3_ACCESS_KEY,
         secret_key=settings.S3_SECRET_KEY,
         endpoint_url=settings.S3_URL,
-        region_name=settings.S3_REGION
+        region_name=settings.S3_REGION,
     )
 
 
@@ -158,8 +161,12 @@ async def s3():
 
 @pytest.fixture(scope="session")
 async def check_content(s3_session):
-    files_in_others = await s3_session.books.list_objects_by_prefix("other/", is_content_bucket=True)
-    need_files = RequiredFilesForTests.FILES # файлы, обязательные для тестов (имеющие префикс other/)
+    files_in_others = await s3_session.books.list_objects_by_prefix(
+        "other/", is_content_bucket=True
+    )
+    need_files = (
+        RequiredFilesForTests.FILES
+    )  # файлы, обязательные для тестов (имеющие префикс other/)
     missing_files = []
     for need_file in need_files:
         if need_file not in files_in_others:
@@ -233,5 +240,3 @@ async def auth_ac_author(ac_session, register_author):
     assert response.status_code == 200
     assert ac_session.cookies
     yield ac_session
-
-

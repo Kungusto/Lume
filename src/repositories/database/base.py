@@ -1,10 +1,8 @@
 from sqlalchemy import select, update, delete, insert
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
-from asyncpg.exceptions import ForeignKeyViolationError
 from src.database import Base
 from src.exceptions.base import ObjectNotFoundException
-
 
 
 class BaseRepository:
@@ -22,7 +20,6 @@ class BaseRepository:
             self.schema.model_validate(model, from_attributes=True) for model in models
         ]
 
-
     async def get_all(self):
         query = select(self.model)
         result = await self.session.execute(query)
@@ -30,7 +27,6 @@ class BaseRepository:
         return [
             self.schema.model_validate(model, from_attributes=True) for model in models
         ]
-
 
     async def add(self, data):
         add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)

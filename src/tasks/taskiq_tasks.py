@@ -8,6 +8,7 @@ from src.schemas.books import SourceImageAdd
 
 broker = RedisStreamBroker(settings.REDIS_URL)
 
+
 @broker.task
 async def async_render(book_id: int):
     files = []

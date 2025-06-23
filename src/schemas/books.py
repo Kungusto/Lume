@@ -83,7 +83,7 @@ class BookAdd(BaseModel):
 class BookAddWithAuthorsTagsGenres(BookAdd):
     authors: list[int] = []
     genres: list[int] = Field(min_items=1)
-    tags: list[str] 
+    tags: list[str]
 
     @field_validator("tags")
     @classmethod
@@ -118,14 +118,14 @@ class BookPATCHWithRels(BaseModel):
 
 class BookPATCH(BaseModel):
     title: str | None = None
-    age_limit: Annotated[conint(ge=0, le=21), None] = None # type: ignore
+    age_limit: Annotated[conint(ge=0, le=21), None] = None  # type: ignore
     description: str | None = None
 
 
 class BookPUT(BaseModel):
-    title: str 
+    title: str
     age_limit: Annotated[int, Field(ge=0, le=21)]
-    description: str | None 
+    description: str | None
 
 
 class BookWithAuthors(Book):

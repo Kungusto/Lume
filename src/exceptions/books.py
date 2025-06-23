@@ -32,4 +32,3 @@ class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
 
 class BookNotExistsOrYouNotOwnerHTTPException(PermissionDeniedHTTPException):
     detail = "Книга не существует, либо у вас нет доступа к ее изменению"
-

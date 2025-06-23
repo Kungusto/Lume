@@ -96,7 +96,7 @@ def get_s3client():
         access_key=settings.S3_ACCESS_KEY,
         secret_key=settings.S3_SECRET_KEY,
         endpoint_url=settings.S3_URL,
-        region_name=settings.S3_REGION
+        region_name=settings.S3_REGION,
     )
 
 

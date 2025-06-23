@@ -43,7 +43,6 @@ class UsersRepository(BaseRepository):
         model = result.scalars().first()
         return self.schema.model_validate(model, from_attributes=True)
 
-
     async def get_books_by_user(self, user_id: int):
         query = (
             select(self.model)
@@ -60,7 +59,6 @@ class UsersRepository(BaseRepository):
             UserAndBooksWithRels.model_validate(model, from_attributes=True)
             for model in models
         ]
-
 
     async def update_user_activity(self, user_id: int):
         query = (

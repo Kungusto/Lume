@@ -16,7 +16,7 @@ class S3Client:
             "aws_secret_access_key": secret_key,
             "endpoint_url": endpoint_url,
             "region_name": region_name,
-            "config": AioConfig(s3={"addressing_style": "virtual"})
+            "config": AioConfig(s3={"addressing_style": "virtual"}),
         }
         self.session = get_session()
 

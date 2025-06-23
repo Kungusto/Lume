@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.schemas.users import UserAdd
-from src.schemas.books import GenreAdd
+from src.schemas.books import GenreAdd, BookAddWithAuthorsTagsGenres
 from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
@@ -93,13 +93,13 @@ async def setup_database():
         await _db.commit()
 
 
-@pytest.fixture(scope="session")
-async def mock_books(setup_database, auth_ac_author): 
-    with open("tests/mock_genres.json", "r", encoding="utf-8") as file: 
+@pytest.fixture(scope="session", autouse=True)
+async def mock_books(setup_database, auth_ac_author_session): 
+    with open("tests/mock_books.json", "r", encoding="utf-8") as file: 
         for book in json.load(file):
-            response = await auth_ac_author.post(
+            response = await auth_ac_author_session.post(
                 url="/author/book",
-                json={**book}
+                json=BookAddWithAuthorsTagsGenres(**book).model_dump(mode="json")
             )
             assert response.status_code == 200
 
@@ -200,6 +200,23 @@ async def auth_ac_user(ac, register_user):
 
 
 @pytest.fixture(scope="session")
+async def register_author_session(ac):
+    response = await ac.post(
+        url="/auth/register",
+        json={
+            "role": "AUTHOR",
+            "email": "author@author.com",
+            "name": "string",
+            "surname": "string",
+            "nickname": "author",
+            "password": "string",
+        },
+    )
+    logging.info("автор залогинился")
+    assert response.status_code == 200
+
+
+@pytest.fixture(scope="function")
 async def register_author(ac):
     response = await ac.post(
         url="/auth/register",
@@ -212,11 +229,22 @@ async def register_author(ac):
             "password": "string",
         },
     )
+    logging.info("автор залогинился")
     assert response.status_code == 200
 
 
+@pytest.fixture(scope="function")
+async def auth_ac_author(ac, register_author_session):
+    response = await ac.post(
+        url="/auth/login", json={"email": "author@author.com", "password": "string"}
+    )
+    assert response.status_code == 200
+    assert ac.cookies
+    yield ac
+
+
 @pytest.fixture(scope="session")
-async def auth_ac_author(ac, register_author):
+async def auth_ac_author_session(ac, register_author_session):
     response = await ac.post(
         url="/auth/login", json={"email": "author@author.com", "password": "string"}
     )

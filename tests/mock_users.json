@@ -17,10 +17,10 @@
   },
   {
     "role": "USER",
-    "email": "carol@example.com",
     "name": "Carol",
     "surname": "Davis",
     "nickname": "carol_d",
+    "email": "carol@example.com",
     "hashed_password": "hashed_pass_789"
   },
   {

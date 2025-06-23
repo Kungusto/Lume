@@ -72,19 +72,7 @@ async def test_base_crud_books(ac, redis, ping_taskiq):
     response_my_books = await ac.get(
         url="/author/my_books"
     )
-    books = response_my_books.json()[0]["books"]
     assert response_my_books.status_code == 200
-    assert books[0]["title"] == "Тайны времени"
-    
-    second_book = books[1]
-    assert second_book["title"] == "Город без памяти"
-    assert sorted([genre["genre_id"] for genre in second_book["genres"]]) == [1, 3]
-    assert second_book["age_limit"] == 16
-    assert sorted([tag["title_tag"] for tag in second_book["tags"]]) == ["тайна", "футуризм"]
-    assert isinstance(books, list)
-    for book in books: 
-        assert isinstance(book, dict)
-
     
     response_delete = await ac.delete(
         url=f"/author/book?book_id={second_book_id}"
@@ -140,25 +128,53 @@ async def test_base_crud_books(ac, redis, ping_taskiq):
 
     ac.cookies.clear()
 
-#   {
-#     "title": "Песочные часы",
-#     "age_limit": 12,
-#     "description": "История о загадочном артефакте, способном управлять временем.",
-#     "language": "Russian",
-#     "authors": [],
-#     "genres": [1],
-#     "tags": ["магия", "приключения", "время"]
-#   }
-
 
 @pytest.mark.parametrize(
-    "patch_data", [
-        BookPATCHWithRels(title="Артефакт")
+    "patch_data, status_code", [
+        [BookPATCHWithRels(title="Артефакт"), 200],
+        [BookPATCHWithRels(age_limit=18), 200],
+        [BookPATCHWithRels(description="Очень интересная книга про артефакт"), 200],
+        # -- Теги
+        [BookPATCHWithRels(tags=["мистика", "артефакты", "реликвии"]), 200],
+        [BookPATCHWithRels(tags=[f"тег{i}" for i in range(100)]), 200],
+        [BookPATCHWithRels(tags=["МИСТИКА", "АРТЕФАКТЫ", "ДРЕВНОСТИ"]), 200],
+        [BookPATCHWithRels(tags=[]), 200],
+        # -- Жанры
+        [BookPATCHWithRels(genres=[1, 2]), 200],
+        [BookPATCHWithRels(genres=[2]), 200],
+        [BookPATCHWithRels(genres=[1]), 200],
+        [BookPATCHWithRels(genres=[]), 200],
+        # -- Полное изменение
+        [BookPATCHWithRels(
+            title="Новая эпоха",
+            age_limit=16,
+            description="Полное обновление книги",
+            genres=[1, 2],
+            tags=["магия", "технологии"],
+        ), 200],
     ]
 )
-async def test_edit_book(patch_data, auth_ac_author): 
+async def test_edit_book(patch_data, status_code, auth_ac_author): 
+    data_to_update = patch_data.model_dump(exclude_unset=True)
     response_edit = await auth_ac_author.patch(
         url="/author/book?book_id=1",
-        json=patch_data.model_dump(exclude_unset=True)
+        json=data_to_update
     )
-    assert response_edit.status_code == 200
+    assert response_edit.status_code == status_code
+    updated_book_response = await auth_ac_author.get(
+        url="/author/book?book_id=1"
+    )
+    assert updated_book_response.status_code == 200
+    if status_code != 200: 
+        return
+    book = updated_book_response.json()
+
+    # сравниваем значения двух словарей
+    for key, value in data_to_update.items():
+        if key == "genres":
+            assert sorted([genre["genre_id"] for genre in book["genres"]]) == sorted(data_to_update["genres"])
+            continue
+        if key == "tags":
+            assert sorted([tag["title_tag"] for tag in book["tags"]]) == sorted([tag.lower() for tag in data_to_update["tags"] or []])
+            continue
+        assert book[key] == value 

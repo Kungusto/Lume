@@ -10,6 +10,14 @@ class BookNotFoundException(ObjectNotFoundException):
     detail = "Книга не найдена"
 
 
+class GenreNotFoundException(ObjectNotFoundException):
+    detail = "Жанр не найден"
+
+
+class GenreNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Жанр не найден"
+
+
 class CoverNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "К этой книге пока нету обложек"
 
@@ -24,3 +32,4 @@ class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
 
 class BookNotExistsOrYouNotOwnerHTTPException(PermissionDeniedHTTPException):
     detail = "Книга не существует, либо у вас нет доступа к ее изменению"
+

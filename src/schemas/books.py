@@ -1,5 +1,6 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Annotated
+from pydantic import BaseModel, EmailStr, Field, field_validator, conint
 from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
@@ -93,7 +94,7 @@ class BookAddWithAuthorsTagsGenres(BookAdd):
 class Book(BaseModel):
     book_id: int
     title: str
-    age_limit: int
+    age_limit: Annotated[int, Field(ge=0, le=21)]
     description: str | None
     language: LanguagesEnum
     book_id: int
@@ -106,8 +107,8 @@ class BookPATCHWithRels(BaseModel):
     title: str | None = None
     age_limit: int | None = None
     description: str | None = None
-    genres: list[int] | None = None
-    tags: list[str] | None = None
+    genres: list[int] | None = []
+    tags: list[str] | None = []
 
     @field_validator("tags")
     @classmethod
@@ -117,14 +118,14 @@ class BookPATCHWithRels(BaseModel):
 
 class BookPATCH(BaseModel):
     title: str | None = None
-    age_limit: int | None = None
+    age_limit: Annotated[conint(ge=0, le=21), None] = None # type: ignore
     description: str | None = None
 
 
 class BookPUT(BaseModel):
-    title: str = None
-    age_limit: int = None
-    description: str | None = None
+    title: str 
+    age_limit: Annotated[int, Field(ge=0, le=21)]
+    description: str | None 
 
 
 class BookWithAuthors(Book):

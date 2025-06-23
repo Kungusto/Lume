@@ -1,8 +1,10 @@
 from sqlalchemy import select, update, delete, insert
 from pydantic import BaseModel
-from src.database import Base
 from sqlalchemy.exc import NoResultFound
+from asyncpg.exceptions import ForeignKeyViolationError
+from src.database import Base
 from src.exceptions.base import ObjectNotFoundException
+
 
 
 class BaseRepository:
@@ -19,6 +21,16 @@ class BaseRepository:
         return [
             self.schema.model_validate(model, from_attributes=True) for model in models
         ]
+
+
+    async def get_all(self):
+        query = select(self.model)
+        result = await self.session.execute(query)
+        models = result.scalars().all()
+        return [
+            self.schema.model_validate(model, from_attributes=True) for model in models
+        ]
+
 
     async def add(self, data):
         add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
@@ -60,7 +72,7 @@ class BaseRepository:
     async def delete_bulk_by_ids(self, ids_to_delete: list[int], **filter_by):
         delete_stmt = (
             delete(self.model)
-            .filter(self.model.id.in_(ids_to_delete))
+            .filter(self.model.genre_id.in_(ids_to_delete))
             .filter_by(**filter_by)
         )
         await self.session.execute(delete_stmt)

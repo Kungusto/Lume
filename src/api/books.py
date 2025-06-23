@@ -1,3 +1,5 @@
+from sqlalchemy.exc import IntegrityError
+from asyncpg.exceptions import ForeignKeyViolationError
 from fastapi import APIRouter, UploadFile
 from src.services.auth import AuthService
 from src.exceptions.books import (
@@ -22,6 +24,7 @@ from src.schemas.books import (
     GenresBooksAdd,
     BookPATCH,
 )
+from src.exceptions.books import GenreNotFoundHTTPException
 from src.tasks.taskiq_tasks import async_render, async_delete_book
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
@@ -85,43 +88,44 @@ async def edit_bood_data(
         book_id=book_id
     )  # Получаем все жанры книги
     tags = await db.tags.get_filtered(book_id=book_id)
-    genres_ids_in_db = [genre.id for genre in genres]
+    genres_ids_in_db = [genre.genre_id for genre in genres]
     tags_titles_in_db = [tag.title_tag for tag in tags]
     # Вычисление нужных и НЕ нужных нам жанров
-    if data.genres is not None:
-        new_genres = data.genres 
-        same_els_genres = set(genres_ids_in_db) & set(new_genres)
-        genres_to_add = set(new_genres) - same_els_genres
-        genres_to_delete = set(genres_ids_in_db) - same_els_genres
+    all_genres = await db.genres.get_all()
+    all_ids = [genre.genre_id for genre in all_genres]
+    for input_genre in data.genres:
+        if input_genre not in all_ids:
+            raise GenreNotFoundHTTPException
+    new_genres = data.genres or set()
+    same_els_genres = set(genres_ids_in_db) & set(new_genres) 
+    genres_to_add = set(new_genres) - same_els_genres  
+    genres_to_delete = set(genres_ids_in_db) - same_els_genres 
     # Вычисление нужных и НЕ нужных нам тегов
-    if data.tags is not None:
-        new_tags = data.tags 
-        same_els_tags = set(tags_titles_in_db) & set(new_tags)
-        tags_to_add = set(new_tags) - same_els_tags
-        tags_to_delete = set(tags_titles_in_db) - same_els_tags
+    new_tags = data.tags or set()
+    same_els_tags = set(tags_titles_in_db) & set(new_tags)
+    tags_to_add = set(new_tags) - same_els_tags
+    tags_to_delete = set(tags_titles_in_db) - same_els_tags
 
-    if data.genres is not None:
-        data_to_add_genres = [
-            GenresBooksAdd(genre_id=gen_book_id, book_id=book_id)
-            for gen_book_id in genres_to_add
-        ]
+    data_to_add_genres = [
+        GenresBooksAdd(genre_id=gen_book_id, book_id=book_id)
+        for gen_book_id in genres_to_add
+    ]
     
-    if data.tags is not None:
-        data_to_add_tags = [
-            TagAdd(title_tag=tag_book_title, book_id=book_id)
-            for tag_book_title in tags_to_add
-        ]
+    data_to_add_tags = [
+        TagAdd(title_tag=tag_book_title, book_id=book_id)
+        for tag_book_title in tags_to_add
+    ]
 
-    # --- Изменение жанров внутри базы данных ---
-    if data.genres is not None and genres_to_delete:
+    # --- Изменение жанров внутри базы данных --- 
+    if genres_to_delete:
         await db.books_genres.delete_bulk_by_ids(genres_to_delete, book_id=book_id)
-    if data.genres is not None and genres_to_add:
+    if genres_to_add:
         await db.books_genres.add_bulk(data_to_add_genres)
-    if data.tags is not None and tags_to_delete:
+    if tags_to_delete:
         await db.tags.delete(
             BooksTagsORM.title_tag.in_(tags_to_delete), book_id=book_id
         )
-    if data.tags is not None and tags_to_add:
+    if tags_to_add:
         await db.tags.add_bulk(data_to_add_tags)
     if book_patch_data.model_dump(exclude_unset=True):
         await db.books.edit(data=book_patch_data, is_patch=True, book_id=book_id)

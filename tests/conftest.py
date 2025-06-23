@@ -94,10 +94,10 @@ async def setup_database():
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def mock_books(setup_database, auth_ac_author_session): 
+async def mock_books(setup_database, auth_ac_author): 
     with open("tests/mock_books.json", "r", encoding="utf-8") as file: 
         for book in json.load(file):
-            response = await auth_ac_author_session.post(
+            response = await auth_ac_author.post(
                 url="/author/book",
                 json=BookAddWithAuthorsTagsGenres(**book).model_dump(mode="json")
             )
@@ -120,6 +120,15 @@ app.dependency_overrides[get_db] = get_db_null_pool
 
 @pytest.fixture(scope="session")
 async def ac():
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+
+
+
+@pytest.fixture(scope="session")
+async def ac_session():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
@@ -174,8 +183,8 @@ async def setup_s3(s3_session):
 
 
 @pytest.fixture(scope="session")
-async def register_user(ac):
-    response = await ac.post(
+async def register_user(ac_session):
+    response = await ac_session.post(
         url="/auth/register",
         json={
             "role": "USER",
@@ -190,18 +199,18 @@ async def register_user(ac):
 
 
 @pytest.fixture(scope="session")
-async def auth_ac_user(ac, register_user):
-    response = await ac.post(
+async def auth_ac_user(ac_session, register_user):
+    response = await ac_session.post(
         url="/auth/login", json={"email": "user@user.com", "password": "string"}
     )
     assert response.status_code == 200
-    assert ac.cookies
-    yield ac
+    assert ac_session.cookies
+    yield ac_session
 
 
 @pytest.fixture(scope="session")
-async def register_author_session(ac):
-    response = await ac.post(
+async def register_author(ac_session):
+    response = await ac_session.post(
         url="/auth/register",
         json={
             "role": "AUTHOR",
@@ -216,40 +225,13 @@ async def register_author_session(ac):
     assert response.status_code == 200
 
 
-@pytest.fixture(scope="function")
-async def register_author(ac):
-    response = await ac.post(
-        url="/auth/register",
-        json={
-            "role": "AUTHOR",
-            "email": "author@author.com",
-            "name": "string",
-            "surname": "string",
-            "nickname": "author",
-            "password": "string",
-        },
-    )
-    logging.info("автор залогинился")
-    assert response.status_code == 200
-
-
-@pytest.fixture(scope="function")
-async def auth_ac_author(ac, register_author_session):
-    response = await ac.post(
-        url="/auth/login", json={"email": "author@author.com", "password": "string"}
-    )
-    assert response.status_code == 200
-    assert ac.cookies
-    yield ac
-
-
 @pytest.fixture(scope="session")
-async def auth_ac_author_session(ac, register_author_session):
-    response = await ac.post(
+async def auth_ac_author(ac_session, register_author):
+    response = await ac_session.post(
         url="/auth/login", json={"email": "author@author.com", "password": "string"}
     )
     assert response.status_code == 200
-    assert ac.cookies
-    yield ac
+    assert ac_session.cookies
+    yield ac_session
 
 

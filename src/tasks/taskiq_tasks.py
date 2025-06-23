@@ -8,7 +8,6 @@ from src.schemas.books import SourceImageAdd
 
 broker = RedisStreamBroker(settings.REDIS_URL)
 
-
 @broker.task
 async def async_render(book_id: int):
     files = []
@@ -48,3 +47,8 @@ async def async_delete_book(book_id: int):
     files = [book.src for book in books]
     async for s3 in get_session():
         await s3.books.delete_bulk(*files)
+
+
+@broker.task
+async def ping_task():
+    return "pong"

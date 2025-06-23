@@ -22,5 +22,21 @@
     "surname": "Davis",
     "nickname": "carol_d",
     "hashed_password": "hashed_pass_789"
+  },
+  {
+    "role": "AUTHOR",
+    "email": "david.writer@example.com",
+    "name": "David",
+    "surname": "Miller",
+    "nickname": "d_mills",
+    "hashed_password": "hashed_pass_321"
+  },
+  {
+    "role": "AUTHOR",
+    "email": "eva.author@example.com",
+    "name": "Eva",
+    "surname": "Brown",
+    "nickname": "eva_b",
+    "hashed_password": "hashed_pass_654"
   }
 ]

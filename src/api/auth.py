@@ -66,7 +66,6 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
 @router.get("/me")
 async def info_about_current_user(user_id: UserIdDep, db: DBDep):
     user = await db.users.get_one(user_id=user_id)
-    await db.commit()
     return user
 
 

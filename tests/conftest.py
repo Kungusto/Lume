@@ -18,6 +18,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.schemas.users import UserAdd
+from src.schemas.books import GenreAdd
+from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
 from src.utils.dbmanager import DBManager
@@ -25,6 +27,8 @@ from src.config import settings, Settings
 from src.main import app
 from src.utils.s3_manager import S3Client
 from src.constants.files import RequiredFilesForTests
+from src.connectors.redis_connector import RedisManager
+from src.tasks.taskiq_tasks import ping_task
 
 settings = Settings()  # noqa: F811
 
@@ -39,6 +43,34 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop.close()
 
 
+@pytest.fixture(scope="function")
+async def ping_taskiq():
+    try:
+        await ping_task.kiq() 
+    except Exception as ex:
+        logging.warning(f"Не удалось отправить задачу в Taskiq: {ex}")
+        pytest.skip("Taskiq не работает — тест пропущен. \
+                    \nЗапуск Taskiq: taskiq worker src.tasks.taskiq_tasks:broker --log-level INFO")
+
+    return True
+
+
+@pytest.fixture(scope="function")
+async def redis(): 
+    async with RedisManager(host=settings.REDIS_HOST, port=settings.REDIS_PORT) as redis:
+        try:
+            result = await redis.ping()
+        except Exception as e:
+            logging.warning(f"Не удалось подключиться к Redis: {e}")
+            pytest.skip("Redis не работает — тест пропущен")
+
+        if not result:
+            logging.warning("Не удалось получить успешный ping Redis, тест пропущен")
+            pytest.skip("Redis ping неудачен — тест пропущен")
+
+        yield redis
+
+
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     assert settings.MODE == "TEST"
@@ -49,9 +81,27 @@ async def setup_database():
 
     async with DBManager(session_factory=async_session_maker_null_pool) as _db:
         with open("tests/mock_users.json", "r", encoding="utf-8") as file:
-            data = [UserAdd(**user) for user in json.load(file)]
+            data = []
+            for user in json.load(file):
+                hashed_password = AuthService().hash_password(user["hashed_password"])
+                user["hashed_password"] = hashed_password
+                data.append(UserAdd(**user))
             await _db.users.add_bulk(data)
+        with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
+            data = [GenreAdd(**genre) for genre in json.load(file)]
+            await _db.genres.add_bulk(data)
         await _db.commit()
+
+
+@pytest.fixture(scope="session")
+async def mock_books(setup_database, auth_ac_author): 
+    with open("tests/mock_genres.json", "r", encoding="utf-8") as file: 
+        for book in json.load(file):
+            response = await auth_ac_author.post(
+                url="/author/book",
+                json={**book}
+            )
+            assert response.status_code == 200
 
 
 async def get_db_null_pool():
@@ -97,7 +147,7 @@ async def s3():
         yield client
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def check_content(s3_session):
     files_in_others = await s3_session.books.list_objects_by_prefix("other/", is_content_bucket=True)
     need_files = RequiredFilesForTests.FILES # файлы, обязательные для тестов (имеющие префикс other/)
@@ -107,8 +157,9 @@ async def check_content(s3_session):
             missing_files.append(need_file)
     if missing_files:
         logging.warning(
-            f"Тесты, связанные с s3-хранилищем будут пропущены, т.к. отсутствуют обязательтые файлы: {", ".join(missing_files)}"
+            f" не найдены обязательные файлы в S3 — {', '.join(missing_files)}"
         )
+        pytest.skip("Тест пропущен. Отсутствуют обязательные файлы")
         return False
     else:
         return True
@@ -172,3 +223,5 @@ async def auth_ac_author(ac, register_author):
     assert response.status_code == 200
     assert ac.cookies
     yield ac
+
+

@@ -60,3 +60,28 @@ class BaseS3Repository:
         result = [file["Key"] for file in contents]
         return result
 
+
+    async def get_files_by_prefix(self, prefix: str = "", is_content_bucket = False):
+        files_with_this_prefix = await self.list_objects_by_prefix(
+            prefix=prefix, is_content_bucket=is_content_bucket
+        )
+        return await self.get_bulk(True, False, *files_with_this_prefix)
+    
+
+    async def get_bulk(self, is_content_bucket = False, only_content = False, *args):
+        if is_content_bucket:
+            bucket_name = settings.S3_STATIC_BUCKET_NAME
+        else:
+            bucket_name = settings.S3_BUCKET_NAME
+        results = []
+        for key in args:
+            response = await self.client.get_object(Bucket=bucket_name, Key=key)
+            content = await response["Body"].read()
+            if only_content:
+                results.append(content)
+            else:
+                results.append({
+                    "key": key,
+                    "content": content
+                })
+        return results

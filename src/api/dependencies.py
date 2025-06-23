@@ -112,7 +112,7 @@ S3Dep = Annotated[S3Client, Depends(get_session)]
 
 
 def get_redisMan():
-    return RedisManager(host="localhost", port=6379)
+    return RedisManager(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
 
 async def get_session_redis():

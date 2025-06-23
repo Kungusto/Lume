@@ -159,7 +159,7 @@ class FullDataAboutBook(BookData):
 
 
 # Авторы
-class UserWithBooks(BaseModel):
+class UserAndBooksWithRels(BaseModel):
     user_id: int
     role: AllUsersRolesEnum
     email: EmailStr
@@ -168,4 +168,4 @@ class UserWithBooks(BaseModel):
     nickname: str
     last_activity: date
     registation_date: date
-    books: list[Book]
+    books: list[BookDataWithRels]

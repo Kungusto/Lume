@@ -69,7 +69,7 @@ async def test_del_by_prefix(check_content_unit_tests, s3):
     files = await s3.books.get_files_by_prefix(
         f"{target_prefix}/", is_content_bucket=True
     )
-    if not files: 
+    if not files:
         pytest.skip("Отсутсвуют обязательные файлы с префиксом files_to_delete")
     for file in files:
         await s3.client.put_object(

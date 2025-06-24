@@ -47,7 +47,9 @@ class AuthService:
         else:
             raise PermissionDeniedHTTPException
 
-    async def verify_user_owns_book(self, user_id: int, book_id: int, db: AsyncDBManager):
+    async def verify_user_owns_book(
+        self, user_id: int, book_id: int, db: AsyncDBManager
+    ):
         """Проверяем, действительно ли пользователь владеет книгой"""
         try:
             book = await db.books_authors.get_one(book_id=book_id, author_id=user_id)

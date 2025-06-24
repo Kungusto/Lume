@@ -2,11 +2,8 @@ import logging
 from celery import Celery
 from sqlalchemy import update
 from src.config import settings
-from src.utils.dbmanager import SyncDBManager
-from src.database import session_maker
 from src.models.books import BooksORM
 from src.api.dependencies import get_sync_session
-import logging
 from src.api.dependencies import get_sync_db_np
 import fitz
 from src.utils.helpers import PDFRenderer
@@ -21,12 +18,14 @@ celery_app = Celery(
 )
 
 
-@celery_app.task 
-def render_book(book_id: int): 
+@celery_app.task
+def render_book(book_id: int):
     with get_sync_session() as s3:
         try:
             bucket_name = settings.S3_BUCKET_NAME
-            response = s3.client.get_object(Bucket=bucket_name, Key=f"books/{book_id}/book.pdf")
+            response = s3.client.get_object(
+                Bucket=bucket_name, Key=f"books/{book_id}/book.pdf"
+            )
             with response["Body"] as stream:
                 file_pdf = stream.read()
         except s3.client.exceptions.NoSuchKey as ex:

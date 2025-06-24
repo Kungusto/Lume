@@ -2,7 +2,11 @@ from contextlib import contextmanager
 from fastapi import Depends, Request
 from typing import Annotated
 from jwt.exceptions import ExpiredSignatureError
-from src.database import async_session_maker, async_session_maker_null_pool, session_maker_null_pool
+from src.database import (
+    async_session_maker,
+    async_session_maker_null_pool,
+    session_maker_null_pool,
+)
 from src.utils.dbmanager import AsyncDBManager, SyncDBManager
 from src.services.auth import AuthService
 from src.exceptions.auth import (
@@ -67,6 +71,7 @@ def authorize_and_return_user_id(min_level: int) -> int:
 
 ## --- Celery --- ##
 
+
 # - DB
 def get_sync_db_manager_np():
     return SyncDBManager(session_factory=session_maker_null_pool)
@@ -76,6 +81,7 @@ def get_sync_db_manager_np():
 def get_sync_db_np():
     with get_sync_db_manager_np() as db:
         yield db
+
 
 # - S3
 def get_sync_s3client():
@@ -88,13 +94,14 @@ def get_sync_s3client():
 
 
 @contextmanager
-def get_sync_session(): 
-    with get_sync_s3client() as client: 
+def get_sync_session():
+    with get_sync_s3client() as client:
         yield client
-## --- 
+
+
+## ---
 
 # --- Database ---
-
 
 
 def get_db_manager():

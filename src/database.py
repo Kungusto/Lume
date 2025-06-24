@@ -16,7 +16,9 @@ async_session_maker_null_pool = async_sessionmaker(
 )
 # для Celery
 session_maker = sessionmaker(bind=sync_engine, expire_on_commit=False)
-session_maker_null_pool = sessionmaker(bind=sync_engine_null_pool, expire_on_commit=False)
+session_maker_null_pool = sessionmaker(
+    bind=sync_engine_null_pool, expire_on_commit=False
+)
 
 
 class Base(DeclarativeBase):

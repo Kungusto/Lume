@@ -23,7 +23,7 @@ from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
 from src.utils.dbmanager import AsyncDBManager
-from src.config import settings, Settings, get_settings
+from src.config import settings, Settings
 from src.main import app
 from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
@@ -169,7 +169,7 @@ async def check_content_unit_tests(s3_session):
     )
     if not files_with_prefix_to_delete:
         logging.warning(
-            f" не найдены обязательные файлы unit-тестов в S3 \
+            " не найдены обязательные файлы unit-тестов в S3 \
             \nдолжен быть хотя-бы один файл с префиксом 'files_to_delete/'"
         )
         pytest.skip("Тест пропущен. Отсутствуют обязательные файлы")

@@ -35,6 +35,7 @@ class AsyncS3Client:
 
 class SyncS3Client:
     """Класс, предназначенный исключительно для Celery. Не использовать в бизнес логике!"""
+
     def __init__(
         self,
         access_key: str,
@@ -58,4 +59,3 @@ class SyncS3Client:
 
     def __exit__(self, *args):
         self.client.close()
-

@@ -57,10 +57,10 @@ class SyncDBManager:
     def __enter__(self):
         self.session = self.session_factory()
         return self
-    
-    def __exit__(self, *args): 
+
+    def __exit__(self, *args):
         self.session.rollback()
         self.session.close()
-    
-    def commit(self): 
+
+    def commit(self):
         self.session.commit()

@@ -1,4 +1,8 @@
-from src.exceptions.base import FileValidationHTTPException, FileValidationException, ObjectNotFoundException
+from src.exceptions.base import (
+    FileValidationHTTPException,
+    FileValidationException,
+    ObjectNotFoundException,
+)
 
 
 class WrongFileExpensionException(FileValidationException):

@@ -22,10 +22,10 @@ from src.schemas.books import GenreAdd, BookAddWithAuthorsTagsGenres
 from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
-from src.utils.dbmanager import DBManager
-from src.config import settings, Settings
+from src.utils.dbmanager import AsyncDBManager
+from src.config import settings, Settings, get_settings
 from src.main import app
-from src.utils.s3_manager import S3Client
+from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.taskiq_tasks import ping_task
@@ -83,7 +83,7 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    async with DBManager(session_factory=async_session_maker_null_pool) as _db:
+    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
         with open("tests/mock_users.json", "r", encoding="utf-8") as file:
             data = []
             for user in json.load(file):
@@ -109,7 +109,7 @@ async def mock_books(setup_database, auth_ac_author):
 
 
 async def get_db_null_pool():
-    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
 
 
@@ -138,8 +138,8 @@ async def ac_session():
         yield ac
 
 
-def get_s3client():
-    return S3Client(
+def get_async_s3client():
+    return AsyncS3Client(
         access_key=settings.S3_ACCESS_KEY,
         secret_key=settings.S3_SECRET_KEY,
         endpoint_url=settings.S3_URL,
@@ -149,23 +149,32 @@ def get_s3client():
 
 @pytest.fixture(scope="session")
 async def s3_session():
-    async with get_s3client() as client:
+    async with get_async_s3client() as client:
         yield client
 
 
 @pytest.fixture(scope="function")
 async def s3():
-    async with get_s3client() as client:
+    async with get_async_s3client() as client:
         yield client
 
 
 @pytest.fixture(scope="session")
-async def check_content(s3_session):
+async def check_content_unit_tests(s3_session):
     files_in_others = await s3_session.books.list_objects_by_prefix(
         "other/", is_content_bucket=True
     )
+    files_with_prefix_to_delete = await s3_session.books.list_objects_by_prefix(
+        "files_to_delete/", is_content_bucket=True
+    )
+    if not files_with_prefix_to_delete:
+        logging.warning(
+            f" не найдены обязательные файлы unit-тестов в S3 \
+            \nдолжен быть хотя-бы один файл с префиксом 'files_to_delete/'"
+        )
+        pytest.skip("Тест пропущен. Отсутствуют обязательные файлы")
     need_files = (
-        RequiredFilesForTests.FILES
+        RequiredFilesForTests.UNIT_TESTS_FILES
     )  # файлы, обязательные для тестов (имеющие префикс other/)
     missing_files = []
     for need_file in need_files:
@@ -173,9 +182,31 @@ async def check_content(s3_session):
             missing_files.append(need_file)
     if missing_files:
         logging.warning(
-            f" не найдены обязательные файлы в S3 — {', '.join(missing_files)}"
+            f" не найдены обязательные файлы unit-тестов в S3 — {', '.join(missing_files)}"
         )
         pytest.skip("Тест пропущен. Отсутствуют обязательные файлы")
+        return False
+    else:
+        return True
+
+
+@pytest.fixture(scope="session")
+async def check_content_integration_tests(s3_session):
+    files_in_others = await s3_session.books.list_objects_by_prefix(
+        "books/", is_content_bucket=True
+    )
+    need_files = (
+        RequiredFilesForTests.INTEGRATION_TESTS_FILES
+    )  # файлы, обязательные для тестов (имеющие префикс other/)
+    missing_files = []
+    for need_file in need_files:
+        if need_file not in files_in_others:
+            missing_files.append(need_file)
+    if missing_files:
+        logging.warning(
+            f" не найдены обязательные файлы интеграционных тестов в S3 — {', '.join(missing_files)}"
+        )
+        pytest.skip(" Тест пропущен. Отсутствуют обязательные файлы")
         return False
     else:
         return True

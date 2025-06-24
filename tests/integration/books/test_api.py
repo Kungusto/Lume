@@ -160,3 +160,16 @@ async def test_edit_book(patch_data, status_code, auth_ac_author):
             )
             continue
         assert book[key] == value
+
+
+async def test_add_content(auth_ac_author, check_content_integration_tests, s3): 
+    file = await s3.books.get_file_by_path(
+        is_content_bucket=True,
+        s3_path="books/test_book.pdf"
+    )
+    response_add_content = await auth_ac_author.post(
+        url="/author/content?book_id=1",
+        files={"file": ("book.pdf", file)}
+    )
+
+    assert response_add_content.status_code == 200

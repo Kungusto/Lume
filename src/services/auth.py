@@ -6,7 +6,7 @@ from src.enums.users import AllUsersRolesEnum
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 import jwt
-from src.utils.dbmanager import DBManager
+from src.utils.dbmanager import AsyncDBManager
 from src.config import settings
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -47,7 +47,7 @@ class AuthService:
         else:
             raise PermissionDeniedHTTPException
 
-    async def verify_user_owns_book(self, user_id: int, book_id: int, db: DBManager):
+    async def verify_user_owns_book(self, user_id: int, book_id: int, db: AsyncDBManager):
         """Проверяем, действительно ли пользователь владеет книгой"""
         try:
             book = await db.books_authors.get_one(book_id=book_id, author_id=user_id)

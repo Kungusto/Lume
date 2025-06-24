@@ -1,4 +1,4 @@
-from src.exceptions.base import FileValidationHTTPException, FileValidationException
+from src.exceptions.base import FileValidationHTTPException, FileValidationException, ObjectNotFoundException
 
 
 class WrongFileExpensionException(FileValidationException):
@@ -15,3 +15,7 @@ class WrongCoverResolutionException(FileValidationException):
 
 class WrongCoverResolutionHTTPException(FileValidationHTTPException):
     detail = "Данное разрешение обложки не поддерживается"
+
+
+class FileNotFoundException(ObjectNotFoundException):
+    detail = "Файл не найден"

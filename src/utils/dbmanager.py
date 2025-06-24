@@ -10,13 +10,13 @@ from src.repositories.database.books_authors import BooksAuthorsRepository
 from src.repositories.database.files_src_images import FilesRepository
 
 
-class DBManager:
+class AsyncDBManager:
     """
     Дополнительный слой абстракции, Позволяющий удобно обращаться к базе данных
 
     Пример использования:
     ```
-    async with DBManager(session_factory=async_session_maker) as db:
+    async with AsyncDBManager(session_factory=async_session_maker) as db:
         user = await db.users.get_one(user_id=user_id)
         return user
     ```
@@ -48,3 +48,19 @@ class DBManager:
     async def commit(self):
         """Сохранения недавних изменений в базу данных"""
         await self.session.commit()
+
+
+class SyncDBManager:
+    def __init__(self, session_factory):
+        self.session_factory = session_factory
+
+    def __enter__(self):
+        self.session = self.session_factory()
+        return self
+    
+    def __exit__(self, *args): 
+        self.session.rollback()
+        self.session.close()
+    
+    def commit(self): 
+        self.session.commit()

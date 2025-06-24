@@ -2,7 +2,7 @@ import pytest
 from src.config import settings
 
 
-async def test_put_and_get(check_content, s3):
+async def test_put_and_get(check_content_unit_tests, s3):
     # Тест на добавление и чтение файла
     new_file_name = "test_image_0.jpg"
     file = await s3.books.get_file_by_path(
@@ -61,14 +61,16 @@ async def test_put_and_get(check_content, s3):
     assert not files_after_deletion
 
 
-async def test_del_by_prefix(check_content, s3):
-    if not check_content:
+async def test_del_by_prefix(check_content_unit_tests, s3):
+    if not check_content_unit_tests:
         pytest.skip()
 
     target_prefix = "files_to_delete"
     files = await s3.books.get_files_by_prefix(
         f"{target_prefix}/", is_content_bucket=True
     )
+    if not files: 
+        pytest.skip("Отсутсвуют обязательные файлы с префиксом files_to_delete")
     for file in files:
         await s3.client.put_object(
             Bucket=settings.S3_BUCKET_NAME, Key=f"{file['key']}", Body=file["content"]

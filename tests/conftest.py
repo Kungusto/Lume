@@ -29,8 +29,16 @@ from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.taskiq_tasks import ping_task
+from src.tasks.celery_app import celery_app
 
 settings = Settings()  # noqa: F811
+
+
+@pytest.fixture(autouse=True)
+def setup_celery():
+    celery_app.conf.task_always_eager = True
+    yield
+    celery_app.conf.task_always_eager = False
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -45,15 +53,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 
 @pytest.fixture(scope="function")
 async def ping_taskiq():
-    try:
-        await ping_task.kiq()
-    except Exception as ex:
-        logging.warning(f"Не удалось отправить задачу в Taskiq: {ex}")
-        pytest.skip(
-            "Taskiq не работает — тест пропущен. \
-                    \nЗапуск Taskiq: taskiq worker src.tasks.taskiq_tasks:broker --log-level INFO"
-        )
-
+    # !! УБРАТЬ !!
     return True
 
 

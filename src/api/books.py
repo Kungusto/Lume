@@ -24,7 +24,7 @@ from src.schemas.books import (
 )
 from src.exceptions.books import GenreNotFoundHTTPException
 from src.tasks.taskiq_tasks import async_delete_book
-from src.tasks.celery_app import render_book
+from src.tasks.tasks import render_book
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
@@ -257,7 +257,7 @@ async def edit_content(
         raise ContentAlreadyExistsHTTPException
     await async_delete_book.kiq(book_id=book_id)
     await s3.books.save_content(book_id=book_id, file=file)
-    render_book.kiq(book_id=book_id)
+    render_book.delay(book_id)
     await db.commit()
     return {"status": "OK"}
 

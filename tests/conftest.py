@@ -101,6 +101,20 @@ async def mock_books(setup_database, auth_ac_author):
             assert response.status_code == 200
 
 
+@pytest.fixture(scope="session", autouse=True)
+async def mock_s3(s3_session, mock_books, auth_ac_author):
+    """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
+    logging.info("Добавляю обложку к книге id=2")
+    assert settings.MODE == "TEST"
+    file = await s3_session.books.get_file_by_path(
+        is_content_bucket=True, s3_path="books/covers/normal_cover.jpg"
+    )
+    response_add_cover = await auth_ac_author.post(
+        url="author/cover?book_id=2", files={"file": ("preview.png", file)}
+    )
+    assert response_add_cover.status_code == 200
+
+
 async def get_db_null_pool():
     async with AsyncDBManager(session_factory=async_session_maker_null_pool) as db:
         yield db

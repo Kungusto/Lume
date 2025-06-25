@@ -30,5 +30,9 @@ class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Контент книги уже был опубликован"
 
 
+class CoverAlreadyExistsHTTPException(AlreadyExistsHTTPException):
+    detail = "Обложка книги уже была опубликована"
+
+
 class BookNotExistsOrYouNotOwnerHTTPException(PermissionDeniedHTTPException):
     detail = "Книга не существует, либо у вас нет доступа к ее изменению"

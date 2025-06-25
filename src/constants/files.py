@@ -11,7 +11,12 @@ class RequiredFilesForTests:
         "other/test_image_2.jpg",
     }
     INTEGRATION_TESTS_FILES = {
-        "books/test_book.pdf",
-        "books/test_cover.jpg",
-        "books/not_a_book.jpg",
+        # контент книг
+        "books/content/test_book.pdf",
+        "books/content/test_cover.jpg",
+        "books/content/not_a_book.jpg",
+        # обложки книг
+        "books/covers/not_a_cover.pdf",
+        "books/covers/not_tall_enough.jpg",
+        "books/covers/normal_cover.jpg",
     }

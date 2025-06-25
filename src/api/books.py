@@ -5,6 +5,7 @@ from src.exceptions.books import (
     ContentAlreadyExistsHTTPException,
     BookNotFoundHTTPException,
     BookNotFoundException,
+    CoverAlreadyExistsHTTPException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -177,6 +178,9 @@ async def add_cover(
         raise WrongCoverResolutionHTTPException from ex
     except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
+    book = await db.books.get_one(book_id=book_id)
+    if book.cover_link is not None:
+        raise CoverAlreadyExistsHTTPException
     cover_link = await s3.books.save_cover(file=file, book_id=book_id)
     await db.books.edit(
         is_patch=True,

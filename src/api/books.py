@@ -23,8 +23,7 @@ from src.schemas.books import (
     BookPATCH,
 )
 from src.exceptions.books import GenreNotFoundHTTPException
-from src.tasks.taskiq_tasks import async_delete_book
-from src.tasks.tasks import render_book
+from src.tasks.tasks import render_book, delete_book_images, change_content
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
@@ -141,7 +140,7 @@ async def delete_book(
         book = await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    await async_delete_book.kiq(book_id=book_id)
+    delete_book_images.delay(book_id)
     if book.is_rendered:
         await s3.books.delete_by_path(f"{book_id}/book.pdf")
     if book.cover_link:
@@ -233,7 +232,7 @@ async def add_all_content(
         FileValidator.check_expansion_books(file_name=file.filename)
     except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
-    if await s3.books.check_file_by_path(f"{book_id}/book.pdf"):
+    if await s3.books.check_file_by_path(f"books/{book_id}/book.pdf"):
         raise ContentAlreadyExistsHTTPException
     await s3.books.save_content(book_id, file=file)
     render_book.delay(book_id)
@@ -253,11 +252,10 @@ async def edit_content(
         FileValidator.check_expansion_books(file_name=file.filename)
     except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
-    if not await s3.books.check_file_by_path(f"{book_id}/book.pdf"):
+    if not await s3.books.check_file_by_path(f"books/{book_id}/book.pdf"):
         raise ContentAlreadyExistsHTTPException
-    await async_delete_book.kiq(book_id=book_id)
     await s3.books.save_content(book_id=book_id, file=file)
-    render_book.delay(book_id)
+    change_content.delay(book_id)
     await db.commit()
     return {"status": "OK"}
 

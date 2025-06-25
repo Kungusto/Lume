@@ -13,4 +13,5 @@ class RequiredFilesForTests:
     INTEGRATION_TESTS_FILES = {
         "books/test_book.pdf",
         "books/test_cover.jpg",
+        "books/not_a_book.jpg",
     }

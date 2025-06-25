@@ -40,9 +40,6 @@ class BaseS3Repository:
     async def delete_by_path(self, s3_path: str):
         await self.client.delete_object(Bucket=self.bucket_name, Key=s3_path)
 
-    async def delete_file(self, path: str):
-        await self.client.delete_object(Bucket=self.bucket_name, Key=path)
-
     async def delete_bulk(self, *args):
         for key in args:
             await self.client.delete_object(Bucket=self.bucket_name, Key=key)

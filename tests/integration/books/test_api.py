@@ -1,6 +1,11 @@
 import pytest
 from src.schemas.books import BookPATCHWithRels
 
+"""
+Запустить только этот файл (один слеш вместо двух):
+pytest -s -v .\\tests\\integration\\books\\test_api.py
+"""
+
 
 async def test_registration_as_author(ac):
     response = await ac.post(
@@ -17,7 +22,7 @@ async def test_registration_as_author(ac):
     assert response.status_code == 200
 
 
-async def test_base_crud_books(ac, redis, ping_taskiq):
+async def test_base_crud_books(ac, redis):
     ac.cookies.clear()
 
     response_login_author = await ac.post(
@@ -121,7 +126,7 @@ async def test_base_crud_books(ac, redis, ping_taskiq):
         [BookPATCHWithRels(genres=[1, 2]), 200],
         [BookPATCHWithRels(genres=[2]), 200],
         [BookPATCHWithRels(genres=[1]), 200],
-        [BookPATCHWithRels(genres=[]), 200],
+        [BookPATCHWithRels(genres=[9999, 10000]), 404],
         # -- Полное изменение
         [
             BookPATCHWithRels(
@@ -162,12 +167,92 @@ async def test_edit_book(patch_data, status_code, auth_ac_author):
         assert book[key] == value
 
 
-async def test_add_content(auth_ac_author, check_content_integration_tests, s3):
+@pytest.mark.parametrize(
+    "book_path_in_content_bucket, status_code, list_images, book_id",
+    [
+        ["books/test_book.pdf", 200, ["books/1/images/page_0_img_0.png"], 1],
+        ["books/test_book.pdf", 409, None, 1],
+        ["books/not_a_book.jpg", 422, None, 2],
+        [
+            "books/test_book_2.pdf",
+            200,
+            ["books/2/images/page_1_img_0.png", "books/2/images/page_1_img_1.png"],
+            2,
+        ],
+    ],
+)
+async def test_add_content(
+    book_path_in_content_bucket,
+    status_code,
+    list_images,
+    book_id,
+    auth_ac_author,
+    check_content_integration_tests,
+    s3,
+    db,
+):
     file = await s3.books.get_file_by_path(
-        is_content_bucket=True, s3_path="books/test_book.pdf"
+        is_content_bucket=True, s3_path=book_path_in_content_bucket
     )
+    filename = book_path_in_content_bucket.split("/")[-1]
     response_add_content = await auth_ac_author.post(
-        url="/author/content?book_id=1", files={"file": ("book.pdf", file)}
+        url=f"/author/content?book_id={book_id}", files={"file": (filename, file)}
     )
 
-    assert response_add_content.status_code == 200
+    assert response_add_content.status_code == status_code
+    if status_code != 200:
+        return
+
+    all_images = await s3.books.list_objects_by_prefix(prefix=f"books/{book_id}/images")
+    book = await db.books.get_one(book_id=book_id)
+    assert len(all_images) == len(list_images)
+    assert all_images == list_images
+    assert book.is_rendered
+
+
+@pytest.mark.parametrize(
+    "book_path_in_content_bucket, status_code, list_images, book_id",
+    [
+        ["books/test_book.pdf", 200, ["books/1/images/page_0_img_0.png"], 1],
+        [
+            "books/test_book_2.pdf",
+            200,
+            ["books/1/images/page_1_img_0.png", "books/1/images/page_1_img_1.png"],
+            1,
+        ],
+        ["books/not_a_book.jpg", 422, None, 2],
+        [
+            "books/test_book_2.pdf",
+            200,
+            ["books/2/images/page_1_img_0.png", "books/2/images/page_1_img_1.png"],
+            2,
+        ],
+    ],
+)
+async def test_edit_content(
+    book_path_in_content_bucket,
+    status_code,
+    list_images,
+    book_id,
+    auth_ac_author,
+    check_content_integration_tests,
+    s3,
+    db,
+):
+    file = await s3.books.get_file_by_path(
+        is_content_bucket=True, s3_path=book_path_in_content_bucket
+    )
+    filename = book_path_in_content_bucket.split("/")[-1]
+    response_add_content = await auth_ac_author.put(
+        url=f"/author/content?book_id={book_id}", files={"file": (filename, file)}
+    )
+
+    assert response_add_content.status_code == status_code
+    if status_code != 200:
+        return
+
+    all_images = await s3.books.list_objects_by_prefix(prefix=f"books/{book_id}/images")
+    book = await db.books.get_one(book_id=book_id)
+    assert len(all_images) == len(list_images)
+    assert all_images == list_images
+    assert book.is_rendered

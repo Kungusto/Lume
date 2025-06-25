@@ -12,9 +12,9 @@ import logging
 
 settings = get_settings()
 
+
 @celery_app.task
 def render_book(book_id: int):
-    print(settings.MODE)
     with get_sync_session() as s3:
         try:
             bucket_name = settings.S3_BUCKET_NAME
@@ -24,7 +24,7 @@ def render_book(book_id: int):
             with response["Body"] as stream:
                 file_pdf = stream.read()
         except s3.client.exceptions.NoSuchKey as ex:
-            logging.error(f"не найден файл book.pdf")
+            logging.error("не найден файл book.pdf")
             raise FileNotFoundException from ex
 
     with fitz.open(stream=file_pdf, filetype="pdf") as doc:
@@ -46,3 +46,23 @@ def render_book(book_id: int):
         book = Book.model_validate(result, from_attributes=True)
         db.commit()
     logging.info(f'Рендеринг книги "{book.title}" завершен')
+
+
+@celery_app.task
+def delete_book_images(book_id: int):
+    logging.info(f"Начинаю удаление книги (id={book_id})")
+    with get_sync_session() as s3:
+        bucket_name = settings.S3_BUCKET_NAME
+        response = s3.client.list_objects_v2(
+            Prefix=f"books/{book_id}/images", Bucket=bucket_name
+        )
+        contents = response.get("Contents", [])
+        files = [file["Key"] for file in contents]
+        for key in files:
+            s3.client.delete_object(Bucket=bucket_name, Key=key)
+
+
+@celery_app.task
+def change_content(book_id: int):
+    delete_book_images(book_id)
+    render_book(book_id)

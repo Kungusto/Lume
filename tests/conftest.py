@@ -28,7 +28,6 @@ from src.main import app
 from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
-from src.tasks.taskiq_tasks import ping_task
 from src.tasks.celery_app import celery_app
 
 settings = Settings()  # noqa: F811
@@ -49,12 +48,6 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     asyncio.set_event_loop(loop)
     yield loop
     loop.close()
-
-
-@pytest.fixture(scope="function")
-async def ping_taskiq():
-    # !! УБРАТЬ !!
-    return True
 
 
 @pytest.fixture(scope="function")

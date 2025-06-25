@@ -15,6 +15,8 @@ class PDFRenderer:
                 xref = img[0]
                 base_image = doc.extract_image(xref)
                 image_bytes = base_image["image"]
-                image_key = f"books/{book_id}/images/page_{page_num + 1}_img_{img_index + 1}.png"
+                image_key = (
+                    f"books/{book_id}/images/page_{page_num}_img_{img_index}.png"
+                )
                 result.append({"Body": image_bytes, "Key": image_key})
         return result

@@ -64,7 +64,7 @@ async def test_base_crud_books(ac, redis):
     assert response_publicate_second.status_code == 200
 
     response_edit = await ac.patch(
-        url=f"/author/book?book_id={second_book_id}",
+        url=f"/author/book/{second_book_id}",
         json={"genres": [1, 3], "age_limit": 16, "tags": ["тайна", "футуризм"]},
     )
     assert response_edit.status_code == 200
@@ -72,10 +72,10 @@ async def test_base_crud_books(ac, redis):
     response_my_books = await ac.get(url="/author/my_books")
     assert response_my_books.status_code == 200
 
-    response_delete = await ac.delete(url=f"/author/book?book_id={second_book_id}")
+    response_delete = await ac.delete(url=f"/author/book/{second_book_id}")
     assert response_delete.status_code == 200
 
-    response_get_this_book = await ac.get(url=f"/author/book?book_id={second_book_id}")
+    response_get_this_book = await ac.get(url=f"/author/book/{second_book_id}")
     assert response_get_this_book.status_code == 404
 
     # чистим куки, имитируя разлогин пользователя
@@ -89,12 +89,12 @@ async def test_base_crud_books(ac, redis):
     assert "access_token" in ac.cookies.keys()
 
     response_edit = await ac.patch(
-        url=f"/author/book?book_id={second_book_id}",
+        url=f"/author/book/{second_book_id}",
         json={"genres": [1, 3], "age_limit": 16, "tags": ["тайна", "футуризм"]},
     )
     assert response_edit.status_code == 403
 
-    response_delete = await ac.delete(url=f"/author/book?book_id={second_book_id}")
+    response_delete = await ac.delete(url=f"/author/book/{second_book_id}")
     assert response_delete.status_code == 403
 
     response_publicate_second = await ac.post(
@@ -146,10 +146,10 @@ async def test_base_crud_books(ac, redis):
 async def test_edit_book(patch_data, status_code, auth_ac_author):
     data_to_update = patch_data.model_dump(exclude_unset=True)
     response_edit = await auth_ac_author.patch(
-        url="/author/book?book_id=1", json=data_to_update
+        url="/author/book/1", json=data_to_update
     )
     assert response_edit.status_code == status_code
-    updated_book_response = await auth_ac_author.get(url="/author/book?book_id=1")
+    updated_book_response = await auth_ac_author.get(url="/author/book/1")
     assert updated_book_response.status_code == 200
     if status_code != 200:
         return
@@ -199,7 +199,7 @@ async def test_add_content(
     )
     filename = book_path_in_content_bucket.split("/")[-1]
     response_add_content = await auth_ac_author.post(
-        url=f"/author/content?book_id={book_id}", files={"file": (filename, file)}
+        url=f"/author/content/{book_id}", files={"file": (filename, file)}
     )
 
     assert response_add_content.status_code == status_code
@@ -247,7 +247,7 @@ async def test_edit_content(
     )
     filename = book_path_in_content_bucket.split("/")[-1]
     response_edit_content = await auth_ac_author.put(
-        url=f"/author/content?book_id={book_id}", files={"file": (filename, file)}
+        url=f"/author/content/{book_id}", files={"file": (filename, file)}
     )
 
     assert response_edit_content.status_code == status_code
@@ -284,7 +284,7 @@ async def test_add_cover(
     )
     filename = cover_path_in_content_bucket.split("/")[-1]
     response_add_cover = await auth_ac_author.post(
-        url=f"author/cover?book_id={book_id}", files={"file": (filename, file)}
+        url=f"author/cover/{book_id}", files={"file": (filename, file)}
     )
     assert response_add_cover.status_code == status_code
 
@@ -319,7 +319,7 @@ async def test_edit_cover(
     )
     filename = cover_path_in_content_bucket.split("/")[-1]
     response_add_cover = await auth_ac_author.put(
-        url=f"author/cover?book_id={book_id}", files={"file": (filename, file)}
+        url=f"author/cover/{book_id}", files={"file": (filename, file)}
     )
     assert response_add_cover.status_code == status_code
 

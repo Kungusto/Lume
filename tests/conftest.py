@@ -110,7 +110,7 @@ async def mock_s3(s3_session, mock_books, auth_ac_author):
         is_content_bucket=True, s3_path="books/covers/normal_cover.jpg"
     )
     response_add_cover = await auth_ac_author.post(
-        url="author/cover?book_id=2", files={"file": ("preview.png", file)}
+        url="author/cover/2", files={"file": ("preview.png", file)}
     )
     assert response_add_cover.status_code == 200
 

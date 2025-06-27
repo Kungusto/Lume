@@ -67,7 +67,7 @@ class BaseS3Repository:
         if is_content_bucket:
             bucket_name = settings.S3_STATIC_BUCKET_NAME
         else:
-            bucket_name = settings.S3_BUCKET_NAME
+            bucket_name = self.bucket_name
         results = []
         for key in args:
             response = await self.client.get_object(Bucket=bucket_name, Key=key)
@@ -77,3 +77,12 @@ class BaseS3Repository:
             else:
                 results.append({"key": key, "content": content})
         return results
+
+
+    async def generate_url(self, file_path: str = "", expires_in: int = 3600):
+        url = await self.client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': self.bucket_name, 'Key': file_path},
+            ExpiresIn=expires_in  # Срок действия в секундах 
+        )
+        return url

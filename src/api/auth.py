@@ -26,7 +26,7 @@ from src.schemas.users import (
 from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 
-router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация"])
+router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
 
 
 @router.post("/register")

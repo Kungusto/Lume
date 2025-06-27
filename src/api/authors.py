@@ -6,6 +6,7 @@ from src.exceptions.books import (
     BookNotFoundHTTPException,
     BookNotFoundException,
     CoverAlreadyExistsHTTPException,
+    BookAlreadyPublicatedHTTPException
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -29,7 +30,7 @@ from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
 
-router = APIRouter(prefix="/author", tags=["Авторы и публикация книг"])
+router = APIRouter(prefix="/author", tags=["Авторы и публикация книг 📚"])
 
 
 @router.post("/book")
@@ -56,7 +57,7 @@ async def add_book(
     return {"status": "OK", "data": book}
 
 
-@router.get("/book")
+@router.get("/book/{book_id}")
 async def get_book_by_id(book_id: int, db: DBDep):
     try:
         return await db.books.get_book_with_rels(book_id=book_id)
@@ -64,7 +65,7 @@ async def get_book_by_id(book_id: int, db: DBDep):
         raise BookNotFoundHTTPException from ex
 
 
-@router.patch("/book")
+@router.patch("/book/{book_id}")
 async def edit_bood_data(
     book_id: int,
     db: DBDep,
@@ -132,7 +133,7 @@ async def edit_bood_data(
     return {"status": "OK"}
 
 
-@router.delete("/book")
+@router.delete("/book/{book_id}")
 async def delete_book(
     book_id: int, db: DBDep, s3: S3Dep, user_id: int = authorize_and_return_user_id(2)
 ):
@@ -162,7 +163,7 @@ async def get_my_books(
 # --- Обложки ---
 
 
-@router.post("/cover")
+@router.post("/cover/{book_id}")
 async def add_cover(
     file: UploadFile,
     book_id: int,
@@ -191,7 +192,7 @@ async def add_cover(
     return {"status": "OK"}
 
 
-@router.put("/cover")
+@router.put("/cover/{book_id}")
 async def put_cover(
     file: UploadFile,
     book_id: int,
@@ -223,7 +224,7 @@ async def put_cover(
 # --- Контент книги ---
 
 
-@router.post("/content")
+@router.post("/content/{book_id}")
 async def add_all_content(
     file: UploadFile,
     book_id: int,
@@ -243,7 +244,7 @@ async def add_all_content(
     return {"status": "OK"}
 
 
-@router.put("/content")
+@router.put("/content/{book_id}")
 async def edit_content(
     book_id: int,
     file: UploadFile,
@@ -264,8 +265,26 @@ async def edit_content(
     return {"status": "OK"}
 
 
-@router.post("/__test__")
-async def test(s3: S3Dep, file: UploadFile):
-    await s3.client.put_object(
-        Bucket="lume-s3-test", Key="books/1/book.pdf", Body=file.file
-    )
+@router.get("/book/{page_number}")
+async def page_number(
+    page_number: int
+): 
+    return {"status": "OK", "page_number": page_number}
+
+
+@router.post("/publicate/{book_id}")
+async def publicate_book(
+    book_id: int,
+    db: DBDep,
+    user_id: int = authorize_and_return_user_id(2)
+):
+    try:
+        book = await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    except BookNotFoundException as ex:
+        raise BookNotFoundHTTPException from ex
+    if book.is_publicated:
+        raise BookAlreadyPublicatedHTTPException
+    data_to_update = BookPATCH(is_publicated=True)
+    updated_data = await db.books.edit(data=data_to_update, is_patch=True, book_id=book_id)
+    await db.commit()
+    return updated_data

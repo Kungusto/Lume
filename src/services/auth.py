@@ -51,8 +51,8 @@ class AuthService:
         self, user_id: int, book_id: int, db: AsyncDBManager
     ):
         """Проверяем, действительно ли пользователь владеет книгой"""
-        try:
-            book = await db.books_authors.get_one(book_id=book_id, author_id=user_id)
-        except ObjectNotFoundException:
+        book = await db.books.get_book_with_rels(book_id=book_id, privat_data=True) # для того чтобы получить id
+        author_ids = [author.user_id for author in book.authors]
+        if user_id not in author_ids:
             raise BookNotExistsOrYouNotOwnerHTTPException
         return book

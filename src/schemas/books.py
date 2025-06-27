@@ -88,7 +88,7 @@ class BookAddWithAuthorsTagsGenres(BookAdd):
     @field_validator("tags")
     @classmethod
     def tags_to_lower(cls, values: list[str]) -> list[str]:
-        return [val.lower() for val in values]
+        return [val.lower() for val in set(values)]
 
 
 class Book(BaseModel):
@@ -101,6 +101,7 @@ class Book(BaseModel):
     date_publicated: date
     is_rendered: bool = False
     cover_link: str | None = None
+    is_publicated: bool
 
 
 class BookPATCHWithRels(BaseModel):
@@ -120,6 +121,7 @@ class BookPATCH(BaseModel):
     title: str | None = None
     age_limit: Annotated[conint(ge=0, le=21), None] = None  # type: ignore
     description: str | None = None
+    is_publicated: bool | None = None
 
 
 class BookPUT(BaseModel):
@@ -147,6 +149,13 @@ class BookDataWithRels(Book):
     genres: list[Genre]  # список жанров
 
 
+
+class BookDataWithRelsPrivat(Book):
+    authors: list[User]  # список авторов
+    tags: list[Tag]  # список тегов
+    genres: list[Genre]  # список жанров
+
+
 class BookDataWithTagRel(BookData):
     tags: list[int]  # список тегов
 
@@ -170,3 +179,5 @@ class UserAndBooksWithRels(BaseModel):
     last_activity: date
     registation_date: date
     books: list[BookDataWithRels]
+
+

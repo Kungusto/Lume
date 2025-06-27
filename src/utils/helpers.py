@@ -20,3 +20,50 @@ class PDFRenderer:
                 )
                 result.append({"Body": image_bytes, "Key": image_key})
         return result
+
+
+    @staticmethod
+    def parse_text_end_images_from_page(doc, page_number: int, book_id: int): 
+        page = doc.load_page(page_number - 1)
+        blocks = page.get_text("dict")["blocks"]
+        content: list[dict[str, str]] = []
+        count_images = 0
+        for block in blocks:
+            if block["type"] == 0: 
+                for line in block.get("lines", []):
+                    line_text = ""
+                    for span in line.get("spans", []):
+                        line_text += span.get("text", "")
+                    if line_text.strip():
+                        content.append(
+                            {
+                                "type": "text",
+                                "content": line_text, # сам текст
+                                "size": span.get("size"),  # размер шрифта
+                                "flags": span.get("flags"),  # флаги шрифта
+                                "bidi": span.get("bidi"),  # уровень двунаправленного текста
+                                "char_flags": span.get("char_flags"),  # флаги символов
+                                "font": span.get("font"),  # название шрифта
+                                "color": span.get("color"),  # цвет текста (в формате RGB)
+                                "alpha": span.get("alpha"),  # прозрачность
+                                "ascender": span.get("ascender"),  # высота восходящей части шрифта
+                                "descender": span.get("descender"),  # высота нисходящей части шрифта
+                                "text": span.get("text"),  # текст спана
+                                "origin": span.get("origin"),  # координаты начала (x, y)
+                                "bbox": span.get("bbox") 
+                            }
+                        )
+            elif block["type"] == 1:
+                content.append(
+                    {
+                        "type": "image", 
+                        "path": f"books/{book_id}/images/page_{page_number - 1}_img_{count_images}.png",
+                        "bbox": block.get("bbox"),
+                        "mask": block.get("mask"),
+                        "width": block.get("width"),  
+                        "height": block.get("height"),
+                     }
+                    )
+                count_images += 1
+        return content
+    

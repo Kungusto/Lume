@@ -1,7 +1,9 @@
 from contextlib import contextmanager
-from fastapi import Depends, Request
+from datetime import date
+from fastapi import Depends, Request, Query
 from typing import Annotated
 from jwt.exceptions import ExpiredSignatureError
+from pydantic import BaseModel
 from src.database import (
     async_session_maker,
     async_session_maker_null_pool,
@@ -19,8 +21,27 @@ from src.connectors.redis_connector import RedisManager
 from src.enums.users import AllUsersRolesEnum
 
 
-# --- Authentification ---
+# --- Schemas ---
 
+class BookSearch(BaseModel):
+    book_title: Annotated[str | None, Query(default=None)]
+    max_age: Annotated[int | None, Query(default=None, ge=0, le=21)]
+    min_age: Annotated[int | None, Query(default=None, ge=0, le=21)]
+    later_than: Annotated[date | None, Query(default=None)]
+    earlier_than: Annotated[date | None, Query(default=None)]
+
+SearchDep = Annotated[BookSearch, Depends()]
+
+class PaginationParams(BaseModel):
+    page: Annotated[int | None, Query(default=1, ge=1, lt=1000)]
+    per_page: Annotated[int | None, Query(default=5, ge=1, lt=40)]
+
+PaginationDep = Annotated[PaginationParams, Depends()]
+
+# --- Schemas ---
+
+
+# --- Authentification ---
 
 def get_token(request: Request):
     access_token = request.cookies.get("access_token", None)
@@ -49,8 +70,8 @@ UserIdDep = Annotated[int, Depends(user_id_from_token)]
 
 UserRoleDep = Annotated[AllUsersRolesEnum, Depends(user_role_from_token)]
 
-# --- Authorization ---
 
+# --- Authorization ---
 
 def authorize_and_return_user_id(min_level: int) -> int:
     async def check(user_id: UserIdDep, user_role: UserRoleDep):
@@ -69,7 +90,7 @@ def authorize_and_return_user_id(min_level: int) -> int:
     return Depends(check)
 
 
-## --- Celery --- ##
+## --- Celery (Sync) --- ##
 
 
 # - DB

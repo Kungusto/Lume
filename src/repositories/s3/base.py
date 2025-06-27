@@ -1,5 +1,6 @@
 from fastapi import UploadFile
 from src.config import settings
+from src.exceptions.files import FileNotFoundException
 
 
 class BaseS3Repository:
@@ -33,7 +34,10 @@ class BaseS3Repository:
             bucket_name = settings.S3_STATIC_BUCKET_NAME
         else:
             bucket_name = settings.S3_BUCKET_NAME
-        response = await self.client.get_object(Bucket=bucket_name, Key=s3_path)
+        try:
+            response = await self.client.get_object(Bucket=bucket_name, Key=s3_path)
+        except self.client.exceptions.NoSuchKey as ex:
+            raise FileNotFoundException from ex
         async with response["Body"] as stream:
             return await stream.read()
 

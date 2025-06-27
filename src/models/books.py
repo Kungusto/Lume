@@ -44,6 +44,9 @@ class BooksORM(Base):
     genres: Mapped[list["GenresORM"]] = relationship(  # type: ignore
         back_populates="books", secondary="Books_genres"
     )
+    reviews: Mapped[list["ReviewsORM"]] = relationship( # type: ignore
+        "ReviewsORM", back_populates="books"
+    )
 
 
 class BooksTagsORM(Base):

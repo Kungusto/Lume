@@ -75,7 +75,7 @@ async def test_base_crud_books(ac, redis):
     response_delete = await ac.delete(url=f"/author/book/{second_book_id}")
     assert response_delete.status_code == 200
 
-    response_get_this_book = await ac.get(url=f"/author/book/{second_book_id}")
+    response_get_this_book = await ac.get(url=f"/books/{second_book_id}")
     assert response_get_this_book.status_code == 404
 
     # чистим куки, имитируя разлогин пользователя
@@ -149,7 +149,7 @@ async def test_edit_book(patch_data, status_code, auth_ac_author):
         url="/author/book/1", json=data_to_update
     )
     assert response_edit.status_code == status_code
-    updated_book_response = await auth_ac_author.get(url="/author/book/1")
+    updated_book_response = await auth_ac_author.get(url="/books/1")
     assert updated_book_response.status_code == 200
     if status_code != 200:
         return

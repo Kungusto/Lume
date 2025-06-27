@@ -1,3 +1,6 @@
+from src.exceptions.books import PageNotFoundException
+
+
 class ServiceForTests:
     """Позже тут появятся полезные функции для удобочитаемости тестов"""
 
@@ -23,7 +26,10 @@ class PDFRenderer:
 
     @staticmethod
     def parse_text_end_images_from_page(doc, page_number: int, book_id: int):
-        page = doc.load_page(page_number - 1)
+        try:
+            page = doc.load_page(page_number - 1)
+        except ValueError as ex: 
+            raise PageNotFoundException(page_number=page_number) from ex
         blocks = page.get_text("dict")["blocks"]
         content: list[dict[str, str]] = []
         count_images = 0
@@ -55,7 +61,6 @@ class PDFRenderer:
                                 "descender": span.get(
                                     "descender"
                                 ),  # высота нисходящей части шрифта
-                                "text": span.get("text"),  # текст спана
                                 "origin": span.get(
                                     "origin"
                                 ),  # координаты начала (x, y)

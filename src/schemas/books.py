@@ -1,10 +1,10 @@
 from datetime import date
-from typing import Annotated
-from pydantic import BaseModel, EmailStr, Field, field_validator, conint
+from typing import Annotated, List
+from pydantic import BaseModel, EmailStr, Field, constr, field_validator, conint
 from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
-
+from src.schemas.reviews import Review
 
 # Для отрисовки картинок на сайте.
 class SourceImage(BaseModel):
@@ -83,7 +83,7 @@ class BookAdd(BaseModel):
 class BookAddWithAuthorsTagsGenres(BookAdd):
     authors: list[int] = []
     genres: list[int] = Field(min_items=1)
-    tags: list[str]
+    tags: List[constr(min_length=2)] | None = [] # type: ignore
 
     @field_validator("tags")
     @classmethod
@@ -109,7 +109,7 @@ class BookPATCHWithRels(BaseModel):
     age_limit: int | None = None
     description: str | None = None
     genres: list[int] | None = []
-    tags: list[str] | None = []
+    tags: List[constr(min_length=2)] | None = [] # type: ignore
 
     @field_validator("tags")
     @classmethod
@@ -147,12 +147,14 @@ class BookDataWithRels(Book):
     authors: list[UserPublicData]  # список авторов
     tags: list[Tag]  # список тегов
     genres: list[Genre]  # список жанров
+    reviews: list[Review] # список отзывов
 
 
 class BookDataWithRelsPrivat(Book):
     authors: list[User]  # список авторов
     tags: list[Tag]  # список тегов
     genres: list[Genre]  # список жанров
+    reviews: list[Review] # список отзывов
 
 
 class BookDataWithTagRel(BookData):

@@ -24,7 +24,7 @@ class AuthService:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def create_access_token(self, data: dict) -> str:
-        "Создание токена. В нем будем хранить id и роль пользователя"
+        """Создание токена. В нем будем хранить id и роль пользователя"""
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES

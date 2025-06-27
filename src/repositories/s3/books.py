@@ -9,6 +9,7 @@ class BooksS3Repository(BaseS3Repository):
         self.client = s3_client
 
     async def save_cover(self, book_id: int, file: UploadFile):
+        await file.seek(0)
         await self.client.put_object(
             Bucket=self.bucket_name,
             Key=f"{self.prefix_name}/{book_id}/preview.png",
@@ -17,9 +18,11 @@ class BooksS3Repository(BaseS3Repository):
         return f"{self.prefix_name}/{book_id}/preview.png"
 
     async def save_content(self, book_id: int, file: UploadFile):
+        await file.seek(0)
         await self.client.put_object(
             Bucket=self.bucket_name,
             Key=f"{self.prefix_name}/{book_id}/book.pdf",
             Body=file.file,
         )
-        return f"{self.prefix_name}prefix_name/{book_id}/book.pdf"
+        print(f"{self.prefix_name}/{book_id}/book.pdf")
+        return f"{self.prefix_name}/{book_id}/book.pdf"

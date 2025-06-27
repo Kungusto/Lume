@@ -26,6 +26,31 @@ class BookNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Книга не найдена"
 
 
+class ContentNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Контент книги не найден"
+
+
+
+class ContentOrBookNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Книга не найдена, либо ее контент не опубликован"
+
+
+class PageNotFoundException(ObjectNotFoundException):
+    def __init__(self, page_number, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.detail = f"Страница {page_number} не найдена"
+
+
+class PageNotFoundHTTPException(ObjectNotFoundHTTPException):
+    def __init__(self, page_number, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.detail = f"Страница {page_number} не найдена"
+
+
+class AuthorNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Автор не найден"
+
+
 class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Контент книги уже был опубликован"
 

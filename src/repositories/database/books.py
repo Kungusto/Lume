@@ -47,6 +47,7 @@ class BooksRepository(BaseRepository):
             .options(joinedload(self.model.authors))
             .options(joinedload(self.model.genres))
             .options(joinedload(self.model.tags))
+            .options(joinedload(self.model.reviews))
             .filter_by(**filter_by)
         )
         result = await self.session.execute(query)
@@ -73,9 +74,14 @@ class BooksRepository(BaseRepository):
     ):
         query = (
             select(self.model)
+            .filter_by(is_publicated=True)
             .limit(limit)
             .offset(offset)
             .filter_by(is_publicated=True)
+            .options(joinedload(self.model.authors))
+            .options(joinedload(self.model.genres))
+            .options(joinedload(self.model.tags))
+            .options(joinedload(self.model.reviews))
             .order_by(self.model.book_id)
         )
 
@@ -96,9 +102,9 @@ class BooksRepository(BaseRepository):
             query = query.filter(BooksORM.date_publicated < search_data.earlier_than)
 
         model = await self.session.execute(query)
-        results = model.scalars().all()
+        results = model.unique().scalars().all()
         return [
-            self.schema.model_validate(result, from_attributes=True)
+            BookDataWithRels.model_validate(result, from_attributes=True)
             for result in results
         ]
 

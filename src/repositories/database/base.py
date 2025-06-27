@@ -1,8 +1,9 @@
 from sqlalchemy import select, update, delete, insert
 from pydantic import BaseModel
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
+from asyncpg.exceptions import ForeignKeyViolationError
 from src.database import Base
-from src.exceptions.base import ObjectNotFoundException
+from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
 
 
 class BaseRepository:
@@ -36,7 +37,13 @@ class BaseRepository:
 
     async def add_bulk(self, data):
         add_stmt = insert(self.model).values([item.model_dump() for item in data])
-        await self.session.execute(add_stmt)
+        try :
+            result = await self.session.execute(add_stmt)
+        except IntegrityError as ex:
+            if isinstance(ex.orig.__cause__, ForeignKeyViolationError):
+                raise ForeignKeyException
+            else:
+                raise ex
 
     async def edit(self, data, is_patch=False, *filter, **filter_by):
         edit_stmt = (

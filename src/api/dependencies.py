@@ -23,6 +23,7 @@ from src.enums.users import AllUsersRolesEnum
 
 # --- Schemas ---
 
+
 class BookSearch(BaseModel):
     book_title: Annotated[str | None, Query(default=None)]
     max_age: Annotated[int | None, Query(default=None, ge=0, le=21)]
@@ -30,11 +31,14 @@ class BookSearch(BaseModel):
     later_than: Annotated[date | None, Query(default=None)]
     earlier_than: Annotated[date | None, Query(default=None)]
 
+
 SearchDep = Annotated[BookSearch, Depends()]
+
 
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(default=1, ge=1, lt=1000)]
     per_page: Annotated[int | None, Query(default=5, ge=1, lt=40)]
+
 
 PaginationDep = Annotated[PaginationParams, Depends()]
 
@@ -42,6 +46,7 @@ PaginationDep = Annotated[PaginationParams, Depends()]
 
 
 # --- Authentification ---
+
 
 def get_token(request: Request):
     access_token = request.cookies.get("access_token", None)
@@ -72,6 +77,7 @@ UserRoleDep = Annotated[AllUsersRolesEnum, Depends(user_role_from_token)]
 
 
 # --- Authorization ---
+
 
 def authorize_and_return_user_id(min_level: int) -> int:
     async def check(user_id: UserIdDep, user_role: UserRoleDep):

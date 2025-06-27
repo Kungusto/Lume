@@ -78,11 +78,10 @@ class BaseS3Repository:
                 results.append({"key": key, "content": content})
         return results
 
-
     async def generate_url(self, file_path: str = "", expires_in: int = 3600):
         url = await self.client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': self.bucket_name, 'Key': file_path},
-            ExpiresIn=expires_in  # Срок действия в секундах 
+            "get_object",
+            Params={"Bucket": self.bucket_name, "Key": file_path},
+            ExpiresIn=expires_in,  # Срок действия в секундах
         )
         return url

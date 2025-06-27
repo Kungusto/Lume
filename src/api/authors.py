@@ -6,7 +6,7 @@ from src.exceptions.books import (
     BookNotFoundHTTPException,
     BookNotFoundException,
     CoverAlreadyExistsHTTPException,
-    BookAlreadyPublicatedHTTPException
+    BookAlreadyPublicatedHTTPException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -266,25 +266,25 @@ async def edit_content(
 
 
 @router.get("/book/{page_number}")
-async def page_number(
-    page_number: int
-): 
+async def page_number(page_number: int):
     return {"status": "OK", "page_number": page_number}
 
 
 @router.post("/publicate/{book_id}")
 async def publicate_book(
-    book_id: int,
-    db: DBDep,
-    user_id: int = authorize_and_return_user_id(2)
+    book_id: int, db: DBDep, user_id: int = authorize_and_return_user_id(2)
 ):
     try:
-        book = await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+        book = await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     if book.is_publicated:
         raise BookAlreadyPublicatedHTTPException
     data_to_update = BookPATCH(is_publicated=True)
-    updated_data = await db.books.edit(data=data_to_update, is_patch=True, book_id=book_id)
+    updated_data = await db.books.edit(
+        data=data_to_update, is_patch=True, book_id=book_id
+    )
     await db.commit()
     return updated_data

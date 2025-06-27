@@ -149,7 +149,6 @@ class BookDataWithRels(Book):
     genres: list[Genre]  # список жанров
 
 
-
 class BookDataWithRelsPrivat(Book):
     authors: list[User]  # список авторов
     tags: list[Tag]  # список тегов
@@ -179,5 +178,3 @@ class UserAndBooksWithRels(BaseModel):
     last_activity: date
     registation_date: date
     books: list[BookDataWithRels]
-
-

@@ -13,3 +13,8 @@ class AllUsersRolesEnum(pyEnum):
             "AllUsersRolesEnum.ADMIN": 3,
         }
         return levels.get(str(role), None)
+
+
+class RegisterUserEnum(pyEnum):
+    USER: str = "USER"
+    AUTHOR: str = "AUTHOR"

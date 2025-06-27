@@ -25,6 +25,7 @@ from src.schemas.users import (
 )
 from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
+from src.enums.users import AllUsersRolesEnum
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
 
@@ -32,6 +33,7 @@ router = APIRouter(prefix="/auth", tags=["Авторизация и аутент
 @router.post("/register")
 async def registrate_users(data: UserRegistrate, db: DBDep):
     hashed_password = AuthService().hash_password(data.password)
+    data.role = AllUsersRolesEnum(data.role.value)
     data = UserAdd(**data.model_dump(), hashed_password=hashed_password)
     try:
         result = await db.users.add(data=data)

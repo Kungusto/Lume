@@ -11,6 +11,7 @@ from src.api.auth import router as auth_router
 from src.api.authors import router as authors_router
 from src.api.books import router as read_router
 from src.api.reviews import router as reviews_router
+from src.api.admin import router as admin_router
 
 logging.basicConfig(level=logging.INFO)
 
@@ -32,6 +33,8 @@ app.include_router(auth_router)
 app.include_router(authors_router)
 app.include_router(read_router)
 app.include_router(reviews_router)
+app.include_router(admin_router)
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)

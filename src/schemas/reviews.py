@@ -3,11 +3,13 @@ from pydantic import BaseModel, Field
 
 class ReviewAddFromUser(BaseModel):
     rating: int = Field(le=5, ge=1)
+    text: str
 
 
 class ReviewAdd(BaseModel):
     book_id: int
     user_id: int
+    text: str
     rating: int = Field(le=5, ge=1)
 
 

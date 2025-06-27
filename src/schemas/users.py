@@ -1,6 +1,6 @@
 from datetime import date
 from pydantic import BaseModel, EmailStr, field_validator, constr
-from src.enums.users import AllUsersRolesEnum
+from src.enums.users import AllUsersRolesEnum, RegisterUserEnum
 from src.exceptions.auth import (
     TooShortPasswordHTTPException,
     TooLongPasswordHTTPException,
@@ -28,7 +28,7 @@ class UserLogin(BaseModel):
 
 
 class UserRegistrate(BaseModel):
-    role: AllUsersRolesEnum
+    role: RegisterUserEnum
     email: EmailStr
     name: constr(min_length=2)  # type: ignore
     surname: constr(min_length=2)  # type: ignore

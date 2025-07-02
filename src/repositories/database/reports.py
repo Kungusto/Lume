@@ -1,9 +1,10 @@
-from sqlalchemy import select, update
+from datetime import datetime, timezone
+from sqlalchemy import func, select, update
 from src.repositories.database.base import BaseRepository
 from src.models.reports import BanORM, ReasonsORM, ReportsORM
 from src.models.users import UsersORM
 from src.schemas.reports import Ban, Reason, Report
-from src.schemas.users import User
+from src.schemas.users import UserWithBanDate, User
 
 
 class BansRepository(BaseRepository):
@@ -12,14 +13,19 @@ class BansRepository(BaseRepository):
 
     async def get_banned_users(self): 
         query = (
-            select(UsersORM)
+            select(UsersORM, func.max(BanORM.ban_until))
             .select_from(BanORM)
+            .filter(BanORM.ban_until > datetime.now(timezone.utc))
             .join(UsersORM, UsersORM.user_id == BanORM.user_id)
             .group_by(UsersORM.user_id)
         )
         models = await self.session.execute(query)
         return [
-            User.model_validate(model, from_attributes=True) for model in models.scalars().all()
+            UserWithBanDate(
+                **User.model_validate(user, from_attributes=True).model_dump(),
+                ban_until=ban_until
+            )
+            for user, ban_until in models.all()
         ]
 
 

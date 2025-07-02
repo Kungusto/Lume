@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel, EmailStr, field_validator, constr
 from src.enums.users import AllUsersRolesEnum, RegisterUserEnum
 from src.exceptions.auth import (
@@ -16,6 +16,10 @@ class User(BaseModel):
     nickname: str
     last_activity: date
     registation_date: date
+
+
+class UserWithBanDate(User):
+    ban_until: datetime | None 
 
 
 class UserWithHashedPassword(User):

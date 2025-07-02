@@ -13,6 +13,8 @@ from src.api.books import router as read_router
 from src.api.reviews import router as reviews_router
 from src.api.admin import router as admin_router
 
+from src.middlewares.middlewares import BanCheckMiddleware
+
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
@@ -34,6 +36,8 @@ app.include_router(authors_router)
 app.include_router(read_router)
 app.include_router(reviews_router)
 app.include_router(admin_router)
+
+app.add_middleware(BanCheckMiddleware)
 
 
 if __name__ == "__main__":

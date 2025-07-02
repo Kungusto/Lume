@@ -6,6 +6,7 @@ from src.exceptions.base import (
     AuthentificationException,
     AlreadyExistsHTTPException,
     AuthentificationHTTPException,
+    PermissionDeniedHTTPException
 )
 
 # =---=---=---=---=---= Base Exceptions =---=---=---=---=---= #
@@ -102,3 +103,5 @@ class UserNotFoundHTTPException(ObjectNotFoundHTTPException):
 
 class EmailNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Почта не найдена"
+
+

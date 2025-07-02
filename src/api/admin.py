@@ -1,13 +1,24 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Path
 from src.api.dependencies import authorize_and_return_user_id, DBDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
+from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit
+from src.models.reports import BanORM
+from src.exceptions.auth import UserNotFoundHTTPException
 from src.exceptions.base import AlreadyExistsException, ObjectNotFoundException
 from src.exceptions.books import (
     GenreAlreadyExistsHTTPException,
     GenreNotFoundHTTPException,
     TagNotFoundHTTPException,
     BookNotFoundHTTPException,
+)
+from src.exceptions.auth import UserNotFoundHTTPException
+from src.exceptions.reports import (
+    ReasonAlreadyExistsHTTPException, 
+    ReasonNotFoundHTTPException,
+    AlreadyBannedHTTPException,
+    UserNotBannedHTTPException
 )
 
 
@@ -20,6 +31,11 @@ async def change_role(
     data: UserRolePUT,
     user_id: int = Path(le=2**31),
 ):
+    try:
+        user = db.users.get_one(user_id=user_id)
+    except ObjectNotFoundException as ex: 
+        raise UserNotFoundHTTPException from ex
+  
     await db.users.edit(data=data, user_id=user_id)
     await db.commit()
     return {"status": "OK"}
@@ -52,7 +68,7 @@ async def edit_genre(
         raise GenreNotFoundHTTPException from ex
     edit_genre = await db.genres.edit(data=data, genre_id=genre_id)
     await db.commit()
-    return {"status": "OK", "data": edit_genre}
+    return {"status": "OK"}
 
 
 @router.delete("/genres/{genre_id}")
@@ -105,6 +121,7 @@ async def edit_tag(
     db: DBDep,
     data: TagEdit,
     tag_id: int = Path(le=2**31),
+    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.tags.get_one(id=tag_id)
@@ -113,3 +130,125 @@ async def edit_tag(
     await db.tags.edit(data=data, id=tag_id)
     await db.commit()
     return {"status": "OK"}
+
+
+@router.post("/reasons")
+async def add_reason(
+    db: DBDep,
+    data: ReasonAdd,
+    user_id: int = authorize_and_return_user_id(3),
+):
+    try:
+        reason = await db.reasons.add(data)
+    except AlreadyExistsException as ex: 
+        raise ReasonAlreadyExistsHTTPException from ex
+    await db.commit()
+    return reason
+
+
+@router.put("/reasons/{reason_id}")
+async def edit_reason(
+    db: DBDep,
+    data: ReasonEdit,
+    reason_id: int = Path(le=2**31),
+    user_id: int = authorize_and_return_user_id(3),
+):
+    try:
+        await db.reasons.get_one(reason_id=reason_id)
+    except ObjectNotFoundException as ex : 
+        raise ReasonNotFoundHTTPException from ex
+    await db.reasons.edit(data=data, reason_id=reason_id)
+    await db.commit()
+    return {"status": "OK"}
+
+
+@router.delete("/reasons/{reason_id}")
+async def delete_reason(
+    db: DBDep,
+    reason_id: int = Path(le=2**31),
+    user_id: int = authorize_and_return_user_id(3),
+):
+    try:
+        await db.reasons.get_one(reason_id=reason_id)
+    except ObjectNotFoundException as ex : 
+        raise ReasonNotFoundHTTPException from ex
+    await db.reasons.delete(reason_id=reason_id)
+    await db.commit()
+    return {"status": "OK"}
+
+
+@router.get("/reports")
+async def get_not_checked_reports(
+    db: DBDep,
+    user_id: int = authorize_and_return_user_id(3),
+):
+    return await db.reports.get_filtered(is_checked=False)
+
+
+@router.patch("/reports/{report_id}")
+async def mark_as_checked(
+    db: DBDep,
+    report_id: int = Path(le=2**31),
+    user_id: int = authorize_and_return_user_id(3),
+): 
+    await db.reports.mark_as_checked(report_id=report_id)
+    await db.commit()
+    return {"status": "OK"}
+
+
+@router.post("/ban/{user_id}")
+async def ban_user_by_id(
+    db: DBDep,
+    data: BanAddFromUser,
+    user_id: int = Path(le=2**31),
+    admin_id: int = authorize_and_return_user_id(3),
+):
+    try:
+        await db.users.get_one(user_id=user_id)
+    except ObjectNotFoundException as ex:
+        raise UserNotFoundHTTPException from ex
+    if await db.bans.get_filtered(BanORM.ban_until > datetime.now(timezone.utc), user_id=user_id):
+        raise AlreadyBannedHTTPException 
+    ban_data = await db.bans.add(
+        data=BanAdd(
+            **data.model_dump(),
+            user_id=user_id
+        )
+    )
+    await db.commit()
+    return ban_data
+
+
+@router.delete("/ban/{ban_id}")
+async def unban_user_by_ban_id(
+    db: DBDep,
+    ban_id: int = Path(le=2**31),
+    admin_id: int = authorize_and_return_user_id(3),
+):
+    if not await db.bans.get_filtered(ban_id=ban_id):
+        raise UserNotBannedHTTPException
+    await db.bans.delete(ban_id=ban_id)
+    await db.commit()
+    return {"status": "OK"}
+
+
+@router.put("/ban/{ban_id}")
+async def edit_ban_date(
+    db: DBDep,
+    data: BanEdit,
+    ban_id: int = Path(le=2**31),
+    admin_id: int = authorize_and_return_user_id(3),
+): 
+    if not await db.bans.get_filtered(ban_id=ban_id):
+        raise UserNotBannedHTTPException
+    await db.bans.edit(data=data, ban_id=ban_id)
+    await db.commit()
+    return {"status": "OK"}
+
+
+@router.get("/banned_users")
+async def get_banned_users(
+    db: DBDep,
+    admin_id: int = authorize_and_return_user_id(3),
+):
+    return await db.bans.get_banned_users()

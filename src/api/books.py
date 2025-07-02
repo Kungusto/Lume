@@ -9,7 +9,10 @@ from src.exceptions.books import (
     PageNotFoundHTTPException,
     ContentOrBookNotFoundHTTPException,
 )
+from src.exceptions.reports import ReasonNotFoundHTTPException
+from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
 from src.exceptions.files import FileNotFoundException
+from src.schemas.reports import ReportAdd, ReportAddFromUser
 import fitz
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
@@ -89,5 +92,21 @@ async def get_page(
 @router.post("/{book_id}/report")
 async def report_book(
     db: DBDep,
+    data: ReportAddFromUser,
     book_id: int = Path(le=2**31),
-): ...
+): 
+    try:
+        await db.books.get_one(book_id=book_id)
+    except ObjectNotFoundException as ex:
+        raise BookNotFoundHTTPException from ex
+    try:
+        report = await db.reports.add(
+            data=ReportAdd(
+                **data.model_dump(),
+                book_id=book_id
+            )
+        )
+    except ForeignKeyException as ex:
+        raise ReasonNotFoundHTTPException from ex
+    await db.commit()
+    return report

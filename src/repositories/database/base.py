@@ -40,6 +40,8 @@ class BaseRepository:
         except IntegrityError as ex:
             if isinstance(ex.orig.__cause__, UniqueViolationError):
                 raise AlreadyExistsException
+            elif isinstance(ex.orig.__cause__, ForeignKeyViolationError):
+                raise ForeignKeyException
             else:
                 raise ex
         model = result.scalars().first()
@@ -52,6 +54,8 @@ class BaseRepository:
         except IntegrityError as ex:
             if isinstance(ex.orig.__cause__, ForeignKeyViolationError):
                 raise ForeignKeyException
+            elif isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise AlreadyExistsException
             else:
                 raise ex
 

@@ -50,6 +50,7 @@ class UsersRepository(BaseRepository):
                 joinedload(UsersORM.books).joinedload(BooksORM.genres),
                 joinedload(UsersORM.books).joinedload(BooksORM.tags),
                 joinedload(UsersORM.books).joinedload(BooksORM.authors),
+                joinedload(UsersORM.books).joinedload(BooksORM.reviews),
             )
             .filter_by(user_id=user_id)
         )

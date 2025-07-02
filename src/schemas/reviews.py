@@ -18,4 +18,5 @@ class Review(ReviewAdd):
 
 
 class ReviewPut(BaseModel):
-    rating: int
+    rating: int = Field(le=5, ge=1)
+    text: str

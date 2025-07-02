@@ -1,9 +1,9 @@
 from sqlalchemy import select, update, delete, insert
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound, IntegrityError
-from asyncpg.exceptions import ForeignKeyViolationError
+from asyncpg.exceptions import ForeignKeyViolationError, UniqueViolationError
 from src.database import Base
-from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
+from src.exceptions.base import ObjectNotFoundException, ForeignKeyException, AlreadyExistsException
 
 
 class BaseRepository:
@@ -31,7 +31,13 @@ class BaseRepository:
 
     async def add(self, data):
         add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        result = await self.session.execute(add_stmt)
+        try:
+            result = await self.session.execute(add_stmt)
+        except IntegrityError as ex:
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise AlreadyExistsException 
+            else:
+                raise ex
         model = result.scalars().first()
         return self.schema.model_validate(model, from_attributes=True)
 

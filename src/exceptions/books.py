@@ -1,6 +1,7 @@
 from src.exceptions.base import (
     ObjectNotFoundHTTPException,
     AlreadyExistsHTTPException,
+    AlreadyExistsException,
     PermissionDeniedHTTPException,
     ObjectNotFoundException,
 )
@@ -65,3 +66,13 @@ class BookAlreadyPublicatedHTTPException(AlreadyExistsHTTPException):
 
 class BookNotExistsOrYouNotOwnerHTTPException(PermissionDeniedHTTPException):
     detail = "Книга не существует, либо у вас нет доступа к ее изменению"
+
+
+class GenreAlreadyExistsException(AlreadyExistsException):
+    detail = "Жанр с таким названием уже существует"
+
+class GenreAlreadyExistsHTTPException(AlreadyExistsHTTPException):
+    detail = "Жанр с таким названием уже существует"
+
+class TagNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Тег не найден"

@@ -73,3 +73,7 @@ class UserPublicData(BaseModel):
     name: str
     surname: str
     nickname: str
+
+
+class UserRolePUT(BaseModel):
+    role: AllUsersRolesEnum

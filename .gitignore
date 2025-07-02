@@ -10,3 +10,6 @@ dump.rdb
 .env-test
 awscli_env
 aiobotocore_env
+.vscode
+.ruff_cache
+.pytest_cache

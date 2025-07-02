@@ -8,9 +8,9 @@ class AllUsersRolesEnum(pyEnum):
 
     def get_permission_level(role) -> int | None:
         levels = {
-            "AllUsersRolesEnum.USER": 1,
-            "AllUsersRolesEnum.AUTHOR": 2,
-            "AllUsersRolesEnum.ADMIN": 3,
+            "USER": 1,
+            "AUTHOR": 2,
+            "ADMIN": 3,
         }
         return levels.get(str(role), None)
 

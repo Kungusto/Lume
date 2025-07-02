@@ -14,7 +14,7 @@ from src.exceptions.files import (
     WrongCoverResolutionHTTPException,
     WrongFileExpensionHTTPException,
 )
-from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id
+from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id, UserRoleDep
 from src.schemas.books import (
     BookAdd,
     BookAddWithAuthorsTagsGenres,
@@ -44,24 +44,26 @@ async def add_book(
         data.authors.append(user_id)
     book = await db.books.add(BookAdd(**data.model_dump()))
     data_to_add_m2m = [
-        BookAuthorAdd(book_id=book.book_id, author_id=author_id) for author_id in set(data.authors)
+        BookAuthorAdd(book_id=book.book_id, author_id=author_id) for author_id in set(data.authors) or []
     ]
     data_to_tags_m2m = [
-        TagAdd(book_id=book.book_id, title_tag=title) for title in set(data.tags)
+        TagAdd(book_id=book.book_id, title_tag=title) for title in set(data.tags) or []
     ]
     data_to_genres_m2m = [
-        GenresBooksAdd(book_id=book.book_id, genre_id=gen_id) for gen_id in set(data.genres)
+        GenresBooksAdd(book_id=book.book_id, genre_id=gen_id) for gen_id in set(data.genres) or []
     ]
     try:
         await db.books_authors.add_bulk(data_to_add_m2m)
     except ForeignKeyException as ex: 
         raise AuthorNotFoundHTTPException from ex
     try:
-        await db.tags.add_bulk(data_to_tags_m2m)
+        if data_to_tags_m2m:
+            await db.tags.add_bulk(data_to_tags_m2m)
     except ForeignKeyException as ex: 
         raise BookNotFoundHTTPException from ex
     try:
-        await db.books_genres.add_bulk(data_to_genres_m2m)
+        if data_to_genres_m2m:
+            await db.books_genres.add_bulk(data_to_genres_m2m)
     except ForeignKeyException as ex: 
         raise GenreNotFoundHTTPException from ex
     await db.commit()
@@ -73,15 +75,17 @@ async def edit_bood_data(
     book_id: int,
     db: DBDep,
     data: BookPATCHWithRels,
+    user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
     try:
         await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    await AuthService().verify_user_owns_book(
-        user_id=user_id, book_id=book_id, db=db
-    )  # Проверяем, владеет ли пользователь этой книгой
+    if user_role != "ADMIN":
+        await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )  # Проверяем, владеет ли пользователь этой книгой
     book_patch_data = BookPATCH(
         **data.model_dump(exclude_unset=True)
     )  # Создаем pydantic-схему для будущего изменения данных
@@ -139,9 +143,14 @@ async def edit_bood_data(
 
 @router.delete("/book/{book_id}")
 async def delete_book(
-    book_id: int, db: DBDep, s3: S3Dep, user_id: int = authorize_and_return_user_id(2)
+    book_id: int,
+    db: DBDep, 
+    s3: S3Dep, 
+    user_role: UserRoleDep,
+    user_id: int = authorize_and_return_user_id(2)
 ):
-    await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    if user_role != "ADMIN":
+        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
     try:
         book = await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
@@ -173,9 +182,11 @@ async def add_cover(
     book_id: int,
     db: DBDep,
     s3: S3Dep,
+    user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    if user_role != "ADMIN":
+        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
     try:
         FileValidator.check_expansion_images(file_name=file.filename)
         await FileValidator.validate_cover(file_img=file)
@@ -202,9 +213,11 @@ async def put_cover(
     book_id: int,
     db: DBDep,
     s3: S3Dep,
+    user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    if user_role != "ADMIN":
+        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
     try:
         FileValidator.check_expansion_images(file_name=file.filename)
         await FileValidator.validate_cover(file_img=file)
@@ -234,9 +247,11 @@ async def add_all_content(
     book_id: int,
     s3: S3Dep,
     db: DBDep,
+    user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    if user_role != "ADMIN":
+        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
     except WrongFileExpensionException as ex:
@@ -254,9 +269,11 @@ async def edit_content(
     file: UploadFile,
     s3: S3Dep,
     db: DBDep,
+    user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+    if user_role != "ADMIN":
+        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
     except WrongFileExpensionException as ex:
@@ -271,12 +288,18 @@ async def edit_content(
 
 @router.post("/publicate/{book_id}")
 async def publicate_book(
-    book_id: int, db: DBDep, user_id: int = authorize_and_return_user_id(2)
+    book_id: int, 
+    db: DBDep, 
+    user_role: UserRoleDep,
+    user_id: int = authorize_and_return_user_id(2),
 ):
     try:
-        book = await AuthService().verify_user_owns_book(
-            user_id=user_id, book_id=book_id, db=db
-        )
+        if user_role != "ADMIN":
+            book = await AuthService().verify_user_owns_book(
+                user_id=user_id, book_id=book_id, db=db
+            )
+        else:
+            book = await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     if book.is_publicated:

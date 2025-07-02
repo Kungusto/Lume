@@ -1,4 +1,9 @@
-from src.exceptions.base import AlreadyExistsException, AlreadyExistsHTTPException, PermissionDeniedHTTPException, ObjectNotFoundHTTPException
+from src.exceptions.base import (
+    AlreadyExistsException,
+    AlreadyExistsHTTPException,
+    PermissionDeniedHTTPException,
+    ObjectNotFoundHTTPException,
+)
 
 
 class ReviewAtThisBookAlreadyExistsException(AlreadyExistsException):
@@ -9,7 +14,7 @@ class ReviewAtThisBookAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Вы не можете публиковать несколько отзывов на одну книгу"
 
 
-class RateYourselfHTTPException(PermissionDeniedHTTPException): 
+class RateYourselfHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете публиковать отзывы на собственные книги"
 
 

@@ -99,5 +99,3 @@ async def edit_user_data(
     await db.users.edit(user_id=user_id, data=data)
     await db.commit()
     return {"status": "OK"}
-
-

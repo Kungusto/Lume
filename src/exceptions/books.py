@@ -31,7 +31,6 @@ class ContentNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Контент книги не найден"
 
 
-
 class ContentOrBookNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Книга не найдена, либо ее контент не опубликован"
 
@@ -71,8 +70,10 @@ class BookNotExistsOrYouNotOwnerHTTPException(PermissionDeniedHTTPException):
 class GenreAlreadyExistsException(AlreadyExistsException):
     detail = "Жанр с таким названием уже существует"
 
+
 class GenreAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Жанр с таким названием уже существует"
+
 
 class TagNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Тег не найден"

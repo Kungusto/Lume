@@ -44,27 +44,29 @@ async def add_book(
         data.authors.append(user_id)
     book = await db.books.add(BookAdd(**data.model_dump()))
     data_to_add_m2m = [
-        BookAuthorAdd(book_id=book.book_id, author_id=author_id) for author_id in set(data.authors) or []
+        BookAuthorAdd(book_id=book.book_id, author_id=author_id)
+        for author_id in set(data.authors) or []
     ]
     data_to_tags_m2m = [
         TagAdd(book_id=book.book_id, title_tag=title) for title in set(data.tags) or []
     ]
     data_to_genres_m2m = [
-        GenresBooksAdd(book_id=book.book_id, genre_id=gen_id) for gen_id in set(data.genres) or []
+        GenresBooksAdd(book_id=book.book_id, genre_id=gen_id)
+        for gen_id in set(data.genres) or []
     ]
     try:
         await db.books_authors.add_bulk(data_to_add_m2m)
-    except ForeignKeyException as ex: 
+    except ForeignKeyException as ex:
         raise AuthorNotFoundHTTPException from ex
     try:
         if data_to_tags_m2m:
             await db.tags.add_bulk(data_to_tags_m2m)
-    except ForeignKeyException as ex: 
+    except ForeignKeyException as ex:
         raise BookNotFoundHTTPException from ex
     try:
         if data_to_genres_m2m:
             await db.books_genres.add_bulk(data_to_genres_m2m)
-    except ForeignKeyException as ex: 
+    except ForeignKeyException as ex:
         raise GenreNotFoundHTTPException from ex
     await db.commit()
     return {"status": "OK", "data": book}
@@ -124,7 +126,7 @@ async def edit_bood_data(
     if genres_to_add:
         try:
             await db.books_genres.add_bulk(data_to_add_genres)
-        except ForeignKeyException as ex: 
+        except ForeignKeyException as ex:
             raise GenreNotFoundHTTPException from ex
     if tags_to_delete:
         await db.tags.delete(
@@ -144,13 +146,15 @@ async def edit_bood_data(
 @router.delete("/book/{book_id}")
 async def delete_book(
     book_id: int,
-    db: DBDep, 
-    s3: S3Dep, 
+    db: DBDep,
+    s3: S3Dep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2)
+    user_id: int = authorize_and_return_user_id(2),
 ):
     if user_role != "ADMIN":
-        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+        await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )
     try:
         book = await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
@@ -186,7 +190,9 @@ async def add_cover(
     user_id: int = authorize_and_return_user_id(2),
 ):
     if user_role != "ADMIN":
-        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+        await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )
     try:
         FileValidator.check_expansion_images(file_name=file.filename)
         await FileValidator.validate_cover(file_img=file)
@@ -217,7 +223,9 @@ async def put_cover(
     user_id: int = authorize_and_return_user_id(2),
 ):
     if user_role != "ADMIN":
-        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+        await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )
     try:
         FileValidator.check_expansion_images(file_name=file.filename)
         await FileValidator.validate_cover(file_img=file)
@@ -251,7 +259,9 @@ async def add_all_content(
     user_id: int = authorize_and_return_user_id(2),
 ):
     if user_role != "ADMIN":
-        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+        await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
     except WrongFileExpensionException as ex:
@@ -273,7 +283,9 @@ async def edit_content(
     user_id: int = authorize_and_return_user_id(2),
 ):
     if user_role != "ADMIN":
-        await AuthService().verify_user_owns_book(user_id=user_id, book_id=book_id, db=db)
+        await AuthService().verify_user_owns_book(
+            user_id=user_id, book_id=book_id, db=db
+        )
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
     except WrongFileExpensionException as ex:
@@ -288,8 +300,8 @@ async def edit_content(
 
 @router.post("/publicate/{book_id}")
 async def publicate_book(
-    book_id: int, 
-    db: DBDep, 
+    book_id: int,
+    db: DBDep,
     user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):

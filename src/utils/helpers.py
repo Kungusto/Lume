@@ -28,7 +28,7 @@ class PDFRenderer:
     def parse_text_end_images_from_page(doc, page_number: int, book_id: int):
         try:
             page = doc.load_page(page_number - 1)
-        except ValueError as ex: 
+        except ValueError as ex:
             raise PageNotFoundException(page_number=page_number) from ex
         blocks = page.get_text("dict")["blocks"]
         content: list[dict[str, str]] = []

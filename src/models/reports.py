@@ -9,7 +9,9 @@ class BanORM(Base):
 
     ban_id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("Users.user_id"))
-    ban_until: Mapped[datetime] = mapped_column(default=lambda: datetime.now() + timedelta(hours=1))
+    ban_until: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now() + timedelta(hours=1)
+    )
     comment: Mapped[str | None] = mapped_column(default=None)
 
 

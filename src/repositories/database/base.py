@@ -3,7 +3,11 @@ from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from asyncpg.exceptions import ForeignKeyViolationError, UniqueViolationError
 from src.database import Base
-from src.exceptions.base import ObjectNotFoundException, ForeignKeyException, AlreadyExistsException
+from src.exceptions.base import (
+    ObjectNotFoundException,
+    ForeignKeyException,
+    AlreadyExistsException,
+)
 
 
 class BaseRepository:
@@ -35,7 +39,7 @@ class BaseRepository:
             result = await self.session.execute(add_stmt)
         except IntegrityError as ex:
             if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise AlreadyExistsException 
+                raise AlreadyExistsException
             else:
                 raise ex
         model = result.scalars().first()
@@ -43,8 +47,8 @@ class BaseRepository:
 
     async def add_bulk(self, data):
         add_stmt = insert(self.model).values([item.model_dump() for item in data])
-        try :
-            result = await self.session.execute(add_stmt)
+        try:
+            await self.session.execute(add_stmt)
         except IntegrityError as ex:
             if isinstance(ex.orig.__cause__, ForeignKeyViolationError):
                 raise ForeignKeyException

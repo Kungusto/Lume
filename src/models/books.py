@@ -7,6 +7,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     from src.models.users import UsersORM
+    from src.models.reviews import ReviewsORM
 
 
 class GenresORM(Base):
@@ -44,7 +45,7 @@ class BooksORM(Base):
     genres: Mapped[list["GenresORM"]] = relationship(  # type: ignore
         back_populates="books", secondary="Books_genres"
     )
-    reviews: Mapped[list["ReviewsORM"]] = relationship( # type: ignore
+    reviews: Mapped[list["ReviewsORM"]] = relationship(  # type: ignore
         "ReviewsORM", back_populates="books"
     )
 

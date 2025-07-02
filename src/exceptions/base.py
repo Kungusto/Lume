@@ -32,6 +32,7 @@ class FileValidationException(LumeException):
 class ForeignKeyException(LumeException):
     detail = "Произошло исключение внешнего ключа"
 
+
 # ------------------------------------ HTTP Exceptions ------------------------------------
 
 
@@ -76,4 +77,3 @@ class AlreadyExistsHTTPException(LumeHTTPException):
 class FileValidationHTTPException(LumeHTTPException):
     detail = "Ошибка валидации файла"
     status_code = 422
-

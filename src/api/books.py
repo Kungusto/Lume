@@ -1,7 +1,14 @@
 from fastapi import APIRouter, Path
 from src.api.dependencies import PaginationDep, DBDep, SearchDep, S3Dep
 from src.utils.helpers import PDFRenderer
-from src.exceptions.books import BookNotFoundHTTPException, BookNotFoundException, ContentNotFoundHTTPException, PageNotFoundException, PageNotFoundHTTPException, ContentOrBookNotFoundHTTPException
+from src.exceptions.books import (
+    BookNotFoundHTTPException,
+    BookNotFoundException,
+    ContentNotFoundHTTPException,
+    PageNotFoundException,
+    PageNotFoundHTTPException,
+    ContentOrBookNotFoundHTTPException,
+)
 from src.exceptions.files import FileNotFoundException
 import fitz
 
@@ -10,17 +17,14 @@ router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
 
 @router.get("")
 async def get_filtered_publicated_books_with_pagination(
-    pagination_data: PaginationDep, 
-    search_data: SearchDep, 
-    db: DBDep,
-    s3: S3Dep
+    pagination_data: PaginationDep, search_data: SearchDep, db: DBDep, s3: S3Dep
 ):
     limit = pagination_data.per_page
     offset = (pagination_data.page - 1) * pagination_data.per_page
     books = await db.books.get_filtered_with_pagination(
         limit=limit, offset=offset, search_data=search_data
     )
-    for book in books: 
+    for book in books:
         if book.cover_link:
             book.cover_link = await s3.books.generate_url(file_path=book.cover_link)
     return books
@@ -44,7 +48,7 @@ async def get_book_by_id(
 
 @router.get("/download/{book_id}")
 async def download_book(
-    s3: S3Dep, 
+    s3: S3Dep,
     db: DBDep,
     book_id: int = Path(le=2**31),
 ):
@@ -86,5 +90,4 @@ async def get_page(
 async def report_book(
     db: DBDep,
     book_id: int = Path(le=2**31),
-):
-    ...
+): ...

@@ -9,7 +9,12 @@ from src.repositories.database.books import (
 from src.repositories.database.books_authors import BooksAuthorsRepository
 from src.repositories.database.files_src_images import FilesRepository
 from src.repositories.database.reviews import ReviewsRepository
-from src.repositories.database.reports import ReportsRepository, BansRepository, ReasonsRepository
+from src.repositories.database.reports import (
+    ReportsRepository,
+    BansRepository,
+    ReasonsRepository,
+)
+
 
 class AsyncDBManager:
     """

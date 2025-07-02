@@ -6,6 +6,7 @@ from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
+
 # Для отрисовки картинок на сайте.
 class SourceImage(BaseModel):
     file_id: int
@@ -83,7 +84,7 @@ class BookAdd(BaseModel):
 class BookAddWithAuthorsTagsGenres(BookAdd):
     authors: list[int] = []
     genres: list[int] = Field(min_items=1)
-    tags: List[constr(min_length=2)] | None = [] # type: ignore
+    tags: List[constr(min_length=2)] | None = []  # type: ignore
 
     @field_validator("tags")
     @classmethod
@@ -109,7 +110,7 @@ class BookPATCHWithRels(BaseModel):
     age_limit: int | None = None
     description: str | None = None
     genres: list[int] | None = []
-    tags: List[constr(min_length=2)] | None = [] # type: ignore
+    tags: List[constr(min_length=2)] | None = []  # type: ignore
 
     @field_validator("tags")
     @classmethod
@@ -147,14 +148,14 @@ class BookDataWithRels(Book):
     authors: list[UserPublicData]  # список авторов
     tags: list[Tag]  # список тегов
     genres: list[Genre]  # список жанров
-    reviews: list[Review] # список отзывов
+    reviews: list[Review]  # список отзывов
 
 
 class BookDataWithRelsPrivat(Book):
     authors: list[User]  # список авторов
     tags: list[Tag]  # список тегов
     genres: list[Genre]  # список жанров
-    reviews: list[Review] # список отзывов
+    reviews: list[Review]  # список отзывов
 
 
 class BookDataWithTagRel(BookData):

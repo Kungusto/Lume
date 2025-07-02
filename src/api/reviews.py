@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Path
 from src.api.dependencies import DBDep, UserIdDep, UserRoleDep
-from src.schemas.reviews import ReviewAddFromUser, ReviewAdd, ReviewPut 
+from src.schemas.reviews import ReviewAddFromUser, ReviewAdd, ReviewPut
 from src.exceptions.reviews import (
     RateYourselfHTTPException,
-    ReviewAtThisBookAlreadyExistsHTTPException, 
+    ReviewAtThisBookAlreadyExistsHTTPException,
     ReviewNotFoundHTTPException,
     CannotEditOthersReviewHTTPException,
-    CannotDeleteOthersReviewHTTPException
+    CannotDeleteOthersReviewHTTPException,
 )
 from src.exceptions.books import BookNotFoundException, BookNotFoundHTTPException
 from src.exceptions.base import ObjectNotFoundException
@@ -29,7 +29,7 @@ async def add_review(
     if user_role != "ADMIN":
         authors_ids = [author.user_id for author in book.authors]
         if user_id in authors_ids:
-            raise RateYourselfHTTPException 
+            raise RateYourselfHTTPException
         if await db.reviews.get_filtered(book_id=book_id, user_id=user_id):
             raise ReviewAtThisBookAlreadyExistsHTTPException
     review = await db.reviews.add(
@@ -58,10 +58,7 @@ async def edit_review(
     if user_role != "ADMIN":
         if user_id != review.user_id:
             raise CannotEditOthersReviewHTTPException
-    await db.reviews.edit(
-        data=data,
-        review_id=review_id
-    )
+    await db.reviews.edit(data=data, review_id=review_id)
     await db.commit()
     return {"status": "OK"}
 
@@ -80,9 +77,7 @@ async def delete_review(
     if user_role != "ADMIN":
         if user_id != review.user_id:
             raise CannotDeleteOthersReviewHTTPException
-    await db.reviews.delete(
-        review_id=review_id
-    )
+    await db.reviews.delete(review_id=review_id)
     await db.commit()
     return {"status": "OK"}
 
@@ -96,7 +91,7 @@ async def get_my_reviews(
 
 
 @router.get("/by_book/{book_id}")
-async def get_my_reviews(
+async def get_book_reviews(
     db: DBDep,
     book_id: int = Path(le=2**31),
 ):

@@ -80,3 +80,11 @@ async def get_page(
             new_path = await s3.books.generate_url(file_path=image_path)
             block["path"] = new_path
     return content_data
+
+
+@router.post("/{book_id}/report")
+async def report_book(
+    db: DBDep,
+    book_id: int = Path(le=2**31),
+):
+    ...

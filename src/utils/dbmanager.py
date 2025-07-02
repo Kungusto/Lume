@@ -9,6 +9,7 @@ from src.repositories.database.books import (
 from src.repositories.database.books_authors import BooksAuthorsRepository
 from src.repositories.database.files_src_images import FilesRepository
 from src.repositories.database.reviews import ReviewsRepository
+from src.repositories.database.reports import ReportsRepository, BansRepository, ReasonsRepository
 
 class AsyncDBManager:
     """
@@ -38,6 +39,9 @@ class AsyncDBManager:
         self.genres = GenreRepository(self.session)
         self.tags = TagRepository(self.session)
         self.reviews = ReviewsRepository(self.session)
+        self.reasons = ReasonsRepository(self.session)
+        self.bans = BansRepository(self.session)
+        self.reports = ReportsRepository(self.session)
 
         return self
 

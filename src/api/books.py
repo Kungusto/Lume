@@ -94,17 +94,14 @@ async def report_book(
     db: DBDep,
     data: ReportAddFromUser,
     book_id: int = Path(le=2**31),
-): 
+):
     try:
         await db.books.get_one(book_id=book_id)
     except ObjectNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     try:
         report = await db.reports.add(
-            data=ReportAdd(
-                **data.model_dump(),
-                book_id=book_id
-            )
+            data=ReportAdd(**data.model_dump(), book_id=book_id)
         )
     except ForeignKeyException as ex:
         raise ReasonNotFoundHTTPException from ex

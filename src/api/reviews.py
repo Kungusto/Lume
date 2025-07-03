@@ -23,11 +23,12 @@ async def add_review(
     book_id: int = Path(le=2**31),
 ):
     try:
-        book = await db.books.get_book_with_rels(book_id=book_id, privat_data=True)
+        books = await db.books.get_book_with_rels(book_id=book_id, privat_data=True)
+
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     if user_role != "ADMIN":
-        authors_ids = [author.user_id for author in book.authors]
+        authors_ids = [author.user_id for author in books[0].authors]
         if user_id in authors_ids:
             raise RateYourselfHTTPException
         if await db.reviews.get_filtered(book_id=book_id, user_id=user_id):

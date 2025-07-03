@@ -6,7 +6,7 @@ from src.exceptions.base import (
     AuthentificationException,
     AlreadyExistsHTTPException,
     AuthentificationHTTPException,
-    PermissionDeniedHTTPException
+    PermissionDeniedHTTPException,
 )
 
 # =---=---=---=---=---= Base Exceptions =---=---=---=---=---= #
@@ -105,3 +105,5 @@ class EmailNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Почта не найдена"
 
 
+class ChangePermissionsOfADMINHTTPException(PermissionDeniedHTTPException):
+    detail = "Вы не можете понизить в правах, или забанить, админа, права которого не ниже ваших"

@@ -1,11 +1,10 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Path
-from src.api.dependencies import authorize_and_return_user_id, DBDep
+from src.api.dependencies import authorize_and_return_user_id, DBDep, UserRoleDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
 from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit
 from src.models.reports import BanORM
-from src.exceptions.auth import UserNotFoundHTTPException
 from src.exceptions.base import AlreadyExistsException, ObjectNotFoundException
 from src.exceptions.books import (
     GenreAlreadyExistsHTTPException,
@@ -13,12 +12,15 @@ from src.exceptions.books import (
     TagNotFoundHTTPException,
     BookNotFoundHTTPException,
 )
-from src.exceptions.auth import UserNotFoundHTTPException
+from src.exceptions.auth import (
+    UserNotFoundHTTPException,
+    ChangePermissionsOfADMINHTTPException,
+)
 from src.exceptions.reports import (
-    ReasonAlreadyExistsHTTPException, 
+    ReasonAlreadyExistsHTTPException,
     ReasonNotFoundHTTPException,
     AlreadyBannedHTTPException,
-    UserNotBannedHTTPException
+    UserNotBannedHTTPException,
 )
 
 
@@ -29,13 +31,21 @@ router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
 async def change_role(
     db: DBDep,
     data: UserRolePUT,
+    user_role: UserRoleDep,
+    admin_id: int = authorize_and_return_user_id(3),
     user_id: int = Path(le=2**31),
 ):
     try:
-        user = db.users.get_one(user_id=user_id)
-    except ObjectNotFoundException as ex: 
+        user = await db.users.get_one(user_id=user_id)
+    except ObjectNotFoundException as ex:
         raise UserNotFoundHTTPException from ex
-  
+
+    # На случай если админ решит понизить другого админа
+    if user_role == user.role.value:
+        raise ChangePermissionsOfADMINHTTPException
+    if user.role.value == "GENERAL_ADMIN":
+        raise ChangePermissionsOfADMINHTTPException
+
     await db.users.edit(data=data, user_id=user_id)
     await db.commit()
     return {"status": "OK"}
@@ -66,7 +76,7 @@ async def edit_genre(
         await db.genres.get_one(genre_id=genre_id)
     except ObjectNotFoundException as ex:
         raise GenreNotFoundHTTPException from ex
-    edit_genre = await db.genres.edit(data=data, genre_id=genre_id)
+    await db.genres.edit(data=data, genre_id=genre_id)
     await db.commit()
     return {"status": "OK"}
 
@@ -140,7 +150,7 @@ async def add_reason(
 ):
     try:
         reason = await db.reasons.add(data)
-    except AlreadyExistsException as ex: 
+    except AlreadyExistsException as ex:
         raise ReasonAlreadyExistsHTTPException from ex
     await db.commit()
     return reason
@@ -155,7 +165,7 @@ async def edit_reason(
 ):
     try:
         await db.reasons.get_one(reason_id=reason_id)
-    except ObjectNotFoundException as ex : 
+    except ObjectNotFoundException as ex:
         raise ReasonNotFoundHTTPException from ex
     await db.reasons.edit(data=data, reason_id=reason_id)
     await db.commit()
@@ -170,7 +180,7 @@ async def delete_reason(
 ):
     try:
         await db.reasons.get_one(reason_id=reason_id)
-    except ObjectNotFoundException as ex : 
+    except ObjectNotFoundException as ex:
         raise ReasonNotFoundHTTPException from ex
     await db.reasons.delete(reason_id=reason_id)
     await db.commit()
@@ -190,7 +200,7 @@ async def mark_as_checked(
     db: DBDep,
     report_id: int = Path(le=2**31),
     user_id: int = authorize_and_return_user_id(3),
-): 
+):
     await db.reports.mark_as_checked(report_id=report_id)
     await db.commit()
     return {"status": "OK"}
@@ -200,21 +210,24 @@ async def mark_as_checked(
 async def ban_user_by_id(
     db: DBDep,
     data: BanAddFromUser,
+    user_role: UserRoleDep,
     user_id: int = Path(le=2**31),
     admin_id: int = authorize_and_return_user_id(3),
 ):
     try:
-        await db.users.get_one(user_id=user_id)
+        user = await db.users.get_one(user_id=user_id)
     except ObjectNotFoundException as ex:
         raise UserNotFoundHTTPException from ex
-    if await db.bans.get_filtered(BanORM.ban_until > datetime.now(timezone.utc), user_id=user_id):
-        raise AlreadyBannedHTTPException 
-    ban_data = await db.bans.add(
-        data=BanAdd(
-            **data.model_dump(),
-            user_id=user_id
-        )
-    )
+    if await db.bans.get_filtered(
+        BanORM.ban_until > datetime.now(timezone.utc), user_id=user_id
+    ):
+        raise AlreadyBannedHTTPException
+    if user_role == user.role.value:
+        raise ChangePermissionsOfADMINHTTPException
+    if user.role.value == "GENERAL_ADMIN":
+        raise ChangePermissionsOfADMINHTTPException
+    # На случай если админ решит понизить другого админа
+    ban_data = await db.bans.add(data=BanAdd(**data.model_dump(), user_id=user_id))
     await db.commit()
     return ban_data
 
@@ -238,7 +251,7 @@ async def edit_ban_date(
     data: BanEdit,
     ban_id: int = Path(le=2**31),
     admin_id: int = authorize_and_return_user_id(3),
-): 
+):
     if not await db.bans.get_filtered(ban_id=ban_id):
         raise UserNotBannedHTTPException
     await db.bans.edit(data=data, ban_id=ban_id)

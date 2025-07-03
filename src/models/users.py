@@ -15,7 +15,7 @@ class UsersORM(Base):
 
     user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     role: Mapped[AllUsersRolesEnum] = mapped_column(
-        Enum(AllUsersRolesEnum, name="user_role_unum"), nullable=False
+        Enum(AllUsersRolesEnum, name="user_role_enum"), nullable=False
     )
     email: Mapped[str] = mapped_column(String(254), unique=True)
     name: Mapped[str] = mapped_column(String(50))

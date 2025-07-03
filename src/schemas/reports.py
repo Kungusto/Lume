@@ -29,7 +29,7 @@ class BanAddFromUser(BaseModel):
     def check_date(cls, value: date) -> date:
         if value > datetime.now(timezone.utc):
             return value
-        else: 
+        else:
             raise InvalidBanDateHTTPException
 
 
@@ -53,8 +53,10 @@ class Ban(BanAdd):
 
 class ReasonEdit(ReasonAdd): ...
 
-class BanEdit(BaseModel): 
+
+class BanEdit(BaseModel):
     ban_until: datetime = datetime.now(timezone.utc) + timedelta(hours=1)
+
 
 class Reason(BaseModel):
     reason_id: int

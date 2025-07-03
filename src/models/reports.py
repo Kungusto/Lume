@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from sqlalchemy import TIMESTAMP, ForeignKey
 from src.database import Base
 from sqlalchemy.orm import mapped_column, Mapped
@@ -11,8 +11,8 @@ class BanORM(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("Users.user_id"))
     ban_until: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now() + timedelta(hours=1), 
-        nullable=False
+        default=lambda: datetime.now() + timedelta(hours=1),
+        nullable=False,
     )
     comment: Mapped[str | None] = mapped_column(default=None)
 

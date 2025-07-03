@@ -1,6 +1,7 @@
 import pandas as pd
 from pydantic import BaseModel
 
+
 # класс для табличек
 class BaseDFExcelRepository:
     def __init__(self, table_name: str):
@@ -10,11 +11,9 @@ class BaseDFExcelRepository:
         except (FileNotFoundError, ValueError):
             self.df = pd.DataFrame()
 
-
     def add_bulk(self, data: list[BaseModel]):
         new_row = pd.DataFrame([index.model_dump() for index in data])
         self.df = pd.concat([self.df, new_row], ignore_index=True)
-        
 
     def get_filtered(self, **filter_by):
         if not filter_by:
@@ -23,7 +22,6 @@ class BaseDFExcelRepository:
         for col, val in filter_by.items():
             result = result[result[col] == val]
         return result
-    
 
     def add(self, data: BaseModel):
         new_row = pd.DataFrame([data.model_dump()])

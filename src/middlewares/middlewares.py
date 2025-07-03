@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 import logging
-from time import time
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from src.api.dependencies import get_db
@@ -14,7 +13,7 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         """
         Проверяет, забанен ли пользователь, на всех методах, кроме GET,
-        и на всех url, кроме разлогина        
+        и на всех url, кроме разлогина
 
         Если пользователь не аутентифицирован - пропускаем, т.к. без токена
         он все равно ничего не сможет опубликовать

@@ -19,7 +19,7 @@ class User(BaseModel):
 
 
 class UserWithBanDate(User):
-    ban_until: datetime | None 
+    ban_until: datetime | None
 
 
 class UserWithHashedPassword(User):

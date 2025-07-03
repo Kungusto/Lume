@@ -151,11 +151,19 @@ class BookDataWithRels(Book):
     reviews: list[Review]  # список отзывов
 
 
+class BookDataWithRelsAndAvgRating(BookDataWithRels):
+    avg_rating: float | None
+
+
 class BookDataWithRelsPrivat(Book):
     authors: list[User]  # список авторов
     tags: list[Tag]  # список тегов
     genres: list[Genre]  # список жанров
     reviews: list[Review]  # список отзывов
+
+
+class BookDataWithRelsAndAvgRatingPrivat(BookDataWithRelsPrivat):
+    avg_rating: float | None
 
 
 class BookDataWithTagRel(BookData):

@@ -11,7 +11,7 @@ class BansRepository(BaseRepository):
     model = BanORM
     schema = Ban
 
-    async def get_banned_users(self): 
+    async def get_banned_users(self):
         query = (
             select(UsersORM, func.max(BanORM.ban_until))
             .select_from(BanORM)
@@ -23,7 +23,7 @@ class BansRepository(BaseRepository):
         return [
             UserWithBanDate(
                 **User.model_validate(user, from_attributes=True).model_dump(),
-                ban_until=ban_until
+                ban_until=ban_until,
             )
             for user, ban_until in models.all()
         ]
@@ -47,5 +47,3 @@ class ReportsRepository(BaseRepository):
         )
         model = await self.session.execute(update_stmt)
         return Report.model_validate(model.scalar_one(), from_attributes=True)
-    
-

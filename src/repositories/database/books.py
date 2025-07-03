@@ -44,6 +44,38 @@ class BooksRepository(BaseRepository):
         result = model.scalars().all()
         return self.schema.model_validate(result, from_attributes=True)
 
+
+    async def get_one_with_rels(self, privat_data=False, **filter_by):
+        query = (
+                    select(self.model, cast(func.avg(ReviewsORM.rating), Float))
+                    .options(joinedload(self.model.authors))
+                    .options(joinedload(self.model.genres))
+                    .options(joinedload(self.model.tags))
+                    .options(joinedload(self.model.reviews))
+                    .filter_by(**filter_by)
+                    .join(ReviewsORM, ReviewsORM.book_id == BooksORM.book_id, isouter=True)
+                    .group_by(self.model.book_id)
+                )
+        result = await self.session.execute(query)
+        try:
+            model = result.unique().one()
+        except NoResultFound as ex:
+            raise BookNotFoundException from ex
+        if privat_data:
+            target_schemaDTO = BookDataWithRelsAndAvgRatingPrivat
+            book_schemaDTO = BookDataWithRelsPrivat
+        else:
+            target_schemaDTO = BookDataWithRelsAndAvgRating
+            book_schemaDTO = BookDataWithRels
+        print(model)
+        return target_schemaDTO(
+                    **book_schemaDTO.model_validate(
+                        model[0], from_attributes=True
+                    ).model_dump(),
+                    avg_rating=model[1],
+                )
+                
+
     async def get_book_with_rels(self, privat_data=False, **filter_by):
         query = (
             select(self.model, cast(func.avg(ReviewsORM.rating), Float))
@@ -56,24 +88,17 @@ class BooksRepository(BaseRepository):
             .group_by(self.model.book_id)
         )
         result = await self.session.execute(query)
-        try:
-            models = result.unique().all()
-        except NoResultFound as ex:
-            raise BookNotFoundException from ex
+        models = result.unique().all()
         if privat_data:
-            return [
-                BookDataWithRelsAndAvgRatingPrivat(
-                    **BookDataWithRelsPrivat.model_validate(
-                        book, from_attributes=True
-                    ).model_dump(),
-                    avg_rating=avg_rating,
-                )
-                for book, avg_rating in models
-            ]
+            target_schemaDTO = BookDataWithRelsAndAvgRatingPrivat
+            book_schemaDTO = BookDataWithRelsPrivat
         else:
-            return [
-                BookDataWithRelsAndAvgRating(
-                    **BookDataWithRels.model_validate(
+            target_schemaDTO = BookDataWithRelsAndAvgRating
+            book_schemaDTO = BookDataWithRels
+        
+        return [
+            target_schemaDTO(
+                    **book_schemaDTO.model_validate(
                         book, from_attributes=True
                     ).model_dump(),
                     avg_rating=avg_rating,

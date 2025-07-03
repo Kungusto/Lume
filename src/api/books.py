@@ -44,7 +44,7 @@ async def get_book_by_id(
     book_id: int = Path(le=2**31),
 ):
     try:
-        return await db.books.get_book_with_rels(book_id=book_id)
+        return await db.books.get_one_with_rels(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
 

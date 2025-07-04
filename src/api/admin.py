@@ -268,5 +268,4 @@ async def get_banned_users(
 
 
 @router.post("/report")
-async def generate_report_inside_app(db: DBDep):
-    ...
+async def generate_report_inside_app(db: DBDep): ...

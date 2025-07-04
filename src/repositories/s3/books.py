@@ -24,5 +24,4 @@ class BooksS3Repository(BaseS3Repository):
             Key=f"{self.prefix_name}/{book_id}/book.pdf",
             Body=file.file,
         )
-        print(f"{self.prefix_name}/{book_id}/book.pdf")
         return f"{self.prefix_name}/{book_id}/book.pdf"

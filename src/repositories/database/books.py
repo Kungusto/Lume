@@ -66,7 +66,6 @@ class BooksRepository(BaseRepository):
         else:
             target_schemaDTO = BookDataWithRelsAndAvgRating
             book_schemaDTO = BookDataWithRels
-        print(model)
         return target_schemaDTO(
             **book_schemaDTO.model_validate(
                 model[0], from_attributes=True
@@ -173,4 +172,3 @@ class GenreRepository(BaseRepository):
 class GenresBooksRepository(BaseRepository):
     model = BooksGenresORM
     schema = GenresBook
-

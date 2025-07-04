@@ -6,6 +6,7 @@ from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
+
 # Теги
 class Tag(BaseModel):
     id: int

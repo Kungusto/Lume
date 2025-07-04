@@ -327,4 +327,3 @@ async def publicate_book(
     )
     await db.commit()
     return updated_data
-

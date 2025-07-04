@@ -4,7 +4,7 @@ from src.exceptions.base import (
     AlreadyExistsException,
     PermissionDeniedHTTPException,
     ObjectNotFoundException,
-    LumeHTTPException
+    LumeHTTPException,
 )
 
 
@@ -80,6 +80,6 @@ class TagNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Тег не найден"
 
 
-class UnableToPuslishHTTPException(LumeHTTPException): 
+class UnableToPuslishHTTPException(LumeHTTPException):
     detail = "Невозможно опубликовать. Не выполнены требования для публикации"
     status_code = 422

@@ -73,10 +73,10 @@ async def get_page(
         book = await db.books.get_one(book_id=book_id)
     except ObjectNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    if not book.is_rendered: 
+    if not book.is_rendered:
         raise ContentNotFoundHTTPException
     if (book.total_pages is None) or (page_number > book.total_pages):
-        raise PageNotFoundHTTPException(page_number=page_number) 
+        raise PageNotFoundHTTPException(page_number=page_number)
     book_file = await s3.books.get_file_by_path(f"books/{book_id}/book.pdf")
     doc = fitz.open(stream=book_file, filetype="pdf")
     try:

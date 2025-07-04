@@ -4,6 +4,7 @@ from src.exceptions.base import (
     AlreadyExistsException,
     PermissionDeniedHTTPException,
     ObjectNotFoundException,
+    LumeHTTPException
 )
 
 
@@ -20,7 +21,7 @@ class GenreNotFoundHTTPException(ObjectNotFoundHTTPException):
 
 
 class CoverNotFoundHTTPException(ObjectNotFoundHTTPException):
-    detail = "К этой книге пока нету обложек"
+    detail = "Обложка не найдена"
 
 
 class BookNotFoundHTTPException(ObjectNotFoundHTTPException):
@@ -77,3 +78,8 @@ class GenreAlreadyExistsHTTPException(AlreadyExistsHTTPException):
 
 class TagNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Тег не найден"
+
+
+class UnableToPuslishHTTPException(LumeHTTPException): 
+    detail = "Невозможно опубликовать. Не выполнены требования для публикации"
+    status_code = 422

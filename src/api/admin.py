@@ -265,3 +265,8 @@ async def get_banned_users(
     admin_id: int = authorize_and_return_user_id(3),
 ):
     return await db.bans.get_banned_users()
+
+
+@router.post("/report")
+async def generate_report_inside_app(db: DBDep):
+    ...

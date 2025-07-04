@@ -29,6 +29,7 @@ def render_book(book_id: int):
 
     with fitz.open(stream=file_pdf, filetype="pdf") as doc:
         files_to_add = PDFRenderer.parse_images_from_pdf(doc=doc, book_id=book_id)
+        num_pages = doc.page_count
         with get_sync_session() as s3:
             for file in files_to_add:
                 s3.client.put_object(
@@ -38,7 +39,7 @@ def render_book(book_id: int):
         update_stmt = (
             update(BooksORM)
             .filter_by(book_id=book_id)
-            .values(is_rendered=True)
+            .values(is_rendered=True, total_pages=num_pages)
             .returning(BooksORM)
         )
         model = db.session.execute(update_stmt)

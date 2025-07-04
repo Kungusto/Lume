@@ -7,11 +7,9 @@ from src.exceptions.books import (
     ContentNotFoundHTTPException,
     PageNotFoundException,
     PageNotFoundHTTPException,
-    ContentOrBookNotFoundHTTPException,
 )
 from src.exceptions.reports import ReasonNotFoundHTTPException
 from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
-from src.exceptions.files import FileNotFoundException
 from src.schemas.reports import ReportAdd, ReportAddFromUser
 import fitz
 
@@ -67,13 +65,19 @@ async def download_book(
 @router.get("/{book_id}/page/{page_number}")
 async def get_page(
     s3: S3Dep,
+    db: DBDep,
     page_number: int = Path(le=5000),
     book_id: int = Path(le=2**31),
 ):
     try:
-        book_file = await s3.books.get_file_by_path(f"books/{book_id}/book.pdf")
-    except FileNotFoundException as ex:
-        raise ContentOrBookNotFoundHTTPException from ex
+        book = await db.books.get_one(book_id=book_id)
+    except ObjectNotFoundException as ex:
+        raise BookNotFoundHTTPException from ex
+    if not book.is_rendered: 
+        raise ContentNotFoundHTTPException
+    if (book.total_pages is None) or (page_number > book.total_pages):
+        raise PageNotFoundHTTPException(page_number=page_number) 
+    book_file = await s3.books.get_file_by_path(f"books/{book_id}/book.pdf")
     doc = fitz.open(stream=book_file, filetype="pdf")
     try:
         content_data = PDFRenderer.parse_text_end_images_from_page(

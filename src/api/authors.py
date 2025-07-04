@@ -7,6 +7,7 @@ from src.exceptions.books import (
     BookNotFoundException,
     CoverAlreadyExistsHTTPException,
     BookAlreadyPublicatedHTTPException,
+    ContentNotFoundHTTPException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -84,7 +85,7 @@ async def edit_bood_data(
         await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )  # Проверяем, владеет ли пользователь этой книгой
@@ -151,7 +152,7 @@ async def delete_book(
     user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -189,7 +190,7 @@ async def add_cover(
     user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -222,7 +223,7 @@ async def put_cover(
     user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -258,7 +259,7 @@ async def add_all_content(
     user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -282,7 +283,7 @@ async def edit_content(
     user_role: UserRoleDep,
     user_id: int = authorize_and_return_user_id(2),
 ):
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -306,7 +307,7 @@ async def publicate_book(
     user_id: int = authorize_and_return_user_id(2),
 ):
     try:
-        if user_role != "ADMIN":
+        if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
             book = await AuthService().verify_user_owns_book(
                 user_id=user_id, book_id=book_id, db=db
             )
@@ -314,6 +315,10 @@ async def publicate_book(
             book = await db.books.get_one(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
+    if (not book.is_rendered) or (book.total_pages is None):
+        raise ContentNotFoundHTTPException
+    if book.cover_link is None:
+        raise CoverNotFoundHTTPException
     if book.is_publicated:
         raise BookAlreadyPublicatedHTTPException
     data_to_update = BookPATCH(is_publicated=True)
@@ -322,3 +327,4 @@ async def publicate_book(
     )
     await db.commit()
     return updated_data
+

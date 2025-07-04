@@ -1,5 +1,5 @@
-from datetime import date
-from sqlalchemy import Enum
+from datetime import date, datetime, timezone
+from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String
 from src.database import Base
@@ -28,3 +28,15 @@ class UsersORM(Base):
     books: Mapped[list["BooksORM"]] = relationship(  # type: ignore
         back_populates="authors", secondary="Books_authors"
     )
+
+
+class UserBooksReadORM(Base):
+    __tablename__ = "User_books_read"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("Users.user_id", ondelete="CASCADE"))
+    book_id: Mapped[int] = mapped_column(
+        ForeignKey("Books.book_id", ondelete="CASCADE")
+    )
+    started_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    last_seen_page: Mapped[int] 

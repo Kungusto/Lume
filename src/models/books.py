@@ -35,6 +35,7 @@ class BooksORM(Base):
     is_rendered: Mapped[bool] = mapped_column(default=False)
     cover_link: Mapped[str | None] = mapped_column(default=None)
     is_publicated: Mapped[bool] = mapped_column(default=False)
+    total_pages: Mapped[int] = mapped_column(default=1, nullable=True)
 
     authors: Mapped[list["UsersORM"]] = relationship(  # type: ignore
         back_populates="books", secondary="Books_authors"

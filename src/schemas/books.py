@@ -6,27 +6,6 @@ from src.enums.books import LanguagesEnum
 from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
-
-# Для отрисовки картинок на сайте.
-class SourceImage(BaseModel):
-    file_id: int
-    book_id: int
-    src: str
-
-
-# Добавление путей для файлов
-class SourceImageAdd(BaseModel):
-    book_id: int
-    src: str
-
-
-class Page(BaseModel):
-    book_id: int
-    page_number: int
-    text: str
-    images: list[SourceImage] = []
-
-
 # Теги
 class Tag(BaseModel):
     id: int
@@ -103,6 +82,7 @@ class Book(BaseModel):
     is_rendered: bool = False
     cover_link: str | None = None
     is_publicated: bool
+    total_pages: int | None
 
 
 class BookPATCHWithRels(BaseModel):

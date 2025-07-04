@@ -1,7 +1,7 @@
 from src.exceptions.books import (
     BookNotExistsOrYouNotOwnerHTTPException,
 )
-from src.exceptions.base import PermissionDeniedHTTPException
+from src.exceptions.base import PermissionDeniedHTTPException, ObjectNotFoundException
 from src.enums.users import AllUsersRolesEnum
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
@@ -51,10 +51,13 @@ class AuthService:
         self, user_id: int, book_id: int, db: AsyncDBManager
     ):
         """Проверяем, действительно ли пользователь владеет книгой"""
-        books = await db.books.get_book_with_rels(
-            book_id=book_id, privat_data=True
-        )  # для того чтобы получить id
-        author_ids = [author.user_id for author in books[0].authors]
+        try:
+            book = await db.books.get_one_with_rels(
+                book_id=book_id, privat_data=True
+            )  # для того чтобы получить id
+        except ObjectNotFoundException as ex:
+            raise BookNotExistsOrYouNotOwnerHTTPException from ex
+        author_ids = [author.user_id for author in book.authors]
         if user_id not in author_ids:
             raise BookNotExistsOrYouNotOwnerHTTPException
-        return books[0]
+        return book

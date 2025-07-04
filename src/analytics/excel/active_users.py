@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 # класс для табличек
-class BaseDFExcelRepository:
+class UsersDFExcelRepository:
     def __init__(self, table_name: str):
         self.table_name = table_name
         try:

@@ -44,18 +44,17 @@ class BooksRepository(BaseRepository):
         result = model.scalars().all()
         return self.schema.model_validate(result, from_attributes=True)
 
-
     async def get_one_with_rels(self, privat_data=False, **filter_by):
         query = (
-                    select(self.model, cast(func.avg(ReviewsORM.rating), Float))
-                    .options(joinedload(self.model.authors))
-                    .options(joinedload(self.model.genres))
-                    .options(joinedload(self.model.tags))
-                    .options(joinedload(self.model.reviews))
-                    .filter_by(**filter_by)
-                    .join(ReviewsORM, ReviewsORM.book_id == BooksORM.book_id, isouter=True)
-                    .group_by(self.model.book_id)
-                )
+            select(self.model, cast(func.avg(ReviewsORM.rating), Float))
+            .options(joinedload(self.model.authors))
+            .options(joinedload(self.model.genres))
+            .options(joinedload(self.model.tags))
+            .options(joinedload(self.model.reviews))
+            .filter_by(**filter_by)
+            .join(ReviewsORM, ReviewsORM.book_id == BooksORM.book_id, isouter=True)
+            .group_by(self.model.book_id)
+        )
         result = await self.session.execute(query)
         try:
             model = result.unique().one()
@@ -69,12 +68,11 @@ class BooksRepository(BaseRepository):
             book_schemaDTO = BookDataWithRels
         print(model)
         return target_schemaDTO(
-                    **book_schemaDTO.model_validate(
-                        model[0], from_attributes=True
-                    ).model_dump(),
-                    avg_rating=model[1],
-                )
-                
+            **book_schemaDTO.model_validate(
+                model[0], from_attributes=True
+            ).model_dump(),
+            avg_rating=model[1],
+        )
 
     async def get_book_with_rels(self, privat_data=False, **filter_by):
         query = (
@@ -95,16 +93,16 @@ class BooksRepository(BaseRepository):
         else:
             target_schemaDTO = BookDataWithRelsAndAvgRating
             book_schemaDTO = BookDataWithRels
-        
+
         return [
             target_schemaDTO(
-                    **book_schemaDTO.model_validate(
-                        book, from_attributes=True
-                    ).model_dump(),
-                    avg_rating=avg_rating,
-                )
-                for book, avg_rating in models
-            ]
+                **book_schemaDTO.model_validate(
+                    book, from_attributes=True
+                ).model_dump(),
+                avg_rating=avg_rating,
+            )
+            for book, avg_rating in models
+        ]
 
     async def get_one(self, *filter, **filter_by):
         query = select(self.model).filter(*filter).filter_by(**filter_by)
@@ -175,3 +173,4 @@ class GenreRepository(BaseRepository):
 class GenresBooksRepository(BaseRepository):
     model = BooksGenresORM
     schema = GenresBook
+

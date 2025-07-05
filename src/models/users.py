@@ -1,5 +1,5 @@
 from datetime import date, datetime, timezone
-from sqlalchemy import Enum, ForeignKey
+from sqlalchemy import TIMESTAMP, Enum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String
 from src.database import Base
@@ -21,13 +21,14 @@ class UsersORM(Base):
     name: Mapped[str] = mapped_column(String(50))
     surname: Mapped[str]
     nickname: Mapped[str] = mapped_column(String(30), unique=True)
-    last_activity: Mapped[date] = mapped_column(default=lambda: date.today())
+    last_activity: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     hashed_password: Mapped[str]
-    registation_date: Mapped[date] = mapped_column(default=lambda: date.today())
+    registation_date: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
     books: Mapped[list["BooksORM"]] = relationship(  # type: ignore
         back_populates="authors", secondary="Books_authors"
     )
-
-
-

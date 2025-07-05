@@ -14,8 +14,11 @@ class User(BaseModel):
     name: str
     surname: str
     nickname: str
-    last_activity: date
-    registation_date: date
+    last_activity: datetime
+    registation_date: datetime
+
+    class Config:
+        use_enum_values = True
 
 
 class UserWithBanDate(User):
@@ -47,6 +50,9 @@ class UserRegistrate(BaseModel):
         elif len(value) > 50:
             raise TooLongPasswordHTTPException
         return value
+
+    class Config:
+        use_enum_values = True
 
 
 class UserAdd(BaseModel):
@@ -81,5 +87,3 @@ class UserPublicData(BaseModel):
 
 class UserRolePUT(BaseModel):
     role: AllUsersRolesEnum
-
-

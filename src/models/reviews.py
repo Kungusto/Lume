@@ -15,8 +15,7 @@ class ReviewsORM(Base):
     rating: Mapped[int] = mapped_column(Integer())
     text: Mapped[str] = mapped_column(String(150))
     publication_date: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     book_id: Mapped[int] = mapped_column(
         ForeignKey("Books.book_id", ondelete="CASCADE")

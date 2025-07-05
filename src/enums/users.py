@@ -1,7 +1,7 @@
 from enum import Enum as pyEnum
 
 
-class AllUsersRolesEnum(pyEnum):
+class AllUsersRolesEnum(str, pyEnum):
     USER: str = "USER"
     AUTHOR: str = "AUTHOR"
     ADMIN: str = "ADMIN"
@@ -17,6 +17,6 @@ class AllUsersRolesEnum(pyEnum):
         return levels.get(str(role), None)
 
 
-class RegisterUserEnum(pyEnum):
+class RegisterUserEnum(str, pyEnum):
     USER: str = "USER"
     AUTHOR: str = "AUTHOR"

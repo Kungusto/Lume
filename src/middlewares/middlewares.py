@@ -30,7 +30,6 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
             logging.info("Вызов эндпоинта")
             return await call_next(request)
 
-
         async for db in get_db():
             try:
                 user_id = AuthService().decode_token(access_token)["user_id"]
@@ -38,7 +37,6 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
                 await db.commit()
             except ExpiredSignatureError:
                 token_is_expired = True
-
 
             if request.method != "GET" and request.url.path != "/auth/logout":
                 if token_is_expired:
@@ -56,7 +54,6 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
                                 "detail": f"Вы были забанены. осталось: {time_left}"
                             },
                         )
-
 
         logging.info("Вызов эндпоинта")
         return await call_next(request)

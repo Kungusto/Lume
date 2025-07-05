@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Mapped, mapped_column 
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import TIMESTAMP, ForeignKey
 from datetime import datetime, timezone
 from src.database import Base
@@ -15,7 +15,6 @@ class UserBooksReadORM(Base):
         ForeignKey("Books.book_id", ondelete="CASCADE")
     )
     started_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     last_seen_page: Mapped[int] = mapped_column(default=1)

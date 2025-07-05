@@ -9,3 +9,8 @@ celery_app = Celery(
     broker=settings.REDIS_URL,
     include=["src.tasks.tasks"],
 )
+
+
+celery_app.conf.beat_schedule = {
+    "auto_statement": {"task": "auto_statement", "schedule": 300}
+}

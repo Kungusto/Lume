@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from isodate import duration_isoformat
 from fastapi import APIRouter, Path
-from src.api.dependencies import authorize_and_return_user_id, DBDep, UserRoleDep
+from src.tasks.celery_app import celery_app
+from src.api.dependencies import authorize_and_return_user_id, DBDep, UserRoleDep, RedisDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
 from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit
@@ -22,6 +24,9 @@ from src.exceptions.reports import (
     AlreadyBannedHTTPException,
     UserNotBannedHTTPException,
 )
+from src.repositories.database.utils import AnalyticsQueryFactory
+from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate, StatementRequestFromADMIN
+from src.analytics.excel.active_users import UsersDFExcelRepository
 
 
 router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
@@ -267,5 +272,33 @@ async def get_banned_users(
     return await db.bans.get_banned_users()
 
 
-@router.post("/report")
-async def generate_report_inside_app(db: DBDep): ...
+@router.post("/statement")
+async def generate_report_inside_app(
+    db: DBDep,
+    data: StatementRequestFromADMIN
+):
+    interval = data.interval
+    now = datetime.now()
+    analytics_query = AnalyticsQueryFactory.users_data_sql(now=now, interval=interval)
+    model = await db.session.execute(analytics_query)
+    data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
+    result = UsersStatement(
+        **data.model_dump(),
+        started_date_as_str=(datetime.now()).strftime("%e/%m/%Y %H:%M:%S"),
+        ended_date_as_str=(datetime.now() + interval).strftime("%e/%m/%Y %H:%M:%S"),
+    )
+    excel_doc = UsersDFExcelRepository("src/analytics/data/users.xlsx")
+    excel_doc.add(result)
+    excel_doc.commit()
+    return result
+
+
+@router.put("/statement/auto/interval")
+async def set_interval_to_auto_statement(
+    data: StatementRequestFromADMIN,
+    redis: RedisDep
+):
+    interval = data.interval
+    iso_interval = duration_isoformat(interval)
+    await redis.session.set("auto-statement-interval", iso_interval, ex=60*24*7)
+    return {"status": "OK"}

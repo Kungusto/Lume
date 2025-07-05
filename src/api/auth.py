@@ -33,7 +33,7 @@ router = APIRouter(prefix="/auth", tags=["Авторизация и аутент
 @router.post("/register")
 async def registrate_users(data: UserRegistrate, db: DBDep):
     hashed_password = AuthService().hash_password(data.password)
-    data.role = AllUsersRolesEnum(data.role.value)
+    data.role = AllUsersRolesEnum(data.role)
     data = UserAdd(**data.model_dump(), hashed_password=hashed_password)
     try:
         result = await db.users.add(data=data)

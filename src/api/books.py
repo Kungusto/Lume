@@ -87,12 +87,20 @@ async def get_page(
         )
     except PageNotFoundException as ex:
         raise PageNotFoundHTTPException(page_number=page_number) from ex
-    
+
     user_read_book = await db.user_reads.get_filtered(user_id=user_id, book_id=book_id)
     if not user_read_book:
-        await db.user_reads.add(UserBookReadAdd(book_id=book_id, user_id=user_id, last_seen_page=page_number))
+        await db.user_reads.add(
+            UserBookReadAdd(
+                book_id=book_id, user_id=user_id, last_seen_page=page_number
+            )
+        )
     else:
-        await db.user_reads.edit(UserBookReadEdit(last_seen_page=page_number), user_id=user_id, book_id=book_id)
+        await db.user_reads.edit(
+            UserBookReadEdit(last_seen_page=page_number),
+            user_id=user_id,
+            book_id=book_id,
+        )
     await db.commit()
 
     for block in content_data:

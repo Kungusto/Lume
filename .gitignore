@@ -13,3 +13,5 @@ aiobotocore_env
 .vscode
 .ruff_cache
 .pytest_cache
+celerybeat-schedule.*
+users.xlsx

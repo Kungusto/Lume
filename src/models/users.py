@@ -1,5 +1,5 @@
-from datetime import date, datetime, timezone
-from sqlalchemy import TIMESTAMP, Enum, ForeignKey
+from datetime import datetime, timezone
+from sqlalchemy import TIMESTAMP, Enum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String
 from src.database import Base

@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 from pydantic import BaseModel, EmailStr, field_validator, constr
 from src.enums.users import AllUsersRolesEnum, RegisterUserEnum
 from src.exceptions.auth import (

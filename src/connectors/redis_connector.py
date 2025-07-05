@@ -2,7 +2,6 @@ import redis.asyncio as redis
 import redis as sync_redis
 
 
-
 class RedisManager:
     def __init__(self, host: str, port: int):
         self.host = host
@@ -17,11 +16,9 @@ class RedisManager:
         if self.session:
             await self.session.close()
 
-
     def __enter__(self):
         self.session = sync_redis.Redis(host=self.host, port=self.port)
         return self
-
 
     def __exit__(self, *args):
         if self.session:

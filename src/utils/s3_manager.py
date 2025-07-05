@@ -3,6 +3,7 @@ from aiobotocore.config import AioConfig
 from botocore.session import get_session as sync_get_session
 from botocore.config import Config
 from src.repositories.s3.books import BooksS3Repository
+from src.repositories.s3.analytics import AnalyticsS3Repository
 
 
 class AsyncS3Client:
@@ -26,6 +27,7 @@ class AsyncS3Client:
         self.client = await self.session.create_client("s3", **self.config).__aenter__()
 
         self.books = BooksS3Repository(self.client)
+        self.analytics = AnalyticsS3Repository(self.client)
 
         return self
 

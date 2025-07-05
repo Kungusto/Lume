@@ -32,13 +32,17 @@ class AnalyticsQueryFactory:
     """Генерирует SQL для получения различных отчетов"""
 
     @staticmethod
-    def users_data_sql(now: datetime, interval: timedelta):
-        interval = text("interval '5 minutes'")
+    def users_data_sql(now: datetime, interval_td: timedelta = timedelta(minutes=5)):
+        interval = text(timedelta_to_sql_interval(interval_td))
         query = select(
             select(func.count("*"))
             .select_from(UsersORM)
+            .filter(UsersORM.last_activity + text("interval '7 days'") > now)
+            .label("active_users_in_week"),
+            select(func.count("*"))
+            .select_from(UsersORM)
             .filter(UsersORM.last_activity + interval > now)
-            .label("active_users"),
+            .label("active_users_in_statement_interval"),
             select(func.count("*"))
             .select_from(ReviewsORM)
             .filter(ReviewsORM.publication_date + interval > now)
@@ -49,3 +53,23 @@ class AnalyticsQueryFactory:
             .label("new_users"),
         )
         return query
+
+
+def timedelta_to_sql_interval(td: timedelta) -> str:
+    days = td.days
+    seconds = td.seconds
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days} days")
+    if hours:
+        parts.append(f"{hours} hours")
+    if minutes:
+        parts.append(f"{minutes} minutes")
+    if seconds:
+        parts.append(f"{seconds} seconds")
+
+    interval_str = " ".join(parts)
+    return f"interval '{interval_str}'"

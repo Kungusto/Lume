@@ -1,7 +1,4 @@
-import asyncio
 from datetime import datetime, timedelta
-
-from isodate import parse_duration
 from src.tasks.celery_app import celery_app
 from sqlalchemy import update
 from src.config import get_settings
@@ -9,15 +6,12 @@ from src.models.books import BooksORM
 from src.api.dependencies import get_sync_session
 from src.api.dependencies import get_sync_db_np
 import fitz
-from src.connectors.redis_connector import RedisManager
 from src.utils.helpers import PDFRenderer
 from src.exceptions.files import FileNotFoundException
 from src.schemas.books import Book
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.repositories.database.utils import AnalyticsQueryFactory
-from src.utils.dbmanager import AsyncDBManager
-from src.database import async_session_maker
 import logging
 
 settings = get_settings()
@@ -85,15 +79,15 @@ def auto_statement():
     analytics_query = AnalyticsQueryFactory.users_data_sql(now=now)
     with get_sync_db_np() as db:
         model = db.session.execute(analytics_query)
-        data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
+        data = UsersStatementWithoutDate.model_validate(
+            model.first(), from_attributes=True
+        )
     result = UsersStatement(
         **data.model_dump(),
         started_date_as_str=now.strftime("%e/%m/%Y %H:%M:%S"),
         ended_date_as_str=(now + timedelta(minutes=5)).strftime("%e/%m/%Y %H:%M:%S"),
     )
-    excel_doc = UsersDFExcelRepository("src/analytics/data/users.xlsx")
+    excel_doc = UsersDFExcelRepository("src/analytics/data/users_statement_auto.xlsx")
     excel_doc.add(result)
     excel_doc.commit()
     logging.info("Отчеты обновлены!")
-
-

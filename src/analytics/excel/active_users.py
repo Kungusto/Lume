@@ -1,3 +1,4 @@
+from io import BytesIO
 import pandas as pd
 from pydantic import BaseModel
 
@@ -29,3 +30,9 @@ class UsersDFExcelRepository:
 
     def commit(self):
         self.df.to_excel(self.table_name, index=False)
+
+    def to_bytes(self) -> bytes:
+        buffer = BytesIO()
+        self.df.to_excel(buffer, index=False)
+        buffer.seek(0)
+        return buffer.read()

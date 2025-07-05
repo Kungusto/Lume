@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta, timezone
-from isodate import duration_isoformat
+from datetime import datetime, timezone
 from fastapi import APIRouter, Path
-from src.tasks.celery_app import celery_app
-from src.api.dependencies import authorize_and_return_user_id, DBDep, UserRoleDep, RedisDep
+from src.api.dependencies import S3Dep, authorize_and_return_user_id, DBDep, UserRoleDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
 from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit
@@ -25,7 +23,11 @@ from src.exceptions.reports import (
     UserNotBannedHTTPException,
 )
 from src.repositories.database.utils import AnalyticsQueryFactory
-from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate, StatementRequestFromADMIN
+from src.schemas.analytics import (
+    UsersStatement,
+    UsersStatementWithoutDate,
+    StatementRequestFromADMIN,
+)
 from src.analytics.excel.active_users import UsersDFExcelRepository
 
 
@@ -274,31 +276,28 @@ async def get_banned_users(
 
 @router.post("/statement")
 async def generate_report_inside_app(
-    db: DBDep,
-    data: StatementRequestFromADMIN
+    db: DBDep, data: StatementRequestFromADMIN, s3: S3Dep
 ):
     interval = data.interval
     now = datetime.now()
-    analytics_query = AnalyticsQueryFactory.users_data_sql(now=now, interval=interval)
+    date_template = "%d-%m-%Y_%H-%M-%S"
+    analytics_query = AnalyticsQueryFactory.users_data_sql(
+        now=now, interval_td=interval
+    )
     model = await db.session.execute(analytics_query)
     data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
     result = UsersStatement(
         **data.model_dump(),
-        started_date_as_str=(datetime.now()).strftime("%e/%m/%Y %H:%M:%S"),
-        ended_date_as_str=(datetime.now() + interval).strftime("%e/%m/%Y %H:%M:%S"),
+        started_date_as_str=now.strftime(date_template),
+        ended_date_as_str=(now + interval).strftime(date_template),
     )
-    excel_doc = UsersDFExcelRepository("src/analytics/data/users.xlsx")
+    excel_doc = UsersDFExcelRepository(
+        f"src/analytics/data/users_{now.strftime(date_template)}.xlsx"
+    )
     excel_doc.add(result)
     excel_doc.commit()
+    excel_bytes = excel_doc.to_bytes()
+    await s3.analytics.save_statement(
+        key=f"analytics/users_{now.strftime(date_template)}.xlsx", body=excel_bytes
+    )
     return result
-
-
-@router.put("/statement/auto/interval")
-async def set_interval_to_auto_statement(
-    data: StatementRequestFromADMIN,
-    redis: RedisDep
-):
-    interval = data.interval
-    iso_interval = duration_isoformat(interval)
-    await redis.session.set("auto-statement-interval", iso_interval, ex=60*24*7)
-    return {"status": "OK"}

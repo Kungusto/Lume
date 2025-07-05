@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import datetime, timezone
 import typing
-from sqlalchemy import Integer, CheckConstraint, ForeignKey, String
+from sqlalchemy import TIMESTAMP, Integer, CheckConstraint, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 
@@ -14,7 +14,10 @@ class ReviewsORM(Base):
     review_id: Mapped[int] = mapped_column(primary_key=True)
     rating: Mapped[int] = mapped_column(Integer())
     text: Mapped[str] = mapped_column(String(150))
-    publication_date: Mapped[date] = mapped_column(default=lambda: date.today())
+    publication_date: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
+    )
     book_id: Mapped[int] = mapped_column(
         ForeignKey("Books.book_id", ondelete="CASCADE")
     )

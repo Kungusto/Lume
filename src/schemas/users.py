@@ -81,3 +81,5 @@ class UserPublicData(BaseModel):
 
 class UserRolePUT(BaseModel):
     role: AllUsersRolesEnum
+
+

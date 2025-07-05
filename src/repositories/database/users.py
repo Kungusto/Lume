@@ -66,6 +66,7 @@ class UsersRepository(BaseRepository):
             update(self.model)
             .filter_by(user_id=user_id)
             .values(last_activity=date.today())
+            .returning(self.model)
         )
         result = await self.session.execute(query)
         model = result.scalar_one()

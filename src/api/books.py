@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path
-from src.api.dependencies import PaginationDep, DBDep, SearchDep, S3Dep
+from src.api.dependencies import PaginationDep, DBDep, SearchDep, S3Dep, UserIdDep
 from src.utils.helpers import PDFRenderer
 from src.exceptions.books import (
     BookNotFoundHTTPException,
@@ -11,6 +11,7 @@ from src.exceptions.books import (
 from src.exceptions.reports import ReasonNotFoundHTTPException
 from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
 from src.schemas.reports import ReportAdd, ReportAddFromUser
+from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
 import fitz
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
@@ -66,6 +67,7 @@ async def download_book(
 async def get_page(
     s3: S3Dep,
     db: DBDep,
+    user_id: UserIdDep,
     page_number: int = Path(le=5000),
     book_id: int = Path(le=2**31),
 ):
@@ -85,6 +87,14 @@ async def get_page(
         )
     except PageNotFoundException as ex:
         raise PageNotFoundHTTPException(page_number=page_number) from ex
+    
+    user_read_book = await db.user_reads.get_filtered(user_id=user_id, book_id=book_id)
+    if not user_read_book:
+        await db.user_reads.add(UserBookReadAdd(book_id=book_id, user_id=user_id, last_seen_page=page_number))
+    else:
+        await db.user_reads.edit(UserBookReadEdit(last_seen_page=page_number), user_id=user_id, book_id=book_id)
+    await db.commit()
+
     for block in content_data:
         if block["type"] == "image":
             image_path = block["path"]

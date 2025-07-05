@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 
@@ -15,7 +15,7 @@ class ReviewAdd(BaseModel):
 
 
 class Review(ReviewAdd):
-    publication_date: date
+    publication_date: datetime
     review_id: int
 
 

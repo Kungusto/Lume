@@ -13,6 +13,7 @@ from src.repositories.database.reports import (
     BansRepository,
     ReasonsRepository,
 )
+from src.repositories.database.user_reads import UserBooksReadRepository
 
 
 class AsyncDBManager:
@@ -45,6 +46,7 @@ class AsyncDBManager:
         self.reasons = ReasonsRepository(self.session)
         self.bans = BansRepository(self.session)
         self.reports = ReportsRepository(self.session)
+        self.user_reads = UserBooksReadRepository(self.session)
 
         return self
 

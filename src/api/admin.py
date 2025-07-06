@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from fastapi import APIRouter, Path
 from src.api.dependencies import S3Dep, authorize_and_return_user_id, DBDep, UserRoleDep
 from src.schemas.users import UserRolePUT
@@ -280,7 +280,7 @@ async def generate_report_inside_app(
 ):
     interval = data.interval
     now = datetime.now()
-    date_template = "%d-%m-%Y_%H-%M-%S"
+    date_template = "%Y-%m-%d_%H-%M-%S"
     analytics_query = AnalyticsQueryFactory.users_data_sql(
         now=now, interval_td=interval
     )
@@ -288,8 +288,8 @@ async def generate_report_inside_app(
     data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
     result = UsersStatement(
         **data.model_dump(),
-        started_date_as_str=now.strftime(date_template),
-        ended_date_as_str=(now + interval).strftime(date_template),
+        started_date_as_str=(now - interval).strftime(date_template),
+        ended_date_as_str=now.strftime(date_template),
     )
     excel_doc = UsersDFExcelRepository(
         f"src/analytics/data/users_{now.strftime(date_template)}.xlsx"
@@ -298,6 +298,19 @@ async def generate_report_inside_app(
     excel_doc.commit()
     excel_bytes = excel_doc.to_bytes()
     await s3.analytics.save_statement(
-        key=f"analytics/users_{now.strftime(date_template)}.xlsx", body=excel_bytes
+        key=f"analytics/{now.strftime('%Y-%m-%d')}/users_{now.strftime(date_template)}.xlsx",
+        body=excel_bytes,
     )
     return result
+
+
+@router.get("/statement")
+async def get_statements_by_date(s3: S3Dep, statement_date: date):
+    statemenets = await s3.analytics.list_objects_by_prefix(
+        f"analytics/{statement_date.strftime('%Y-%m-%d')}"
+    )
+    urls = []
+    for statement in statemenets:
+        key_url = await s3.analytics.generate_url(file_path=statement)
+        urls.append({"key": statement, "url": key_url})
+    return urls

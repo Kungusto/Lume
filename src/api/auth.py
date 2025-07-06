@@ -59,7 +59,7 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
     if not AuthService().verify_password(data.password, user.hashed_password):
         raise WrongPasswordOrEmailHTTPException
     access_token = AuthService().create_access_token(
-        {"user_id": user.user_id, "role": user.role.value}
+        {"user_id": user.user_id, "role": user.role}
     )
     response.set_cookie(key="access_token", value=access_token)
     return {"access_token": access_token}

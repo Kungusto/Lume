@@ -56,7 +56,7 @@ async def redis():
         host=settings.REDIS_HOST, port=settings.REDIS_PORT
     ) as redis:
         try:
-            result = await redis.ping()
+            result = await redis.session.ping()
         except Exception as e:
             logging.warning(f"Не удалось подключиться к Redis: {e}")
             pytest.skip("Redis не работает — тест пропущен")

@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-import logging
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from src.api.dependencies import get_db
@@ -19,15 +18,12 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
         он все равно ничего не сможет опубликовать
         """
         token_is_expired = False
-
-        logging.info("Обработка миддлваром")
         access_token = request.cookies.get("access_token", None)
         """
          если нету access_token, не проверяем,
         т.к. без него пользователь все равно не сможет ничего публиковать
         """
         if not access_token:
-            logging.info("Вызов эндпоинта")
             return await call_next(request)
 
         async for db in get_db():
@@ -55,5 +51,4 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
                             },
                         )
 
-        logging.info("Вызов эндпоинта")
         return await call_next(request)

@@ -1,5 +1,5 @@
 from sqlalchemy import insert, select, update
-from datetime import date
+from datetime import datetime, timezone
 from sqlalchemy.orm import joinedload
 from src.exceptions.auth import (
     EmailAlreadyRegistratedException,
@@ -65,7 +65,7 @@ class UsersRepository(BaseRepository):
         query = (
             update(self.model)
             .filter_by(user_id=user_id)
-            .values(last_activity=date.today())
+            .values(last_activity=datetime.now(timezone.utc))
             .returning(self.model)
         )
         result = await self.session.execute(query)

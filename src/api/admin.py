@@ -28,7 +28,9 @@ from src.schemas.analytics import (
     UsersStatementWithoutDate,
     StatementRequestFromADMIN,
 )
+
 from src.analytics.excel.active_users import UsersDFExcelRepository
+from src.exceptions.files import StatementNotFoundHTTPException
 
 
 router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
@@ -314,3 +316,21 @@ async def get_statements_by_date(s3: S3Dep, statement_date: date):
         key_url = await s3.analytics.generate_url(file_path=statement)
         urls.append({"key": statement, "url": key_url})
     return urls
+
+
+@router.get("/statement/auto")
+async def save_and_get_auto_statement(s3: S3Dep):
+    key = f"analytics/auto/{datetime.today().strftime("%Y-%m-%d_%H-%M")}"
+    try:
+        with open("src/analytics/data/users_statement_auto.xlsx", "rb") as doc:
+            content = doc.read()
+            if not content:
+                raise StatementNotFoundHTTPException
+            doc.seek(0)
+            await s3.analytics.save_statement(key=key, body=doc)
+    except FileNotFoundError as ex:
+        raise StatementNotFoundHTTPException from ex
+    # делаем файл пустым
+    with open("src/analytics/data/users_statement_auto.xlsx", "w") as f:
+        f.truncate(0)
+    return await s3.analytics.generate_url(file_path=key)

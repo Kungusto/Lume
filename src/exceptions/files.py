@@ -2,6 +2,7 @@ from src.exceptions.base import (
     FileValidationHTTPException,
     FileValidationException,
     ObjectNotFoundException,
+    ObjectNotFoundHTTPException
 )
 
 
@@ -23,3 +24,7 @@ class WrongCoverResolutionHTTPException(FileValidationHTTPException):
 
 class FileNotFoundException(ObjectNotFoundException):
     detail = "Файл не найден"
+
+
+class StatementNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Автоматический отчет еще не сгенерировал"

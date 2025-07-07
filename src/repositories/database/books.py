@@ -3,6 +3,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound
 from src.repositories.database.base import BaseRepository
 from src.models.books import BooksORM, BooksTagsORM, GenresORM
+from src.models.user_reads import UserBooksReadORM
 from src.schemas.books import (
     Book,
     Tag,
@@ -115,17 +116,23 @@ class BooksRepository(BaseRepository):
     async def get_filtered_with_pagination(
         self, search_data, limit: int = 0, offset: int = 5
     ):
+        avg_rating = cast(func.avg(ReviewsORM.rating), Float).label("rating")
+        readers = func.count(UserBooksReadORM.user_id.distinct()).label("readers")
         query = (
-            select(self.model, cast(func.avg(ReviewsORM.rating), Float))
+            select(self.model, avg_rating, readers)
             .filter_by(is_publicated=True)
             .limit(limit)
             .offset(offset)
-            .filter_by(is_publicated=True)
             .options(joinedload(self.model.authors))
             .options(joinedload(self.model.genres))
             .options(joinedload(self.model.tags))
             .options(joinedload(self.model.reviews))
             .join(ReviewsORM, ReviewsORM.book_id == BooksORM.book_id, isouter=True)
+            .join(
+                UserBooksReadORM,
+                UserBooksReadORM.book_id == BooksORM.book_id,
+                isouter=True,
+            )
             .order_by(self.model.book_id)
             .group_by(self.model.book_id)
         )
@@ -137,14 +144,21 @@ class BooksRepository(BaseRepository):
                 )
             )
         if search_data.min_age:
-            query = query.filter(BooksORM.age_limit > search_data.min_age)
+            query = query.filter(BooksORM.age_limit >= search_data.min_age)
         if search_data.max_age:
-            query = query.filter(BooksORM.age_limit < search_data.max_age)
+            query = query.filter(BooksORM.age_limit <= search_data.max_age)
         if search_data.later_than:
-            query = query.filter(BooksORM.date_publicated > search_data.later_than)
-
+            query = query.filter(BooksORM.date_publicated >= search_data.later_than)
         if search_data.earlier_than:
-            query = query.filter(BooksORM.date_publicated < search_data.earlier_than)
+            query = query.filter(BooksORM.date_publicated <= search_data.earlier_than)
+        if search_data.min_rating:
+            query = query.having(avg_rating >= search_data.min_rating)
+        if search_data.max_rating:
+            query = query.having(avg_rating <= search_data.max_rating)
+        if search_data.min_readers:
+            query = query.having(readers >= search_data.min_readers)
+        if search_data.max_readers:
+            query = query.having(readers <= search_data.max_readers)
 
         model = await self.session.execute(query)
         results = model.unique().all()
@@ -154,8 +168,9 @@ class BooksRepository(BaseRepository):
                     book, from_attributes=True
                 ).model_dump(),
                 avg_rating=avg_rating,
+                readers=readers,
             )
-            for book, avg_rating in results
+            for book, avg_rating, readers in results
         ]
 
 

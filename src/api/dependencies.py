@@ -25,11 +25,15 @@ from src.enums.users import AllUsersRolesEnum
 
 
 class BookSearch(BaseModel):
-    book_title: Annotated[str | None, Query(default=None)]
-    max_age: Annotated[int | None, Query(default=None, ge=0, le=21)]
-    min_age: Annotated[int | None, Query(default=None, ge=0, le=21)]
-    later_than: Annotated[date | None, Query(default=None)]
-    earlier_than: Annotated[date | None, Query(default=None)]
+    book_title: Annotated[str | None, Query(default=None)] = None
+    max_age: Annotated[int | None, Query(default=None, ge=0, le=21)] = None
+    min_age: Annotated[int | None, Query(default=None, ge=0, le=21)] = None
+    later_than: Annotated[date | None, Query(default=None)] = None
+    earlier_than: Annotated[date | None, Query(default=None)] = None
+    min_rating: Annotated[float | None, Query(default=None, ge=1, le=5)] = None
+    max_rating: Annotated[float | None, Query(default=None, ge=1, le=5)] = None
+    min_readers: Annotated[int | None, Query(default=None)] = None
+    max_readers: Annotated[int | None, Query(default=None)] = None
 
 
 SearchDep = Annotated[BookSearch, Depends()]

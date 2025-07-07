@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path
-from src.api.dependencies import PaginationDep, DBDep, SearchDep, S3Dep, UserIdDep
+from src.api.dependencies import PaginationDep, DBDep, S3Dep, UserIdDep, SearchDep
 from src.utils.helpers import PDFRenderer
 from src.exceptions.books import (
     BookNotFoundHTTPException,
@@ -8,10 +8,21 @@ from src.exceptions.books import (
     PageNotFoundException,
     PageNotFoundHTTPException,
 )
+from src.exceptions.search import (
+    LaterThanAfterEarlierThanException,
+    LaterThanAfterEarlierThanHTTPException,
+    MinAgeGreaterThanMaxAgeException,
+    MinAgeGreaterThanMaxAgeHTTPException,
+    MinRatingGreaterThanMaxRatingException,
+    MinRatingGreaterThanMaxRatingHTTPException,
+    MinReadersGreaterThanMaxReadersException,
+    MinReadersGreaterThanMaxReadersHTTPException,
+)
 from src.exceptions.reports import ReasonNotFoundHTTPException
 from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
 from src.schemas.reports import ReportAdd, ReportAddFromUser
 from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
+from src.validation.search import SearchValidator
 import fitz
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
@@ -19,8 +30,22 @@ router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
 
 @router.get("")
 async def get_filtered_publicated_books_with_pagination(
-    pagination_data: PaginationDep, search_data: SearchDep, db: DBDep, s3: S3Dep
+    pagination_data: PaginationDep,
+    db: DBDep,
+    s3: S3Dep,
+    search_data: SearchDep,
 ):
+    try:
+        SearchValidator.validate_book_filters(**search_data.model_dump())
+    except LaterThanAfterEarlierThanException as ex:
+        raise LaterThanAfterEarlierThanHTTPException from ex
+    except MinAgeGreaterThanMaxAgeException as ex:
+        raise MinAgeGreaterThanMaxAgeHTTPException from ex
+    except MinRatingGreaterThanMaxRatingException as ex:
+        raise MinRatingGreaterThanMaxRatingHTTPException from ex
+    except MinReadersGreaterThanMaxReadersException as ex:
+        raise MinReadersGreaterThanMaxReadersHTTPException from ex
+
     limit = pagination_data.per_page
     offset = (pagination_data.page - 1) * pagination_data.per_page
     books = await db.books.get_filtered_with_pagination(

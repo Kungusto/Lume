@@ -320,7 +320,7 @@ async def get_statements_by_date(s3: S3Dep, statement_date: date):
 
 @router.get("/statement/auto")
 async def save_and_get_auto_statement(s3: S3Dep):
-    key = f"analytics/auto/{datetime.today().strftime("%Y-%m-%d_%H-%M")}"
+    key = f"analytics/auto/{datetime.today().strftime('%Y-%m-%d_%H-%M')}"
     try:
         with open("src/analytics/data/users_statement_auto.xlsx", "rb") as doc:
             content = doc.read()

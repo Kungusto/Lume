@@ -2,7 +2,7 @@ from src.exceptions.base import (
     FileValidationHTTPException,
     FileValidationException,
     ObjectNotFoundException,
-    ObjectNotFoundHTTPException
+    ObjectNotFoundHTTPException,
 )
 
 

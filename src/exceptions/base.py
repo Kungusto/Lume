@@ -33,6 +33,10 @@ class ForeignKeyException(LumeException):
     detail = "Произошло исключение внешнего ключа"
 
 
+class BadRequestException(LumeException):
+    detail = "Некорректный запрос"
+
+
 # ------------------------------------ HTTP Exceptions ------------------------------------
 
 
@@ -47,6 +51,11 @@ class LumeHTTPException(HTTPException):
 class InternalServerErrorHTTPException(LumeHTTPException):
     detail = "Непредвиденная ошибка на стороне сервера"
     status_code = 500
+
+
+class BadRequestHTTPException(LumeHTTPException):
+    detail = "Некорректный запрос"
+    status_code = 400
 
 
 class AuthentificationHTTPException(LumeHTTPException):

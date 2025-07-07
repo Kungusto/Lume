@@ -134,6 +134,7 @@ class BookDataWithRels(Book):
 
 class BookDataWithRelsAndAvgRating(BookDataWithRels):
     avg_rating: float | None
+    readers: int | None
 
 
 class BookDataWithRelsPrivat(Book):

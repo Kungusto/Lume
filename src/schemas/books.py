@@ -146,6 +146,8 @@ class RatingReadersRel(BaseModel):
 
 class BookDataWithAllRels(RatingReadersRel, BookDataWithRels):
     pass
+
+
 class BookDataWithAllRelsPrivat(RatingReadersRel, BookDataWithRelsPrivat):
     pass
 

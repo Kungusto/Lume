@@ -110,7 +110,7 @@ async def mock_reviews(mock_books):
             data = [ReviewAdd(**review) for review in json.load(file)]
             await _db.reviews.add_bulk(data)
         await _db.commit()
-    
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def mock_s3(s3_session, mock_books, auth_ac_author_session):

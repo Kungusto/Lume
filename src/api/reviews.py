@@ -95,4 +95,4 @@ async def get_book_reviews(
     db: DBDep,
     book_id: int = Path(le=2**31),
 ):
-    return await db.reviews.get_filtered(user_id=book_id)
+    return await db.reviews.get_filtered(book_id=book_id)

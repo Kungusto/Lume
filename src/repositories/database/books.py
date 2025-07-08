@@ -9,9 +9,9 @@ from src.schemas.books import (
     Tag,
     Genre,
     BookDataWithRels,
-    BookDataWithRelsAndAvgRatingPrivat,
+    BookDataWithAllRelsPrivat,
     BookDataWithRelsPrivat,
-    BookDataWithRelsAndAvgRating,
+    BookDataWithAllRels,
     GenresBook,
 )
 from src.models.reviews import ReviewsORM
@@ -46,14 +46,21 @@ class BooksRepository(BaseRepository):
         return self.schema.model_validate(result, from_attributes=True)
 
     async def get_one_with_rels(self, privat_data=False, **filter_by):
+        avg_rating = cast(func.avg(ReviewsORM.rating), Float).label("rating")
+        readers = func.count(UserBooksReadORM.user_id.distinct()).label("readers")
         query = (
-            select(self.model, cast(func.avg(ReviewsORM.rating), Float))
+            select(self.model, avg_rating, readers)
             .options(joinedload(self.model.authors))
             .options(joinedload(self.model.genres))
             .options(joinedload(self.model.tags))
             .options(joinedload(self.model.reviews))
             .filter_by(**filter_by)
             .join(ReviewsORM, ReviewsORM.book_id == BooksORM.book_id, isouter=True)
+            .join(
+                UserBooksReadORM,
+                UserBooksReadORM.book_id == BooksORM.book_id,
+                isouter=True,
+            )
             .group_by(self.model.book_id)
         )
         result = await self.session.execute(query)
@@ -62,36 +69,44 @@ class BooksRepository(BaseRepository):
         except NoResultFound as ex:
             raise BookNotFoundException from ex
         if privat_data:
-            target_schemaDTO = BookDataWithRelsAndAvgRatingPrivat
+            target_schemaDTO = BookDataWithAllRelsPrivat
             book_schemaDTO = BookDataWithRelsPrivat
         else:
-            target_schemaDTO = BookDataWithRelsAndAvgRating
+            target_schemaDTO = BookDataWithAllRels
             book_schemaDTO = BookDataWithRels
         return target_schemaDTO(
             **book_schemaDTO.model_validate(
                 model[0], from_attributes=True
             ).model_dump(),
             avg_rating=model[1],
+            readers=model[2],
         )
 
     async def get_book_with_rels(self, privat_data=False, **filter_by):
+        avg_rating = cast(func.avg(ReviewsORM.rating), Float).label("rating")
+        readers = func.count(UserBooksReadORM.user_id.distinct()).label("readers")
         query = (
-            select(self.model, cast(func.avg(ReviewsORM.rating), Float))
+            select(self.model, avg_rating, readers)
             .options(joinedload(self.model.authors))
             .options(joinedload(self.model.genres))
             .options(joinedload(self.model.tags))
             .options(joinedload(self.model.reviews))
             .filter_by(**filter_by)
             .join(ReviewsORM, ReviewsORM.book_id == BooksORM.book_id, isouter=True)
+            .join(
+                UserBooksReadORM,
+                UserBooksReadORM.book_id == BooksORM.book_id,
+                isouter=True,
+            )
             .group_by(self.model.book_id)
         )
         result = await self.session.execute(query)
         models = result.unique().all()
         if privat_data:
-            target_schemaDTO = BookDataWithRelsAndAvgRatingPrivat
+            target_schemaDTO = BookDataWithAllRelsPrivat
             book_schemaDTO = BookDataWithRelsPrivat
         else:
-            target_schemaDTO = BookDataWithRelsAndAvgRating
+            target_schemaDTO = BookDataWithAllRels
             book_schemaDTO = BookDataWithRels
 
         return [
@@ -100,8 +115,9 @@ class BooksRepository(BaseRepository):
                     book, from_attributes=True
                 ).model_dump(),
                 avg_rating=avg_rating,
+                readers=readers,
             )
-            for book, avg_rating in models
+            for book, avg_rating, readers in models
         ]
 
     async def get_one(self, *filter, **filter_by):
@@ -163,7 +179,7 @@ class BooksRepository(BaseRepository):
         model = await self.session.execute(query)
         results = model.unique().all()
         return [
-            BookDataWithRelsAndAvgRating(
+            BookDataWithAllRels(
                 **BookDataWithRels.model_validate(
                     book, from_attributes=True
                 ).model_dump(),

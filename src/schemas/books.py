@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated, List
 from pydantic import BaseModel, EmailStr, Field, constr, field_validator, conint
 from src.enums.users import AllUsersRolesEnum
@@ -132,11 +132,6 @@ class BookDataWithRels(Book):
     reviews: list[Review]  # список отзывов
 
 
-class BookDataWithRelsAndAvgRating(BookDataWithRels):
-    avg_rating: float | None
-    readers: int | None
-
-
 class BookDataWithRelsPrivat(Book):
     authors: list[User]  # список авторов
     tags: list[Tag]  # список тегов
@@ -144,8 +139,15 @@ class BookDataWithRelsPrivat(Book):
     reviews: list[Review]  # список отзывов
 
 
-class BookDataWithRelsAndAvgRatingPrivat(BookDataWithRelsPrivat):
+class RatingReadersRel(BaseModel):
     avg_rating: float | None
+    readers: int | None
+
+
+class BookDataWithAllRels(RatingReadersRel, BookDataWithRels):
+    pass
+class BookDataWithAllRelsPrivat(RatingReadersRel, BookDataWithRelsPrivat):
+    pass
 
 
 class BookDataWithTagRel(BookData):
@@ -168,6 +170,6 @@ class UserAndBooksWithRels(BaseModel):
     name: str
     surname: str
     nickname: str
-    last_activity: date
-    registation_date: date
+    last_activity: datetime
+    registation_date: datetime
     books: list[BookDataWithRels]

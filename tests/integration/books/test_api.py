@@ -6,7 +6,8 @@ from src.schemas.books import BookPATCHWithRels
 pytest -s -v .\\tests\\integration\\books\\test_api.py
 """
 """
-Выполнить тест отдельно: pytest -s -v tests/integration/books/test_api.py::*название функции теста*
+Выполнить тест отдельно:
+pytest -s -v tests/integration/books/test_api.py::*название функции теста*
 """
 
 
@@ -25,7 +26,7 @@ async def test_registration_as_author(ac):
     assert response.status_code == 200
 
 
-async def test_base_crud_books(ac, redis):
+async def test_base_crud_books(ac):
     ac.cookies.clear()
 
     response_login_author = await ac.post(

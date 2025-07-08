@@ -29,6 +29,8 @@ from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
+from src.schemas.reviews import ReviewAdd
+
 
 settings = Settings()  # noqa: F811
 
@@ -91,10 +93,10 @@ async def setup_database():
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def mock_books(setup_database, auth_ac_author):
+async def mock_books(setup_database, auth_ac_author_session):
     with open("tests/mock_books.json", "r", encoding="utf-8") as file:
         for book in json.load(file):
-            response = await auth_ac_author.post(
+            response = await auth_ac_author_session.post(
                 url="/author/book",
                 json=BookAddWithAuthorsTagsGenres(**book).model_dump(mode="json"),
             )
@@ -102,14 +104,23 @@ async def mock_books(setup_database, auth_ac_author):
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def mock_s3(s3_session, mock_books, auth_ac_author):
+async def mock_reviews(mock_books):
+    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
+        with open("tests/mock_reviews.json", "r", encoding="utf-8") as file:
+            data = [ReviewAdd(**review) for review in json.load(file)]
+            await _db.reviews.add_bulk(data)
+        await _db.commit()
+    
+
+@pytest.fixture(scope="session", autouse=True)
+async def mock_s3(s3_session, mock_books, auth_ac_author_session):
     """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
     logging.info("Добавляю обложку к книге id=2")
     assert settings.MODE == "TEST"
     file = await s3_session.books.get_file_by_path(
         is_content_bucket=True, s3_path="books/covers/normal_cover.jpg"
     )
-    response_add_cover = await auth_ac_author.post(
+    response_add_cover = await auth_ac_author_session.post(
         url="author/cover/2", files={"file": ("preview.png", file)}
     )
     assert response_add_cover.status_code == 200
@@ -243,8 +254,9 @@ async def register_user(ac_session):
     assert response.status_code == 200
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def auth_ac_user(ac_session, register_user):
+    ac_session.cookies.clear()
     response = await ac_session.post(
         url="/auth/login", json={"email": "user@user.com", "password": "string"}
     )
@@ -271,7 +283,18 @@ async def register_author(ac_session):
 
 
 @pytest.fixture(scope="session")
+async def auth_ac_author_session(ac_session, register_author):
+    response = await ac_session.post(
+        url="/auth/login", json={"email": "author@author.com", "password": "string"}
+    )
+    assert response.status_code == 200
+    assert ac_session.cookies
+    yield ac_session
+
+
+@pytest.fixture(scope="function")
 async def auth_ac_author(ac_session, register_author):
+    ac_session.cookies.clear()
     response = await ac_session.post(
         url="/auth/login", json={"email": "author@author.com", "password": "string"}
     )

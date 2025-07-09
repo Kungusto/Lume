@@ -78,11 +78,29 @@ async def redis():
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     assert settings.MODE == "TEST"
-
     async with engine_null_pool.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+
+@pytest.fixture(scope="session", autouse=True)
+async def seed_db(setup_database, seed_genres, seed_users, seed_books, seed_reviews):
+    logging.info("База данных заполнена мок-данными!")
+
+
+@pytest.fixture(scope="session")
+async def seed_genres():
+    logging.debug("Заполняю бд жанрами")
+    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
+        with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
+            data = [GenreAdd(**genre) for genre in json.load(file)]
+            await _db.genres.add_bulk(data)
+        await _db.commit()
+
+
+@pytest.fixture(scope="session")
+async def seed_users():
+    logging.debug("Заполняю бд пользователями")
     async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
         with open("tests/mock_users.json", "r", encoding="utf-8") as file:
             data = []
@@ -91,15 +109,12 @@ async def setup_database():
                 user["hashed_password"] = hashed_password
                 data.append(UserAdd(**user))
             await _db.users.add_bulk(data)
-
-        with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
-            data = [GenreAdd(**genre) for genre in json.load(file)]
-            await _db.genres.add_bulk(data)
         await _db.commit()
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def mock_books(setup_database, auth_ac_author_session):
+@pytest.fixture(scope="session")
+async def seed_books(seed_genres, seed_users, auth_ac_author_session):
+    logging.debug("Заполняю бд книгами")
     with open("tests/mock_books.json", "r", encoding="utf-8") as file:
         for book in json.load(file):
             response = await auth_ac_author_session.post(
@@ -109,8 +124,9 @@ async def mock_books(setup_database, auth_ac_author_session):
             assert response.status_code == 200
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def mock_reviews(mock_books):
+@pytest.fixture(scope="session")
+async def seed_reviews(seed_books):
+    logging.debug("Заполняю бд отзывами")
     async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
         with open("tests/mock_reviews.json", "r", encoding="utf-8") as file:
             data = [ReviewAdd(**review) for review in json.load(file)]
@@ -119,7 +135,7 @@ async def mock_reviews(mock_books):
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def mock_s3(s3_session, mock_books, auth_ac_author_session):
+async def mock_s3(s3_session, seed_db, auth_ac_author_session):
     """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
     logging.info("Добавляю обложку к книге id=2")
     assert settings.MODE == "TEST"

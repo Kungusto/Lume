@@ -1,5 +1,9 @@
 import pytest
 
+"""
+Запустить этот файл отдельно: 
+pytest -s -v tests/integration/auth/test_api.py
+"""
 
 async def test_auth(ac):
     response_register = await ac.post(
@@ -115,7 +119,9 @@ async def test_registration(
 @pytest.mark.parametrize(
     "email, password, status_code",
     [
+        # неправильная почта
         ("user1@example.com", "johny", 401),
+        # неправильный пароль
         ("user@example.com", "johny1", 401),
         ("user@example.com", "password", 200),
     ],
@@ -143,7 +149,6 @@ async def test_already_authorized(ac):
         url="/auth/login", json={"email": "user@example.com", "password": "password"}
     )
     assert response_second.status_code == 400
-
     ac.cookies.clear()
 
 
@@ -152,17 +157,14 @@ async def test_logout(ac):
         url="/auth/login",
         json={"email": "John123@example.com", "password": "John_1234"},
     )
-
     assert response_login.status_code == 200
     assert ac.cookies
 
     response_logout = await ac.post(url="/auth/logout")
-
     assert response_logout.status_code == 200
     assert not ac.cookies
 
     response_logout_not_authorized = await ac.post(url="/auth/logout")
-
     assert response_logout_not_authorized.status_code == 401
 
 

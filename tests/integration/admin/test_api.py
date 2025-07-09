@@ -1,4 +1,9 @@
-async def test_change_user_role(auth_ac_admin):
+"""
+Запустить этот файл отдельно: 
+pytest -s -v tests/integration/admin/test_api.py
+"""
+
+async def test_change_user_role(auth_ac_admin, seed_users):
     # изменить роль несуществующему пользователю
     response_change_role_non_existent_user = await auth_ac_admin.patch(
         url="admin/9999/change_role", json={"role": "AUTHOR"}

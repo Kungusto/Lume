@@ -1,10 +1,6 @@
 from src.exceptions.books import PageNotFoundException
 
 
-class ServiceForTests:
-    """Позже тут появятся полезные функции для удобочитаемости тестов"""
-
-
 class PDFRenderer:
     """Работа с файлами .pdf"""
 

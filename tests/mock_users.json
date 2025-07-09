@@ -38,5 +38,29 @@
     "surname": "Brown",
     "nickname": "eva_b",
     "hashed_password": "hashed_pass_654"
+  },
+  {
+    "role":"ADMIN",
+    "email":"admin@admin.com",
+    "name":"admin",
+    "surname":"admin",
+    "nickname":"ADMIN",
+    "hashed_password":"admin"
+  },
+  {
+    "role":"GENERAL_ADMIN",
+    "email":"general_admin@admin.com",
+    "name":"admin",
+    "surname":"admin",
+    "nickname":"GENERAL_ADMIN",
+    "hashed_password":"general_admin"
+  },
+  {
+    "role": "USER",
+    "email": "test-role-change@example.com",
+    "name": "Role",
+    "surname": "Tester",
+    "nickname": "role_tester",
+    "hashed_password": "changeme123"
   }
 ]

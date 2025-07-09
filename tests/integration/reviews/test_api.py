@@ -5,6 +5,13 @@ pytest -s -v tests/integration/reviews/test_api.py
 
 
 async def test_add_review(auth_ac_user, db):
+    # публикуем отзыв на несуществующую книгу
+    response_add = await auth_ac_user.post(
+        url="/reviews/by_book/9999",
+        json={"rating": 5, "text": "Хорошая книга! Жаль что ее не существует"},
+    )
+    assert response_add.status_code == 404
+
     # добавляем подходящий по всем критериям отзыв
     response_add = await auth_ac_user.post(
         url="/reviews/by_book/1", json={"rating": 4, "text": "Хорошая книга!"}
@@ -111,3 +118,39 @@ async def test_get_book_reviews(ac, db):
     book_reviews_json = book_reviews_reponse.json()
     assert book_reviews_reponse.status_code == 200
     assert len(book_reviews_json) == len(book_reviews_in_db)
+
+
+async def test_check_rate_yourself(auth_ac_author):
+    response_add = await auth_ac_author.post(
+        url="/reviews/by_book/1",
+        json={"rating": 5, "text": "Я оцениваю свою же книгу!"},
+    )
+    assert response_add.status_code == 403
+
+
+async def test_admin_edit_alian_reviews(auth_ac_admin, db):
+    response_add_as_admin = await auth_ac_admin.post(
+        url="/reviews/by_book/1",
+        json={"rating": 5, "text": "Я оцениваю книгу как админ!"},
+    )
+    response_add_as_admin.status_code == 200
+
+    response_add_as_admin_again = await auth_ac_admin.post(
+        url="/reviews/by_book/1",
+        json={"rating": 5, "text": "Я оцениваю книгу дважды как админ!"},
+    )
+    response_add_as_admin_again.status_code == 200
+
+    data_to_edit = {"rating": 1, "text": "Этот отзыв изменил сам админ!"}
+    reponse_edit_alien_review_as_admin = await auth_ac_admin.put(
+        url="/reviews/1", json=data_to_edit
+    )
+    reponse_edit_alien_review_as_admin.status_code == 200
+    edited_review_in_db = await db.reviews.get_one(review_id=1)
+    assert edited_review_in_db.rating == data_to_edit.get("rating", None)
+    assert edited_review_in_db.text == data_to_edit.get("text", None)
+
+    response_delete_as_admin = await auth_ac_admin.delete(url="/reviews/1")
+    response_delete_as_admin.status_code == 200
+    deleted_review_in_db = await db.reviews.get_filtered(review_id=1)
+    assert not deleted_review_in_db

@@ -31,6 +31,11 @@ from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
 from src.schemas.reviews import ReviewAdd
 
+"""
+Напоминания:
+id админа = 6
+id главного админа = 7
+"""
 
 settings = Settings()  # noqa: F811
 
@@ -86,6 +91,7 @@ async def setup_database():
                 user["hashed_password"] = hashed_password
                 data.append(UserAdd(**user))
             await _db.users.add_bulk(data)
+
         with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
             data = [GenreAdd(**genre) for genre in json.load(file)]
             await _db.genres.add_bulk(data)
@@ -297,6 +303,17 @@ async def auth_ac_author(ac_session, register_author):
     ac_session.cookies.clear()
     response = await ac_session.post(
         url="/auth/login", json={"email": "author@author.com", "password": "string"}
+    )
+    assert response.status_code == 200
+    assert ac_session.cookies
+    yield ac_session
+
+
+@pytest.fixture(scope="function")
+async def auth_ac_admin(ac_session):
+    ac_session.cookies.clear()
+    response = await ac_session.post(
+        url="/auth/login", json={"email": "admin@admin.com", "password": "admin"}
     )
     assert response.status_code == 200
     assert ac_session.cookies

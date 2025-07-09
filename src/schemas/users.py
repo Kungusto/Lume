@@ -4,6 +4,7 @@ from src.enums.users import AllUsersRolesEnum, RegisterUserEnum
 from src.exceptions.auth import (
     TooShortPasswordHTTPException,
     TooLongPasswordHTTPException,
+    CannotChangeToGeneralAdminHTTPException,
 )
 
 
@@ -87,3 +88,10 @@ class UserPublicData(BaseModel):
 
 class UserRolePUT(BaseModel):
     role: AllUsersRolesEnum
+
+    @field_validator("role")
+    @classmethod
+    def validate_than_role_is_not_gen_admin(cls, value):
+        if value.value == "GENERAL_ADMIN":
+            raise CannotChangeToGeneralAdminHTTPException
+        return value

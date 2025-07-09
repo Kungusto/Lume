@@ -40,7 +40,7 @@ router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
 async def change_role(
     db: DBDep,
     data: UserRolePUT,
-    user_role: UserRoleDep,
+    current_user_role: UserRoleDep,
     admin_id: int = authorize_and_return_user_id(3),
     user_id: int = Path(le=2**31),
 ):
@@ -50,9 +50,9 @@ async def change_role(
         raise UserNotFoundHTTPException from ex
 
     # На случай если админ решит понизить другого админа
-    if user_role == user.role.value:
+    if current_user_role == user.role:
         raise ChangePermissionsOfADMINHTTPException
-    if user.role.value == "GENERAL_ADMIN":
+    if user.role == "GENERAL_ADMIN":
         raise ChangePermissionsOfADMINHTTPException
 
     await db.users.edit(data=data, user_id=user_id)

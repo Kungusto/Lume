@@ -26,7 +26,7 @@ async def add_review(
         book = await db.books.get_one_with_rels(book_id=book_id, privat_data=True)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         authors_ids = [author.user_id for author in book.authors]
         if user_id in authors_ids:
             raise RateYourselfHTTPException
@@ -55,7 +55,7 @@ async def edit_review(
         review = await db.reviews.get_one(review_id=review_id)
     except ObjectNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         if user_id != review.user_id:
             raise CannotEditOthersReviewHTTPException
     await db.reviews.edit(data=data, review_id=review_id)
@@ -74,7 +74,7 @@ async def delete_review(
         review = await db.reviews.get_one(review_id=review_id)
     except ObjectNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex
-    if user_role != "ADMIN":
+    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         if user_id != review.user_id:
             raise CannotDeleteOthersReviewHTTPException
     await db.reviews.delete(review_id=review_id)

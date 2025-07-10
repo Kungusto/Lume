@@ -78,7 +78,6 @@ class Book(BaseModel):
     age_limit: Annotated[int, Field(ge=0, le=21)]
     description: str | None
     language: LanguagesEnum
-    book_id: int
     date_publicated: date
     is_rendered: bool = False
     cover_link: str | None = None

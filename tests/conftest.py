@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import random
 from typing import Generator
 from dotenv import load_dotenv
 import os
@@ -17,8 +18,9 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.schemas.users import UserAdd
-from src.schemas.books import GenreAdd, BookAddWithAuthorsTagsGenres
+
+from src.schemas.books import GenreAdd, GenresBooksAdd
+from src.schemas.books_authors import BookAuthorAdd
 from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
@@ -29,9 +31,10 @@ from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
-from src.schemas.reviews import ReviewAdd
 from tests.factories.users_factory import UserAddFactory
+from tests.factories.books_factory import BookAddFactory
 from tests.schemas.users import TestUserWithPassword
+from tests.schemas.books import TestBookWithRels
 
 
 """
@@ -86,54 +89,18 @@ async def setup_database():
         await conn.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope="session")
-async def seed_db(setup_database, seed_genres, seed_users, seed_books, seed_reviews):
-    logging.info("База данных заполнена мок-данными!")
+# @pytest.fixture(scope="session")
+# async def seed_db(setup_database, seed_genres, seed_users, seed_books, seed_reviews):
+#     logging.info("База данных заполнена мок-данными!")
 
 
-@pytest.fixture(scope="session")
-async def seed_genres():
+@pytest.fixture(scope="session", autouse=True)
+async def seed_genres(setup_database):
     logging.debug("Заполняю бд жанрами")
     async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
         with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
             data = [GenreAdd(**genre) for genre in json.load(file)]
             await _db.genres.add_bulk(data)
-        await _db.commit()
-
-
-@pytest.fixture(scope="session")
-async def seed_users():
-    logging.debug("Заполняю бд пользователями")
-    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
-        with open("tests/mock_users.json", "r", encoding="utf-8") as file:
-            data = []
-            for user in json.load(file):
-                hashed_password = AuthService().hash_password(user["hashed_password"])
-                user["hashed_password"] = hashed_password
-                data.append(UserAdd(**user))
-            await _db.users.add_bulk(data)
-        await _db.commit()
-
-
-@pytest.fixture(scope="session")
-async def seed_books(seed_genres, seed_users, auth_ac_author_session):
-    logging.debug("Заполняю бд книгами")
-    with open("tests/mock_books.json", "r", encoding="utf-8") as file:
-        for book in json.load(file):
-            response = await auth_ac_author_session.post(
-                url="/author/book",
-                json=BookAddWithAuthorsTagsGenres(**book).model_dump(mode="json"),
-            )
-            assert response.status_code == 200
-
-
-@pytest.fixture(scope="session")
-async def seed_reviews(seed_books):
-    logging.debug("Заполняю бд отзывами")
-    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
-        with open("tests/mock_reviews.json", "r", encoding="utf-8") as file:
-            data = [ReviewAdd(**review) for review in json.load(file)]
-            await _db.reviews.add_bulk(data)
         await _db.commit()
 
 
@@ -339,7 +306,7 @@ async def auth_ac_admin(ac_session):
     yield ac_session
 
 
-# --- фикстуры для создания нужных нам данных
+# --- фикстуры для создания нужных нам данных ---
 @pytest.fixture(scope="function")
 async def new_user(db):
     user = UserAddFactory()
@@ -362,3 +329,25 @@ async def auth_new_user(ac, new_user):
     assert response_login.status_code == 200
     assert ac.cookies
     yield ac
+
+
+@pytest.fixture(scope="function")
+async def new_book(db, new_user):
+    book = BookAddFactory()
+    db_book = await db.books.add(book)
+    genre_ids = [g.genre_id for g in await db.genres.get_all()]
+    genre_id = random.choice(genre_ids)
+    await db.books_genres.add(
+        GenresBooksAdd(genre_id=genre_id, book_id=db_book.book_id)
+    )
+    await db.books_authors.add(
+        BookAuthorAdd(book_id=db_book.book_id, author_id=new_user.user_id)
+    )
+    result_data = TestBookWithRels(
+        **db_book.model_dump(),
+        author=new_user, 
+        genre_id=genre_id
+    )
+    await db.commit()
+    return result_data
+    

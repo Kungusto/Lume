@@ -185,6 +185,7 @@ async def test_logout(ac, new_user):
 async def test_get_me(ac, new_user):
     login_data = {"email": new_user.email, "password": new_user.password}
 
+    # не авторизован
     response_not_authentificated = await ac.get(url="/auth/me")
     assert response_not_authentificated.status_code == 401
 
@@ -201,16 +202,14 @@ async def test_get_me(ac, new_user):
     assert data["name"] == new_user.name
     assert data["surname"] == new_user.surname
 
-    ac.cookies.clear()
 
+async def test_find_user(ac, new_user):
+    response = await ac.get(url=f"auth/{new_user.user_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == new_user.name
+    assert data["surname"] == new_user.surname
+    assert data["nickname"] == new_user.nickname
 
-# async def test_find_user(ac):
-#     response = await ac.get(url="auth/1")
-#     assert response.status_code == 200
-#     data = response.json()
-#     assert data["name"] == "Alice"
-#     assert data["surname"] == "Johnson"
-#     assert data["nickname"] == "ali_jo"
-
-#     response_with_fake_id = await ac.get(url="auth/9999999")
-#     assert response_with_fake_id.status_code == 404
+    response_with_fake_id = await ac.get(url="auth/9999999")
+    assert response_with_fake_id.status_code == 404

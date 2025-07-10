@@ -30,6 +30,9 @@ from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
 from src.schemas.reviews import ReviewAdd
+from tests.factories.users_factory import UserAddFactory
+from tests.schemas.users import TestUserWithPassword
+
 
 """
 Напоминания:
@@ -83,7 +86,7 @@ async def setup_database():
         await conn.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def seed_db(setup_database, seed_genres, seed_users, seed_books, seed_reviews):
     logging.info("База данных заполнена мок-данными!")
 
@@ -134,7 +137,7 @@ async def seed_reviews(seed_books):
         await _db.commit()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def mock_s3(s3_session, seed_db, auth_ac_author_session):
     """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
     logging.info("Добавляю обложку к книге id=2")
@@ -162,7 +165,7 @@ async def db():
 app.dependency_overrides[get_db] = get_db_null_pool
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def ac():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -314,7 +317,7 @@ async def auth_ac_author_session(ac_session, register_author):
     yield ac_session
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 async def auth_ac_author(ac_session, register_author):
     ac_session.cookies.clear()
     response = await ac_session.post(
@@ -325,7 +328,7 @@ async def auth_ac_author(ac_session, register_author):
     yield ac_session
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 async def auth_ac_admin(ac_session):
     ac_session.cookies.clear()
     response = await ac_session.post(
@@ -334,3 +337,28 @@ async def auth_ac_admin(ac_session):
     assert response.status_code == 200
     assert ac_session.cookies
     yield ac_session
+
+
+# --- фикстуры для создания нужных нам данных
+@pytest.fixture(scope="function")
+async def new_user(db):
+    user = UserAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user.hashed_password)
+    # добавляем в бд пользователя и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    await db.commit()
+
+    return TestUserWithPassword(**db_user.model_dump(), password=user_password)
+
+
+@pytest.fixture(scope="function")
+async def auth_new_user(ac, new_user):
+    login_data = {"email": new_user.email, "password": new_user.password}
+    response_login = await ac.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac.cookies
+    yield ac

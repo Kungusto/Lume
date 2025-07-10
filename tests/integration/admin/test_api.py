@@ -1,7 +1,8 @@
 """
-Запустить этот файл отдельно: 
+Запустить этот файл отдельно:
 pytest -s -v tests/integration/admin/test_api.py
 """
+
 
 async def test_change_user_role(auth_ac_admin, seed_users):
     # изменить роль несуществующему пользователю

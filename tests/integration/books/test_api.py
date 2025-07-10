@@ -7,7 +7,7 @@ pytest -s -v tests/integration/books/test_api.py::*название функци
 """
 
 
-async def test_registration_as_author(ac, seed_books, seed_users):
+async def test_registration_as_author(ac):
     response = await ac.post(
         url="/auth/register",
         json={
@@ -22,7 +22,7 @@ async def test_registration_as_author(ac, seed_books, seed_users):
     assert response.status_code == 200
 
 
-async def test_base_crud_books(ac, seed_books, seed_users):
+async def test_base_crud_books(ac):
     ac.cookies.clear()
 
     response_login_author = await ac.post(
@@ -140,7 +140,7 @@ async def test_base_crud_books(ac, seed_books, seed_users):
         ],
     ],
 )
-async def test_edit_book(patch_data, status_code, auth_ac_author, seed_books, seed_users):
+async def test_edit_book(patch_data, status_code, auth_ac_author):
     data_to_update = patch_data.model_dump(exclude_unset=True)
     response_edit = await auth_ac_author.patch(
         url="/author/book/1", json=data_to_update
@@ -174,15 +174,14 @@ async def test_edit_book(patch_data, status_code, auth_ac_author, seed_books, se
         ["books/content/test_book.pdf", 409, None, 1],
         ["books/content/not_a_book.jpg", 422, None, 2],
         [
-            "books/content/test_book_2.pdf", # book_path_in_content_bucket
-            200, # status_code 
+            "books/content/test_book_2.pdf",  # book_path_in_content_bucket
+            200,  # status_code
             ["books/2/images/page_1_img_0.png", "books/2/images/page_1_img_1.png"],
-            2, # book_id
+            2,  # book_id
         ],
     ],
 )
 async def test_add_content(
-
     book_path_in_content_bucket,
     status_code,
     list_images,
@@ -231,7 +230,6 @@ async def test_add_content(
     ],
 )
 async def test_edit_content(
-    
     book_path_in_content_bucket,
     status_code,
     list_images,
@@ -270,7 +268,6 @@ async def test_edit_content(
     ],
 )
 async def test_add_cover(
-    
     cover_path_in_content_bucket,
     status_code,
     book_id,
@@ -306,7 +303,6 @@ async def test_add_cover(
     ],
 )
 async def test_edit_cover(
-    
     cover_path_in_content_bucket,
     status_code,
     book_id,

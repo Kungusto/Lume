@@ -4,8 +4,6 @@ __pycache__
 src/migrations/*
 migrations
 alembic.ini
-static
-static/*
 dump.rdb
 .env-test
 awscli_env

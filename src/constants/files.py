@@ -13,7 +13,7 @@ class RequiredFilesForTests:
     INTEGRATION_TESTS_FILES = {
         # контент книг
         "books/content/test_book.pdf",
-        "books/content/test_cover.jpg",
+        "books/content/test_book_2.jpg",
         "books/content/not_a_book.jpg",
         # обложки книг
         "books/covers/not_a_cover.pdf",

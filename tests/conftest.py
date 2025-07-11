@@ -360,3 +360,17 @@ async def authorized_client_with_new_book(new_book, ac):
     assert response_login.status_code == 200
     assert ac.cookies
     yield ac, new_book
+
+
+@pytest.fixture(scope="function")
+async def authorized_client_with_new_book_with_cover(authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
+
+    file, filename = await ServiceForTests.get_file_and_name(
+        "books/covers/normal_cover.jpg"
+    )
+    response_add_cover = await author_client.post(
+        url=f"author/cover/{book.book_id}", files={"file": (filename, file)}
+    )
+    assert response_add_cover.status_code == 200
+    yield author_client, book

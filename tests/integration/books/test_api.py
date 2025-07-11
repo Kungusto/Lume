@@ -1,5 +1,7 @@
 import pytest
+from tests.utils import ServiceForTests
 from src.schemas.books import BookPATCHWithRels
+
 
 """
 Выполнить тест отдельно:
@@ -7,7 +9,6 @@ pytest -s -v tests/integration/books/test_api.py::*название функци
 """
 
 
-# ✅
 async def test_registration_as_author(ac):
     response = await ac.post(
         url="/auth/register",
@@ -23,7 +24,6 @@ async def test_registration_as_author(ac):
     assert response.status_code == 200
 
 
-# ✅
 async def test_add_book(auth_new_author):
     response_publicate = await auth_new_author.post(
         url="/author/book",
@@ -43,7 +43,6 @@ async def test_add_book(auth_new_author):
     assert response_my_books.status_code == 200
 
 
-# ✅
 async def test_patch_book(db, authorized_client_with_new_book):
     author_client, book = authorized_client_with_new_book
     data_to_edit = {"genres": [1, 3], "age_limit": 16, "tags": ["тайна", "футуризм"]}
@@ -58,7 +57,6 @@ async def test_patch_book(db, authorized_client_with_new_book):
     assert book_in_db.age_limit == data_to_edit.get("age_limit", None)
 
 
-# ✅
 async def test_delete_book(authorized_client_with_new_book, db):
     author_client, book = authorized_client_with_new_book
 
@@ -67,7 +65,6 @@ async def test_delete_book(authorized_client_with_new_book, db):
     assert not await db.books.get_filtered(book_id=book.book_id)
 
 
-# ✅
 async def test_get_book(authorized_client_with_new_book):
     author_client, book = authorized_client_with_new_book
 
@@ -81,7 +78,6 @@ async def test_get_book(authorized_client_with_new_book):
     assert api_book_json.get("description", "None") == book.description
 
 
-# ✅
 async def test_user_cannot_modify_or_create_books(auth_new_user, new_book):
     response_edit = await auth_new_user.patch(
         url=f"/author/book/{new_book.book_id}",
@@ -107,7 +103,6 @@ async def test_user_cannot_modify_or_create_books(auth_new_user, new_book):
     assert response_publicate_second.status_code == 403
 
 
-# ✅
 @pytest.mark.parametrize(
     "patch_data, status_code",
     [
@@ -165,119 +160,183 @@ async def test_edit_book(patch_data, status_code, authorized_client_with_new_boo
         assert book[key] == value
 
 
-@pytest.mark.parametrize(
-    "book_path_in_content_bucket, status_code, list_images, book_id",
-    [
-        ["books/content/test_book.pdf", 200, ["books/1/images/page_0_img_0.png"], 1],
-        [
-            "books/content/test_book_2.pdf",
-            200,
-            ["books/1/images/page_1_img_0.png", "books/1/images/page_1_img_1.png"],
-            1,
-        ],
-        ["books/content/not_a_book.jpg", 422, None, 2],
-        [
-            "books/content/test_book_2.pdf",
-            200,
-            ["books/2/images/page_1_img_0.png", "books/2/images/page_1_img_1.png"],
-            2,
-        ],
-    ],
-)
-async def test_edit_content(
-    book_path_in_content_bucket,
-    status_code,
-    list_images,
-    book_id,
-    auth_ac_author,
+async def test_add_already_exist_content(
+    authorized_client_with_new_book,
     check_content_integration_tests,
     s3,
     db,
 ):
-    file = await s3.books.get_file_by_path(
-        is_content_bucket=True, s3_path=book_path_in_content_bucket
+    author_client, book = authorized_client_with_new_book
+
+    list_images = [f"books/{book.book_id}/images/page_0_img_0.png"]
+    file_path = "books/content/test_book.pdf"
+    file, filename = await ServiceForTests.get_file_and_name(file_path)
+
+    response_add_content = await author_client.post(
+        url=f"/author/content/{book.book_id}", files={"file": (filename, file)}
     )
-    filename = book_path_in_content_bucket.split("/")[-1]
-    response_edit_content = await auth_ac_author.put(
-        url=f"/author/content/{book_id}", files={"file": (filename, file)}
+    assert response_add_content.status_code == 200
+
+    all_images = await s3.books.list_objects_by_prefix(
+        prefix=f"books/{book.book_id}/images"
     )
 
-    assert response_edit_content.status_code == status_code
-    if status_code != 200:
-        return
-
-    all_images = await s3.books.list_objects_by_prefix(prefix=f"books/{book_id}/images")
-    book = await db.books.get_one(book_id=book_id)
-    assert book.is_rendered
+    book = await db.books.get_one(book_id=book.book_id)
     assert len(all_images) == len(list_images)
     assert all_images == list_images
+    assert book.is_rendered
+
+    # добавляем контент к книге, у которой он уже есть
+    response_add_content_again = await author_client.post(
+        url=f"/author/content/{book.book_id}", files={"file": (filename, file)}
+    )
+    assert response_add_content_again.status_code == 409
+
+
+async def test_add_not_book(authorized_client_with_new_book, db, s3):
+    author_client, book = authorized_client_with_new_book
+    file_path = "books/content/not_a_book.jpg"
+    file, filename = await ServiceForTests.get_file_and_name(file_path)
+    list_images = []
+
+    response_add_content = await author_client.post(
+        url=f"/author/content/{book.book_id}", files={"file": (filename, file)}
+    )
+    all_images = await s3.books.list_objects_by_prefix(
+        prefix=f"books/{book.book_id}/images"
+    )
+    assert response_add_content.status_code == 422
+    book = await db.books.get_one(book_id=book.book_id)
+    assert len(all_images) == len(list_images)
+    assert all_images == list_images
+    assert not book.is_rendered
 
 
 @pytest.mark.parametrize(
-    "cover_path_in_content_bucket, status_code, book_id",
+    "book_path_in_local_file_system, images_count",
     [
-        ["books/covers/not_a_cover.pdf", 422, 1],
-        ["books/covers/not_tall_enough.jpg", 422, 1],
-        ["books/covers/normal_cover.jpg", 200, 1],
-        ["books/covers/normal_cover.jpg", 409, 1],
+        ["books/content/test_book.pdf", 1],
+        ["books/content/test_book_2.pdf", 2],
+    ],
+)
+async def test_add_already_exists_content(
+    book_path_in_local_file_system: str,
+    images_count: int,
+    authorized_client_with_new_book,
+    db,
+    s3,
+):
+    author_client, book = authorized_client_with_new_book
+    file, filename = await ServiceForTests.get_file_and_name(
+        book_path_in_local_file_system
+    )
+
+    response_add_content = await author_client.post(
+        url=f"/author/content/{book.book_id}", files={"file": (filename, file)}
+    )
+    assert response_add_content.status_code == 200
+
+    all_images = await s3.books.list_objects_by_prefix(
+        prefix=f"books/{book.book_id}/images"
+    )
+    book = await db.books.get_one(book_id=book.book_id)
+    assert len(all_images) == images_count
+    assert book.is_rendered
+
+
+@pytest.mark.parametrize(
+    "cover_path_in_content_bucket, status_code",
+    [
+        ["books/covers/not_a_cover.pdf", 422],
+        ["books/covers/not_tall_enough.jpg", 422],
+        ["books/covers/normal_cover.jpg", 200],
     ],
 )
 async def test_add_cover(
     cover_path_in_content_bucket,
     status_code,
-    book_id,
-    auth_ac_author,
+    authorized_client_with_new_book,
     check_content_integration_tests,
     s3,
     db,
 ):
-    file = await s3.books.get_file_by_path(
-        is_content_bucket=True, s3_path=cover_path_in_content_bucket
+    author_client, book = authorized_client_with_new_book
+    file, filename = await ServiceForTests.get_file_and_name(
+        cover_path_in_content_bucket
     )
-    filename = cover_path_in_content_bucket.split("/")[-1]
-    response_add_cover = await auth_ac_author.post(
-        url=f"author/cover/{book_id}", files={"file": (filename, file)}
+    response_add_cover = await author_client.post(
+        url=f"author/cover/{book.book_id}", files={"file": (filename, file)}
     )
     assert response_add_cover.status_code == status_code
 
     if status_code != 200:
         return
 
-    book = await db.books.get_one(book_id=book_id)
+    book = await db.books.get_one(book_id=book.book_id)
     assert book.cover_link is not None
-    assert await s3.books.check_file_by_path(f"books/{book_id}/preview.png")
+    assert await s3.books.check_file_by_path(f"books/{book.book_id}/preview.png")
+
+
+async def test_add_already_exists_cover(authorized_client_with_new_book_with_cover):
+    author_client, book = authorized_client_with_new_book_with_cover
+    file, filename = await ServiceForTests.get_file_and_name(
+        "books/covers/normal_cover.jpg"
+    )
+    response_add_cover = await author_client.post(
+        url=f"author/cover/{book.book_id}", files={"file": (filename, file)}
+    )
+    assert response_add_cover.status_code == 409
 
 
 @pytest.mark.parametrize(
-    "cover_path_in_content_bucket, status_code, book_id",
+    "cover_path, status_code",
     [
-        ["books/covers/normal_cover.jpg", 404, 3],
-        ["books/covers/not_a_cover.pdf", 422, 2],
-        ["books/covers/not_tall_enough.jpg", 422, 2],
-        ["books/covers/normal_cover.jpg", 200, 2],
+        # ["books/covers/normal_cover.jpg", 404],
+        ["books/covers/not_a_cover.pdf", 422],
+        ["books/covers/not_tall_enough.jpg", 422],
+        ["books/covers/normal_cover.jpg", 200],
     ],
 )
 async def test_edit_cover(
-    cover_path_in_content_bucket,
+    cover_path,
     status_code,
-    book_id,
-    auth_ac_author,
     check_content_integration_tests,
+    authorized_client_with_new_book_with_cover,
     s3,
     db,
 ):
-    file = await s3.books.get_file_by_path(
-        is_content_bucket=True, s3_path=cover_path_in_content_bucket
-    )
-    filename = cover_path_in_content_bucket.split("/")[-1]
-    response_add_cover = await auth_ac_author.put(
-        url=f"author/cover/{book_id}", files={"file": (filename, file)}
+    author_client, book = authorized_client_with_new_book_with_cover
+    file, filename = await ServiceForTests.get_file_and_name(cover_path)
+    response_add_cover = await author_client.put(
+        url=f"author/cover/{book.book_id}", files={"file": (filename, file)}
     )
     assert response_add_cover.status_code == status_code
 
     if status_code != 200:
         return
 
-    book = await db.books.get_one(book_id=book_id)
+    book = await db.books.get_one(book_id=book.book_id)
     assert book.cover_link is not None
-    assert await s3.books.check_file_by_path(f"books/{book_id}/preview.png")
+    assert await s3.books.check_file_by_path(f"books/{book.book_id}/preview.png")
+
+
+async def test_edit_book_without_cover(authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
+    file, filename = await ServiceForTests.get_file_and_name(
+        "books/covers/normal_cover.jpg"
+    )
+    response_add_cover = await author_client.put(
+        url=f"author/cover/{book.book_id}", files={"file": (filename, file)}
+    )
+    assert response_add_cover.status_code == 404
+
+
+async def test_edit_non_existing_book(authorized_client_with_new_book):
+    author_client, _ = authorized_client_with_new_book
+    file, filename = await ServiceForTests.get_file_and_name(
+        "books/covers/normal_cover.jpg"
+    )
+    response_add_cover = await author_client.put(
+        url="author/cover/99999", files={"file": (filename, file)}
+    )
+    assert response_add_cover.status_code == 403

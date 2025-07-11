@@ -1,7 +1,6 @@
 from pathlib import Path
 from src.exceptions.conftest import (
     MissingFilesException,
-    DirectoryNotFoundException,
     DirectoryIsEmptyException,
 )
 from src.utils.helpers import FileManager
@@ -28,3 +27,9 @@ class ServiceForTests:
         )
         if not existing_files:
             raise DirectoryIsEmptyException(folder_path=folder_path)
+
+    @staticmethod
+    async def get_file_and_name(file_path):
+        file = await FileManager().get_file_by_rel_path(file_path)
+        filename = Path(file_path).name
+        return file, filename

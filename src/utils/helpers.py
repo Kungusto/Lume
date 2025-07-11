@@ -1,4 +1,6 @@
+from pathlib import Path
 from src.exceptions.books import PageNotFoundException
+from src.exceptions.conftest import DirectoryNotFoundException
 
 
 class PDFRenderer:
@@ -76,3 +78,16 @@ class PDFRenderer:
                 )
                 count_images += 1
         return content
+
+
+class FileManager:
+    @staticmethod
+    def get_list_files_by_folder_path(folder_path: str) -> set[str]:
+        """
+        Получает - абсолютный путь к директории
+        Возвращает - set() файлов в директории
+        """
+        try:
+            return set(f.name for f in Path(folder_path).iterdir() if f.is_file())
+        except FileNotFoundError as ex:
+            raise DirectoryNotFoundException(folder_path=folder_path) from ex

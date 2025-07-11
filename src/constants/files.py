@@ -4,14 +4,6 @@ class AllowedExtensions:
 
 
 class RequiredFilesForTests:
-    # обычные изображения для unit-тестов
-    UNIT_TESTS_FILES = {
-        "other": {
-            "test_file_0.txt",
-            "test_file_1.txt",
-            "test_file_2.txt",
-        }
-    }
     INTEGRATION_TESTS_FILES = {
         "content": {
             # контент книг

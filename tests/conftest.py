@@ -31,7 +31,11 @@ from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
-from src.exceptions.conftest import MissingFilesException, MissingTestDataException
+from src.exceptions.conftest import (
+    MissingFilesException,
+    DirectoryNotFoundException,
+    DirectoryIsEmptyException,
+)
 from tests.factories.users_factory import UserAddFactory
 from tests.factories.books_factory import BookAddFactory
 from tests.schemas.users import TestUserWithPassword
@@ -106,18 +110,18 @@ async def seed_genres(setup_database):
         await _db.commit()
 
 
-@pytest.fixture(scope="session")
-async def mock_s3(s3_session, seed_db, auth_ac_author_session):
-    """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
-    logging.info("Добавляю обложку к книге id=2")
-    assert settings.MODE == "TEST"
-    file = await s3_session.books.get_file_by_path(
-        is_content_bucket=True, s3_path="books/covers/normal_cover.jpg"
-    )
-    response_add_cover = await auth_ac_author_session.post(
-        url="author/cover/2", files={"file": ("preview.png", file)}
-    )
-    assert response_add_cover.status_code == 200
+# @pytest.fixture(scope="session")
+# async def mock_s3(s3_session, seed_db, auth_ac_author_session):
+#     """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
+#     logging.info("Добавляю обложку к книге id=2")
+#     assert settings.MODE == "TEST"
+#     file = await s3_session.books.get_file_by_path(
+#         is_content_bucket=True, s3_path="books/covers/normal_cover.jpg"
+#     )
+#     response_add_cover = await auth_ac_author_session.post(
+#         url="author/cover/2", files={"file": ("preview.png", file)}
+#     )
+#     assert response_add_cover.status_code == 200
 
 
 async def get_db_null_pool():
@@ -172,61 +176,40 @@ async def s3():
 
 
 @pytest.fixture(scope="session")
-async def check_content_unit_tests(s3_session):
-    files_in_others = await s3_session.books.list_objects_by_prefix(
-        "other/", is_content_bucket=True
-    )
-    files_with_prefix_to_delete = await s3_session.books.list_objects_by_prefix(
-        "files_to_delete/", is_content_bucket=True
-    )
-    if not files_with_prefix_to_delete:
-        logging.warning(
-            " не найдены обязательные файлы unit-тестов в S3 \
-            \nдолжен быть хотя-бы один файл с префиксом 'files_to_delete/'"
-        )
-        pytest.skip("Тест пропущен. Отсутствуют обязательные файлы")
-    need_files = (
-        RequiredFilesForTests.UNIT_TESTS_FILES
-    )  # файлы, обязательные для тестов (имеющие префикс other/)
-    missing_files = []
-    for need_file in need_files:
-        if need_file not in files_in_others:
-            missing_files.append(need_file)
-    if missing_files:
-        logging.warning(
-            f" не найдены обязательные файлы unit-тестов в S3 — {', '.join(missing_files)}"
-        )
-        pytest.skip("Тест пропущен. Отсутствуют обязательные файлы")
-        return False
-    else:
-        return True
-
-
-@pytest.fixture(scope="session")
 async def check_content_integration_tests():
-    all_variants_to_check = [
-        {
-            "folder_path": "src/static/books/content",
-            "need_files": RequiredFilesForTests.INTEGRATION_TESTS_FILES["content"],
-        },
-        {
-            "folder_path": "src/static/books/covers",
-            "need_files": RequiredFilesForTests.INTEGRATION_TESTS_FILES["covers"],
-        },
-        {
-            "folder_path": "src/static/other",
-            "need_files": RequiredFilesForTests.UNIT_TESTS_FILES["other"],
-        },
-    ]
+    checks_config = {
+        # С проверкой на наличие определенных файлов
+        "check_files": [
+            {
+                "folder_path": "src/static/books/content",
+                "need_files": RequiredFilesForTests.INTEGRATION_TESTS_FILES["content"],
+            },
+            {
+                "folder_path": "src/static/books/covers",
+                "need_files": RequiredFilesForTests.INTEGRATION_TESTS_FILES["covers"],
+            },
+        ],
+        # Проверка на наличие хотя-бы одного файла
+        "check_not_empty": [
+            {"folder_path": "src/static/other"},
+            {"folder_path": "src/static/test"},
+        ],
+    }
     try:
-        for variant in all_variants_to_check:
-            ServiceForTests.check_necessarily_files(
+        for variant in checks_config.get("check_files", []):
+            ServiceForTests.check_required_files(
                 folder_path=variant.get("folder_path", None),
                 need_files=variant.get("need_files", None),
             )
-    except MissingTestDataException as ex:
+        for variant in checks_config.get("check_not_empty", []):
+            ServiceForTests.check_not_empty(
+                folder_path=variant.get("folder_path", None)
+            )
+    except DirectoryNotFoundException as ex:
         pytest.skip(ex.detail)
     except MissingFilesException as ex:
+        pytest.skip(ex.detail)
+    except DirectoryIsEmptyException as ex:
         pytest.skip(ex.detail)
 
 

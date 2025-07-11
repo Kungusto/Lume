@@ -17,7 +17,7 @@ async def test_put_and_get(check_content_for_tests, s3):
     assert body
 
     # Тест метода check_file_by_path
-    fake_file_name = f"unreal_prefix/unreal_file.txt"
+    fake_file_name = "unreal_prefix/unreal_file.txt"
     is_exist = await s3.books.check_file_by_path(f"other/{filename}")
     assert is_exist
     is_exist = await s3.books.check_file_by_path(fake_file_name)

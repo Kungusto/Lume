@@ -19,3 +19,11 @@ class UserAddFactory(factory.Factory):
 
 class AuthorsAddFactory(UserAddFactory):
     role = "AUTHOR"
+
+
+class AdminAddFactory(UserAddFactory):
+    role = "ADMIN"
+
+
+class GeneralAdminAddFactory(UserAddFactory):
+    role = "GENERAL_ADMIN"

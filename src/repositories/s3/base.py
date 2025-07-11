@@ -31,7 +31,9 @@ class BaseS3Repository:
 
     async def get_file_by_path(self, s3_path: str):
         try:
-            response = await self.client.get_object(Bucket=self.bucket_name, Key=s3_path)
+            response = await self.client.get_object(
+                Bucket=self.bucket_name, Key=s3_path
+            )
         except self.client.exceptions.NoSuchKey as ex:
             raise FileNotFoundException from ex
         async with response["Body"] as stream:
@@ -44,11 +46,11 @@ class BaseS3Repository:
         for key in args:
             await self.client.delete_object(Bucket=self.bucket_name, Key=key)
 
-    async def list_objects_by_prefix(
-        self, prefix: str = ""
-    ) -> list[str]:
+    async def list_objects_by_prefix(self, prefix: str = "") -> list[str]:
         """Вернуть список всех ключей (имён файлов), соответствующих префиксу."""
-        response = await self.client.list_objects_v2(Prefix=prefix, Bucket=self.bucket_name)
+        response = await self.client.list_objects_v2(
+            Prefix=prefix, Bucket=self.bucket_name
+        )
         contents = response.get("Contents", [])
         result = [file["Key"] for file in contents]
         return result

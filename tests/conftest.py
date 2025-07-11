@@ -36,18 +36,19 @@ from src.exceptions.conftest import (
     DirectoryNotFoundException,
     DirectoryIsEmptyException,
 )
-from tests.factories.users_factory import UserAddFactory, AuthorsAddFactory
+from tests.factories.users_factory import (
+    UserAddFactory,
+    AuthorsAddFactory,
+    AdminAddFactory,
+    GeneralAdminAddFactory,
+)
 from tests.factories.books_factory import BookAddFactory
+from tests.factories.reviews_factory import ReviewAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
+from tests.schemas.reviews import TestReviewWithRels
 from tests.utils import ServiceForTests
 
-
-"""
-Напоминания:
-id админа = 6
-id главного админа = 7
-"""
 
 settings = Settings()  # noqa: F811
 
@@ -271,18 +272,30 @@ async def auth_ac_author(ac_session, register_author):
     yield ac_session
 
 
-@pytest.fixture(scope="session")
-async def auth_ac_admin(ac_session):
-    ac_session.cookies.clear()
-    response = await ac_session.post(
-        url="/auth/login", json={"email": "admin@admin.com", "password": "admin"}
-    )
-    assert response.status_code == 200
-    assert ac_session.cookies
-    yield ac_session
-
-
 # --- фикстуры для создания нужных нам данных --- #
+@pytest.fixture(scope="function")
+async def new_admin(db):
+    user = AdminAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user.hashed_password)
+    # добавляем в бд автора и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    await db.commit()
+    return TestUserWithPassword(**db_user.model_dump(), password=user_password)
+
+
+@pytest.fixture(scope="function")
+async def auth_new_admin(ac2, new_admin):
+    login_data = {"email": new_admin.email, "password": new_admin.password}
+    response_login = await ac2.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac2.cookies
+    yield ac2
+
+
 @pytest.fixture(scope="function")
 async def new_user(db):
     user = UserAddFactory()
@@ -296,7 +309,20 @@ async def new_user(db):
 
 
 @pytest.fixture(scope="function")
+async def new_general_admin(db):
+    user = GeneralAdminAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user.hashed_password)
+    # добавляем в бд пользователя и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    await db.commit()
+
+    return TestUserWithPassword(**db_user.model_dump(), password=user_password)
+
+
+@pytest.fixture(scope="function")
 async def auth_new_user(ac, new_user):
+    ac.cookies.clear()
     login_data = {"email": new_user.email, "password": new_user.password}
     response_login = await ac.post(
         url="/auth/login",
@@ -374,3 +400,83 @@ async def authorized_client_with_new_book_with_cover(authorized_client_with_new_
     )
     assert response_add_cover.status_code == 200
     yield author_client, book
+
+
+@pytest.fixture(scope="function")
+async def new_review(new_book, auth_new_user):
+    review = ReviewAddFactory()
+    response_add = await auth_new_user.post(
+        url=f"/reviews/by_book/{new_book.book_id}",
+        json=review.model_dump(),
+    )
+    assert response_add.status_code == 200
+    response_json = response_add.json()
+    review_to_return = TestReviewWithRels(
+        book_id=new_book.book_id,
+        user_id=response_json.get("user_id", None),
+        text=response_json.get("text", None),
+        rating=response_json.get("rating", None),
+        publication_date=response_json.get("publication_date", None),
+        review_id=response_json.get("review_id", None),
+    )
+    yield review_to_return
+
+
+@pytest.fixture(scope="function")
+async def new_review_with_author_ac(new_book, auth_new_user):
+    review = ReviewAddFactory()
+    response_add = await auth_new_user.post(
+        url=f"/reviews/by_book/{new_book.book_id}",
+        json=review.model_dump(),
+    )
+    assert response_add.status_code == 200
+    response_json = response_add.json()
+    review_to_return = TestReviewWithRels(
+        book_id=new_book.book_id,
+        user_id=response_json.get("user_id", None),
+        text=response_json.get("text", None),
+        rating=response_json.get("rating", None),
+        publication_date=response_json.get("publication_date", None),
+        review_id=response_json.get("review_id", None),
+    )
+    yield auth_new_user, review_to_return
+
+
+@pytest.fixture(scope="function")
+async def ac2():
+    """
+    Дополнительная сессия для второго клиента
+    Нужна для избегания конфликта с первой
+    """
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac2:
+        yield ac2
+
+
+@pytest.fixture(scope="function")
+async def new_second_user(db):
+    """
+    Создаёт второго пользователя в базе для тестов.
+    Используется, когда нужен пользователь, отличный от первого.
+    """
+    user = UserAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user.hashed_password)
+    # добавляем в бд пользователя и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    await db.commit()
+
+    return TestUserWithPassword(**db_user.model_dump(), password=user_password)
+
+
+@pytest.fixture(scope="function")
+async def auth_new_second_user(ac2, new_second_user):
+    login_data = {"email": new_second_user.email, "password": new_second_user.password}
+    response_login = await ac2.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac2.cookies
+    yield ac2

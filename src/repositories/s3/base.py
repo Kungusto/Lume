@@ -29,13 +29,9 @@ class BaseS3Repository:
         except Exception:
             return False
 
-    async def get_file_by_path(self, s3_path: str, is_content_bucket=False):
-        if is_content_bucket:
-            bucket_name = settings.S3_STATIC_BUCKET_NAME
-        else:
-            bucket_name = settings.S3_BUCKET_NAME
+    async def get_file_by_path(self, s3_path: str):
         try:
-            response = await self.client.get_object(Bucket=bucket_name, Key=s3_path)
+            response = await self.client.get_object(Bucket=self.bucket_name, Key=s3_path)
         except self.client.exceptions.NoSuchKey as ex:
             raise FileNotFoundException from ex
         async with response["Body"] as stream:
@@ -49,14 +45,10 @@ class BaseS3Repository:
             await self.client.delete_object(Bucket=self.bucket_name, Key=key)
 
     async def list_objects_by_prefix(
-        self, prefix: str = "", is_content_bucket=False
+        self, prefix: str = ""
     ) -> list[str]:
         """Вернуть список всех ключей (имён файлов), соответствующих префиксу."""
-        if is_content_bucket:
-            bucket_name = settings.S3_STATIC_BUCKET_NAME
-        else:
-            bucket_name = settings.S3_BUCKET_NAME
-        response = await self.client.list_objects_v2(Prefix=prefix, Bucket=bucket_name)
+        response = await self.client.list_objects_v2(Prefix=prefix, Bucket=self.bucket_name)
         contents = response.get("Contents", [])
         result = [file["Key"] for file in contents]
         return result
@@ -67,14 +59,10 @@ class BaseS3Repository:
         )
         return await self.get_bulk(True, False, *files_with_this_prefix)
 
-    async def get_bulk(self, is_content_bucket=False, only_content=False, *args):
-        if is_content_bucket:
-            bucket_name = settings.S3_STATIC_BUCKET_NAME
-        else:
-            bucket_name = self.bucket_name
+    async def get_bulk(self, only_content=False, *args):
         results = []
         for key in args:
-            response = await self.client.get_object(Bucket=bucket_name, Key=key)
+            response = await self.client.get_object(Bucket=self.bucket_name, Key=key)
             content = await response["Body"].read()
             if only_content:
                 results.append(content)

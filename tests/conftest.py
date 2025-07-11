@@ -162,7 +162,7 @@ async def s3():
 
 
 @pytest.fixture(scope="session")
-async def check_content_integration_tests():
+async def check_content_for_tests():
     checks_config = {
         # С проверкой на наличие определенных файлов
         "check_files": [

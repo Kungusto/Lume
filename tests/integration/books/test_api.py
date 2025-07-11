@@ -162,7 +162,7 @@ async def test_edit_book(patch_data, status_code, authorized_client_with_new_boo
 
 async def test_add_already_exist_content(
     authorized_client_with_new_book,
-    check_content_integration_tests,
+    check_content_for_tests,
     s3,
     db,
 ):
@@ -256,7 +256,7 @@ async def test_add_cover(
     cover_path_in_content_bucket,
     status_code,
     authorized_client_with_new_book,
-    check_content_integration_tests,
+    check_content_for_tests,
     s3,
     db,
 ):
@@ -300,7 +300,7 @@ async def test_add_already_exists_cover(authorized_client_with_new_book_with_cov
 async def test_edit_cover(
     cover_path,
     status_code,
-    check_content_integration_tests,
+    check_content_for_tests,
     authorized_client_with_new_book_with_cover,
     s3,
     db,

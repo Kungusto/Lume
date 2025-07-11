@@ -1,8 +1,9 @@
 from pathlib import Path
+from typing import List, Tuple
 
 import aiofiles
 from src.exceptions.books import PageNotFoundException
-from src.exceptions.conftest import DirectoryNotFoundException
+from src.exceptions.conftest import DirectoryNotFoundException, ReadFileException
 from src.exceptions.files import FileNotFoundException
 
 
@@ -97,6 +98,20 @@ class FileManager:
         async with aiofiles.open(file_path, "rb") as f:
             content = await f.read()
         return content
+
+    async def get_files_in_folder(self, folder_path: str) -> List[Tuple[bytes, str]]:
+        full_folder_path = self.STATIC_ROOT / folder_path
+        files_data = []
+        try:
+            for file_path in full_folder_path.iterdir():
+                if not file_path.is_file():
+                    continue
+                async with aiofiles.open(file_path, "rb") as f:
+                    content = await f.read()
+                    files_data.append((content, file_path.name))
+        except OSError as ex:
+            raise ReadFileException(filename=file_path.name) from ex
+        return files_data
 
     @staticmethod
     def get_list_files_by_folder_path(folder_path: str) -> set[str]:

@@ -31,10 +31,12 @@ from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
 from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
+from src.exceptions.conftest import MissingFilesException, MissingTestDataException
 from tests.factories.users_factory import UserAddFactory
 from tests.factories.books_factory import BookAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
+from tests.utils import ServiceForTests
 
 
 """
@@ -201,25 +203,31 @@ async def check_content_unit_tests(s3_session):
 
 
 @pytest.fixture(scope="session")
-async def check_content_integration_tests(s3_session):
-    files_in_others = await s3_session.books.list_objects_by_prefix(
-        "books/", is_content_bucket=True
-    )
-    need_files = (
-        RequiredFilesForTests.INTEGRATION_TESTS_FILES
-    )  # файлы, обязательные для тестов (имеющие префикс other/)
-    missing_files = []
-    for need_file in need_files:
-        if need_file not in files_in_others:
-            missing_files.append(need_file)
-    if missing_files:
-        logging.warning(
-            f" не найдены обязательные файлы интеграционных тестов в S3 — {', '.join(missing_files)}"
-        )
-        pytest.skip(" Тест пропущен. Отсутствуют обязательные файлы")
-        return False
-    else:
-        return True
+async def check_content_integration_tests():
+    all_variants_to_check = [
+        {
+            "folder_path": "src/static/books/content",
+            "need_files": RequiredFilesForTests.INTEGRATION_TESTS_FILES["content"],
+        },
+        {
+            "folder_path": "src/static/books/covers",
+            "need_files": RequiredFilesForTests.INTEGRATION_TESTS_FILES["covers"],
+        },
+        {
+            "folder_path": "src/static/other",
+            "need_files": RequiredFilesForTests.UNIT_TESTS_FILES["other"],
+        },
+    ]
+    try:
+        for variant in all_variants_to_check:
+            ServiceForTests.check_necessarily_files(
+                folder_path=variant.get("folder_path", None),
+                need_files=variant.get("need_files", None),
+            )
+    except MissingTestDataException as ex:
+        pytest.skip(ex.detail)
+    except MissingFilesException as ex:
+        pytest.skip(ex.detail)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -344,10 +352,7 @@ async def new_book(db, new_user):
         BookAuthorAdd(book_id=db_book.book_id, author_id=new_user.user_id)
     )
     result_data = TestBookWithRels(
-        **db_book.model_dump(),
-        author=new_user, 
-        genre_id=genre_id
+        **db_book.model_dump(), author=new_user, genre_id=genre_id
     )
     await db.commit()
     return result_data
-    

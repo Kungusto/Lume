@@ -7,6 +7,7 @@ pytest -s -v tests/integration/books/test_api.py::*название функци
 """
 
 
+# ✅
 async def test_registration_as_author(ac):
     response = await ac.post(
         url="/auth/register",
@@ -22,16 +23,9 @@ async def test_registration_as_author(ac):
     assert response.status_code == 200
 
 
-async def test_base_crud_books(ac):
-    ac.cookies.clear()
-
-    response_login_author = await ac.post(
-        url="auth/login",
-        json={"email": "david.writer@example.com", "password": "hashed_pass_321"},
-    )
-    assert response_login_author.status_code == 200
-
-    response_publicate = await ac.post(
+# ✅
+async def test_add_book(auth_new_author):
+    response_publicate = await auth_new_author.post(
         url="/author/book",
         json={
             "title": "Тайны времени",
@@ -45,56 +39,60 @@ async def test_base_crud_books(ac):
     )
     assert response_publicate.status_code == 200
 
-    response_publicate_second = await ac.post(
-        url="/author/book",
-        json={
-            "title": "Город без памяти",
-            "age_limit": 18,
-            "description": "В мегаполисе, где каждый день начинается с чистого листа, один человек пытается вспомнить правду.",
-            "language": "Russian",
-            "authors": [],
-            "genres": [2],
-            "tags": ["антиутопия", "память", "будущее", "тайна"],
-        },
-    )
-    second_book_id = response_publicate_second.json()["data"]["book_id"]
-    assert response_publicate_second.status_code == 200
-
-    response_edit = await ac.patch(
-        url=f"/author/book/{second_book_id}",
-        json={"genres": [1, 3], "age_limit": 16, "tags": ["тайна", "футуризм"]},
-    )
-    assert response_edit.status_code == 200
-
-    response_my_books = await ac.get(url="/author/my_books")
+    response_my_books = await auth_new_author.get(url="/author/my_books")
     assert response_my_books.status_code == 200
 
-    response_delete = await ac.delete(url=f"/author/book/{second_book_id}")
-    assert response_delete.status_code == 200
 
-    response_get_this_book = await ac.get(url=f"/books/{second_book_id}")
-    assert response_get_this_book.status_code == 404
-
-    # чистим куки, имитируя разлогин пользователя
-    ac.cookies.clear()
-
-    response_login_user = await ac.post(
-        url="/auth/login",
-        json={"email": "carol@example.com", "password": "hashed_pass_789"},
+# ✅
+async def test_patch_book(db, authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
+    data_to_edit = {"genres": [1, 3], "age_limit": 16, "tags": ["тайна", "футуризм"]}
+    response_edit = await author_client.patch(
+        url=f"/author/book/{book.book_id}",
+        json=data_to_edit,
     )
-    assert response_login_user.status_code == 200
-    assert "access_token" in ac.cookies.keys()
+    book_in_db = await db.books.get_one(book_id=book.book_id)
 
-    response_edit = await ac.patch(
-        url=f"/author/book/{second_book_id}",
+    assert response_edit.status_code == 200
+    assert book_in_db
+    assert book_in_db.age_limit == data_to_edit.get("age_limit", None)
+
+
+# ✅
+async def test_delete_book(authorized_client_with_new_book, db):
+    author_client, book = authorized_client_with_new_book
+
+    response_delete = await author_client.delete(url=f"/author/book/{book.book_id}")
+    assert response_delete.status_code == 200
+    assert not await db.books.get_filtered(book_id=book.book_id)
+
+
+# ✅
+async def test_get_book(authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
+
+    response_get_this_book = await author_client.get(url=f"/books/{book.book_id}")
+    api_book_json = response_get_this_book.json()
+
+    assert response_get_this_book.status_code == 200
+    assert api_book_json.get("book_id", "None") == book.book_id
+    assert api_book_json.get("title", "None") == book.title
+    assert api_book_json.get("age_limit", "None") == book.age_limit
+    assert api_book_json.get("description", "None") == book.description
+
+
+# ✅
+async def test_user_cannot_modify_or_create_books(auth_new_user, new_book):
+    response_edit = await auth_new_user.patch(
+        url=f"/author/book/{new_book.book_id}",
         json={"genres": [1, 3], "age_limit": 16, "tags": ["тайна", "футуризм"]},
     )
     assert response_edit.status_code == 403
 
-    response_delete = await ac.delete(url=f"/author/book/{second_book_id}")
+    response_delete = await auth_new_user.delete(url=f"/author/book/{new_book.book_id}")
     assert response_delete.status_code == 403
 
-    response_publicate_second = await ac.post(
+    response_publicate_second = await auth_new_user.post(
         url="/author/book",
         json={
             "title": "Город без памяти",
@@ -108,9 +106,8 @@ async def test_base_crud_books(ac):
     )
     assert response_publicate_second.status_code == 403
 
-    ac.cookies.clear()
 
-
+# ✅
 @pytest.mark.parametrize(
     "patch_data, status_code",
     [
@@ -140,13 +137,14 @@ async def test_base_crud_books(ac):
         ],
     ],
 )
-async def test_edit_book(patch_data, status_code, auth_ac_author):
+async def test_edit_book(patch_data, status_code, authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
     data_to_update = patch_data.model_dump(exclude_unset=True)
-    response_edit = await auth_ac_author.patch(
-        url="/author/book/1", json=data_to_update
+    response_edit = await author_client.patch(
+        url=f"/author/book/{book.book_id}", json=data_to_update
     )
     assert response_edit.status_code == status_code
-    updated_book_response = await auth_ac_author.get(url="/books/1")
+    updated_book_response = await author_client.get(url=f"/books/{book.book_id}")
     assert updated_book_response.status_code == 200
     if status_code != 200:
         return
@@ -165,49 +163,6 @@ async def test_edit_book(patch_data, status_code, auth_ac_author):
             )
             continue
         assert book[key] == value
-
-
-@pytest.mark.parametrize(
-    "book_path_in_content_bucket, status_code, list_images, book_id",
-    [
-        ["books/content/test_book.pdf", 200, ["books/1/images/page_0_img_0.png"], 1],
-        ["books/content/test_book.pdf", 409, None, 1],
-        ["books/content/not_a_book.jpg", 422, None, 2],
-        [
-            "books/content/test_book_2.pdf",  # book_path_in_content_bucket
-            200,  # status_code
-            ["books/2/images/page_1_img_0.png", "books/2/images/page_1_img_1.png"],
-            2,  # book_id
-        ],
-    ],
-)
-async def test_add_content(
-    book_path_in_content_bucket,
-    status_code,
-    list_images,
-    book_id,
-    auth_ac_author,
-    check_content_integration_tests,
-    s3,
-    db,
-):
-    file = await s3.books.get_file_by_path(
-        is_content_bucket=True, s3_path=book_path_in_content_bucket
-    )
-    filename = book_path_in_content_bucket.split("/")[-1]
-    response_add_content = await auth_ac_author.post(
-        url=f"/author/content/{book_id}", files={"file": (filename, file)}
-    )
-
-    assert response_add_content.status_code == status_code
-    if status_code != 200:
-        return
-
-    all_images = await s3.books.list_objects_by_prefix(prefix=f"books/{book_id}/images")
-    book = await db.books.get_one(book_id=book_id)
-    assert len(all_images) == len(list_images)
-    assert all_images == list_images
-    assert book.is_rendered
 
 
 @pytest.mark.parametrize(

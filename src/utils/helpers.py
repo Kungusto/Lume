@@ -1,6 +1,9 @@
 from pathlib import Path
+
+import aiofiles
 from src.exceptions.books import PageNotFoundException
 from src.exceptions.conftest import DirectoryNotFoundException
+from src.exceptions.files import FileNotFoundException
 
 
 class PDFRenderer:
@@ -81,6 +84,20 @@ class PDFRenderer:
 
 
 class FileManager:
+    STATIC_ROOT = Path("src/static")
+
+    async def get_file_by_rel_path(self, rel_path: str) -> bytes:
+        """
+        Получает - относительный путь для директории src/static
+        Возваращает - bytes нужного файла
+        """
+        file_path = self.STATIC_ROOT / rel_path
+        if not file_path.exists():
+            raise FileNotFoundException(file_path=file_path)
+        async with aiofiles.open(file_path, "rb") as f:
+            content = await f.read()
+        return content
+
     @staticmethod
     def get_list_files_by_folder_path(folder_path: str) -> set[str]:
         """

@@ -23,7 +23,12 @@ class WrongCoverResolutionHTTPException(FileValidationHTTPException):
 
 
 class FileNotFoundException(ObjectNotFoundException):
-    detail = "Файл не найден"
+    def __init__(self, file_path: str = "", *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        if not file_path:
+            self.detail = "Файл не найден"
+        else:
+            self.detail = f"Файл {file_path} не найден"
 
 
 class StatementNotFoundHTTPException(ObjectNotFoundHTTPException):

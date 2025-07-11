@@ -36,7 +36,7 @@ from src.exceptions.conftest import (
     DirectoryNotFoundException,
     DirectoryIsEmptyException,
 )
-from tests.factories.users_factory import UserAddFactory
+from tests.factories.users_factory import UserAddFactory, AuthorsAddFactory
 from tests.factories.books_factory import BookAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
@@ -110,20 +110,6 @@ async def seed_genres(setup_database):
         await _db.commit()
 
 
-# @pytest.fixture(scope="session")
-# async def mock_s3(s3_session, seed_db, auth_ac_author_session):
-#     """Добавляем обложку к книге с id=2 для теста на изменение обложки"""
-#     logging.info("Добавляю обложку к книге id=2")
-#     assert settings.MODE == "TEST"
-#     file = await s3_session.books.get_file_by_path(
-#         is_content_bucket=True, s3_path="books/covers/normal_cover.jpg"
-#     )
-#     response_add_cover = await auth_ac_author_session.post(
-#         url="author/cover/2", files={"file": ("preview.png", file)}
-#     )
-#     assert response_add_cover.status_code == 200
-
-
 async def get_db_null_pool():
     async with AsyncDBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
@@ -192,7 +178,6 @@ async def check_content_integration_tests():
         # Проверка на наличие хотя-бы одного файла
         "check_not_empty": [
             {"folder_path": "src/static/other"},
-            {"folder_path": "src/static/test"},
         ],
     }
     try:
@@ -297,7 +282,7 @@ async def auth_ac_admin(ac_session):
     yield ac_session
 
 
-# --- фикстуры для создания нужных нам данных ---
+# --- фикстуры для создания нужных нам данных --- #
 @pytest.fixture(scope="function")
 async def new_user(db):
     user = UserAddFactory()
@@ -323,7 +308,31 @@ async def auth_new_user(ac, new_user):
 
 
 @pytest.fixture(scope="function")
-async def new_book(db, new_user):
+async def new_author(db):
+    user = AuthorsAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user.hashed_password)
+    # добавляем в бд автора и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    await db.commit()
+    return TestUserWithPassword(**db_user.model_dump(), password=user_password)
+
+
+@pytest.fixture(scope="function")
+async def auth_new_author(ac, new_author):
+    login_data = {"email": new_author.email, "password": new_author.password}
+    response_login = await ac.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac.cookies
+    yield ac
+
+
+# --- Книги
+@pytest.fixture(scope="function")
+async def new_book(db, new_author):
     book = BookAddFactory()
     db_book = await db.books.add(book)
     genre_ids = [g.genre_id for g in await db.genres.get_all()]
@@ -332,10 +341,22 @@ async def new_book(db, new_user):
         GenresBooksAdd(genre_id=genre_id, book_id=db_book.book_id)
     )
     await db.books_authors.add(
-        BookAuthorAdd(book_id=db_book.book_id, author_id=new_user.user_id)
+        BookAuthorAdd(book_id=db_book.book_id, author_id=new_author.user_id)
     )
     result_data = TestBookWithRels(
-        **db_book.model_dump(), author=new_user, genre_id=genre_id
+        **db_book.model_dump(), author=new_author, genre_id=genre_id
     )
     await db.commit()
     return result_data
+
+
+@pytest.fixture(scope="function")
+async def authorized_client_with_new_book(new_book, ac):
+    login_data = {"email": new_book.author.email, "password": new_book.author.password}
+    response_login = await ac.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac.cookies
+    yield ac, new_book

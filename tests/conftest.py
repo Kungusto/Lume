@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-from src.schemas.books import GenreAdd, GenresBooksAdd, BookPATCH
+from src.schemas.books import GenreAdd, GenresBooksAdd, BookPATCH, TagAdd
 from src.schemas.books_authors import BookAuthorAdd
 from src.schemas.reports import ReasonAdd
 from src.services.auth import AuthService
@@ -46,10 +46,11 @@ from tests.factories.users_factory import (
 from tests.factories.books_factory import BookAddFactory
 from tests.factories.reviews_factory import ReviewAddFactory
 from tests.factories.genres_factory import GenreAddFactory
+from tests.factories.tags_factory import TagAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
-from tests.utils import ServiceForTests, FileManager
+from tests.utils import ServiceForTests
 
 
 settings = Settings()  # noqa: F811
@@ -486,6 +487,17 @@ async def new_genre(db):
     db_genre = await db.genres.add(genre)
     await db.commit()
     return db_genre
+
+
+# -- Теги
+@pytest.fixture(scope="function")
+async def new_tag(db, new_book): 
+    tag = TagAddFactory()
+    tag_add = TagAdd(title_tag=tag.title_tag, book_id=new_book.book_id)
+    db_tag = await db.tags.add(tag_add)
+    await db.commit()
+    return db_tag
+
 
 
 # -- Второй клиент

@@ -80,6 +80,10 @@ class TagNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Тег не найден"
 
 
+class TagAlreadyExistsHTTPException(AlreadyExistsHTTPException):
+    detail = "Нельзя добавить два одинаковых тега на одну книгу"
+
+
 class UnableToPuslishHTTPException(LumeHTTPException):
     detail = "Невозможно опубликовать. Не выполнены требования для публикации"
     status_code = 422

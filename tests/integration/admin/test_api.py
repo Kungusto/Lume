@@ -29,3 +29,30 @@ async def test_change_user_role(auth_new_admin, new_user, new_general_admin):
     assert response_change_role.status_code == 403
 
 
+async def test_add_already_exist_genre(auth_new_admin, new_genre): 
+    response_add_already_exist_genre = await auth_new_admin.post(
+        "/admin/genres", json={"title": new_genre.title}
+    )
+    assert response_add_already_exist_genre.status_code == 409
+
+
+async def test_add_genre(auth_new_admin):
+    response_add_genre = await auth_new_admin.post(
+        "/admin/genres", json={"title": "Страшилки!"}
+    )
+    assert response_add_genre.status_code == 200
+
+
+async def test_edit_genre(db, auth_new_admin, new_genre): 
+    update_data = {"title": "Роман_"}
+    response_edit_genre = await auth_new_admin.put(
+        f"/admin/genres/{new_genre.genre_id}", json=update_data
+    )
+    assert response_edit_genre.status_code == 200
+    db_genre = await db.genres.get_one(genre_id=new_genre.genre_id)
+    assert db_genre.title == update_data.get("title", None)
+
+    response_edit_genre = await auth_new_admin.put(
+        "/admin/genres/9999", json={"title": "Изменяю несуществующий жанр!"}
+    )
+    assert response_edit_genre.status_code == 404

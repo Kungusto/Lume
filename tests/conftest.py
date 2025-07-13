@@ -45,6 +45,7 @@ from tests.factories.users_factory import (
 )
 from tests.factories.books_factory import BookAddFactory
 from tests.factories.reviews_factory import ReviewAddFactory
+from tests.factories.genres_factory import GenreAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
@@ -478,6 +479,15 @@ async def new_review_with_author_ac(new_book, auth_new_user):
     yield auth_new_user, review_to_return
 
 
+# -- Жанры
+@pytest.fixture(scope="function")
+async def new_genre(db):
+    genre = GenreAddFactory()
+    db_genre = await db.genres.add(genre)
+    await db.commit()
+    return db_genre
+
+
 # -- Второй клиент
 @pytest.fixture(scope="function")
 async def ac2():
@@ -518,3 +528,4 @@ async def auth_new_second_user(ac2, new_second_user):
     assert response_login.status_code == 200
     assert ac2.cookies
     yield ac2
+

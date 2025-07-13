@@ -11,6 +11,7 @@ from src.exceptions.books import (
     GenreNotFoundHTTPException,
     TagNotFoundHTTPException,
     BookNotFoundHTTPException,
+    TagAlreadyExistsHTTPException
 )
 from src.exceptions.auth import (
     UserNotFoundHTTPException,
@@ -130,6 +131,8 @@ async def add_tag(
         await db.books.get_one(book_id=data.book_id)
     except ObjectNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
+    if await db.tags.get_filtered(book_id=data.book_id, title_tag=data.title_tag):
+        raise TagAlreadyExistsHTTPException
     await db.tags.add(data=data)
     await db.commit()
     return {"status": "OK"}

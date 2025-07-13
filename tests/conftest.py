@@ -19,8 +19,9 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-from src.schemas.books import GenreAdd, GenresBooksAdd
+from src.schemas.books import GenreAdd, GenresBooksAdd, BookPATCH
 from src.schemas.books_authors import BookAuthorAdd
+from src.schemas.reports import ReasonAdd
 from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
@@ -47,7 +48,7 @@ from tests.factories.reviews_factory import ReviewAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
-from tests.utils import ServiceForTests
+from tests.utils import ServiceForTests, FileManager
 
 
 settings = Settings()  # noqa: F811
@@ -96,11 +97,6 @@ async def setup_database():
         await conn.run_sync(Base.metadata.create_all)
 
 
-# @pytest.fixture(scope="session")
-# async def seed_db(setup_database, seed_genres, seed_users, seed_books, seed_reviews):
-#     logging.info("База данных заполнена мок-данными!")
-
-
 @pytest.fixture(scope="session", autouse=True)
 async def seed_genres(setup_database):
     logging.debug("Заполняю бд жанрами")
@@ -108,6 +104,16 @@ async def seed_genres(setup_database):
         with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
             data = [GenreAdd(**genre) for genre in json.load(file)]
             await _db.genres.add_bulk(data)
+        await _db.commit()
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def seed_reasons(setup_database):
+    logging.debug("Заполняю бд перечнем причин бана")
+    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
+        with open("tests/mock_reasons.json", "r", encoding="utf-8") as file:
+            data = [ReasonAdd(**reason) for reason in json.load(file)]
+            await _db.reasons.add_bulk(data)
         await _db.commit()
 
 
@@ -376,6 +382,7 @@ async def new_book(db, new_author):
     return result_data
 
 
+
 @pytest.fixture(scope="function")
 async def authorized_client_with_new_book(new_book, ac):
     login_data = {"email": new_book.author.email, "password": new_book.author.password}
@@ -386,6 +393,34 @@ async def authorized_client_with_new_book(new_book, ac):
     assert response_login.status_code == 200
     assert ac.cookies
     yield ac, new_book
+
+
+@pytest.fixture(scope="function")
+async def authorized_client_new_book_with_content(authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
+    file, filename = await ServiceForTests.get_file_and_name("books/content/test_book_2.pdf")
+    response_add_content = await author_client.post(
+        url=f"/author/content/{book.book_id}", files={"file": (filename, file)}
+    )
+    assert response_add_content.status_code == 200
+    return author_client, book
+
+
+@pytest.fixture(scope="function")
+async def new_publicated_book(db, new_book):
+    updated_data = BookPATCH(is_publicated=True)
+    await db.books.edit(updated_data, is_patch=True, book_id=new_book.book_id)
+    await db.commit()
+    return new_book
+
+
+@pytest.fixture(scope="function")
+async def new_publicated_book_with_cover(db, authorized_client_with_new_book_with_cover):
+    _, book = authorized_client_with_new_book_with_cover
+    updated_data = BookPATCH(is_publicated=True)
+    await db.books.edit(updated_data, is_patch=True, book_id=book.book_id)
+    await db.commit()
+    return book
 
 
 @pytest.fixture(scope="function")
@@ -402,6 +437,7 @@ async def authorized_client_with_new_book_with_cover(authorized_client_with_new_
     yield author_client, book
 
 
+# -- Отзывы
 @pytest.fixture(scope="function")
 async def new_review(new_book, auth_new_user):
     review = ReviewAddFactory()
@@ -442,6 +478,7 @@ async def new_review_with_author_ac(new_book, auth_new_user):
     yield auth_new_user, review_to_return
 
 
+# -- Второй клиент
 @pytest.fixture(scope="function")
 async def ac2():
     """
@@ -452,6 +489,7 @@ async def ac2():
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac2:
         yield ac2
+
 
 
 @pytest.fixture(scope="function")

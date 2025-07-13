@@ -106,13 +106,9 @@ async def get_page(
         raise PageNotFoundHTTPException(page_number=page_number)
     book_file = await s3.books.get_file_by_path(f"books/{book_id}/book.pdf")
     doc = fitz.open(stream=book_file, filetype="pdf")
-    try:
-        content_data = PDFRenderer.parse_text_end_images_from_page(
-            page_number=page_number, book_id=book_id, doc=doc
-        )
-    except PageNotFoundException as ex:
-        raise PageNotFoundHTTPException(page_number=page_number) from ex
-
+    content_data = PDFRenderer.parse_text_end_images_from_page(
+        page_number=page_number, book_id=book_id, doc=doc
+    )
     user_read_book = await db.user_reads.get_filtered(user_id=user_id, book_id=book_id)
     if not user_read_book:
         await db.user_reads.add(

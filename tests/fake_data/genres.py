@@ -1,0 +1,11 @@
+BOOK_GENRES = [
+    "fantasy", "science fiction", "romance", "mystery", "thriller", "horror",
+    "historical", "drama", "comedy", "adventure", "action", "crime", "biography",
+    "memoir", "poetry", "dystopian", "utopian", "coming of age", "paranormal",
+    "magical realism", "mythology", "urban fantasy", "steampunk", "cyberpunk",
+    "space opera", "military fiction", "high fantasy", "dark fantasy", "epic fantasy",
+    "political fiction", "satire", "short stories", "western", "suspense",
+    "psychological thriller", "legal thriller", "spy fiction", "war", "supernatural",
+    "literary fiction", "contemporary", "young adult", "new adult", "children’s",
+    "science", "self-help", "philosophy", "travel", "religion", "technology"
+]

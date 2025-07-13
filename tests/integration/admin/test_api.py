@@ -3,12 +3,6 @@
 pytest -s -v tests/integration/admin/test_api.py
 """
 
-
-import random
-
-import pytest
-
-
 async def test_change_user_role(auth_new_admin, new_user, new_general_admin):
     # изменить роль несуществующему пользователю
     response_change_role_non_existent_user = await auth_new_admin.patch(
@@ -33,6 +27,5 @@ async def test_change_user_role(auth_new_admin, new_user, new_general_admin):
         url=f"admin/{new_user.user_id}/change_role", json={"role": "USER"}
     )
     assert response_change_role.status_code == 403
-
 
 

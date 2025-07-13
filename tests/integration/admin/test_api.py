@@ -56,3 +56,73 @@ async def test_edit_genre(db, auth_new_admin, new_genre):
         "/admin/genres/9999", json={"title": "Изменяю несуществующий жанр!"}
     )
     assert response_edit_genre.status_code == 404
+
+
+async def test_delete_genre(db, auth_new_admin, new_genre): 
+    # 200 OK
+    response_delete_genre = await auth_new_admin.delete(
+        f"/admin/genres/{new_genre.genre_id}"
+    )
+    assert response_delete_genre.status_code == 200
+    assert not await db.genres.get_filtered(genre_id=new_genre.genre_id)
+
+    # Пробуем удалить несуществующий жанр
+    response_delete_genre = await auth_new_admin.delete(
+        f"/admin/genres/9999"
+    )
+    assert response_delete_genre.status_code == 404
+
+
+async def test_delete_tag(db, auth_new_admin, new_tag):
+    # 200 OK
+    response_delete_tag = await auth_new_admin.delete(
+        url=f"admin/tag/{new_tag.id}"
+    )
+    assert response_delete_tag.status_code == 200
+    assert not await db.tags.get_filtered(id=new_tag.id)
+
+    # Пробуем удалить несуществующий тег
+    response_delete_non_existent_tag = await auth_new_admin.delete(
+        url=f"admin/tag/9999"
+    )
+    assert response_delete_non_existent_tag.status_code == 404
+
+
+async def test_add_tag(db, auth_new_admin, new_book): 
+    # 200 OK 
+    data_to_add = {"book_id": new_book.book_id, "title_tag": "Много роз!"}
+    response_add_tag = await auth_new_admin.post(
+        url="admin/tag", json=data_to_add
+    )
+    assert response_add_tag.status_code == 200
+    assert await db.tags.get_filtered(book_id=new_book.book_id, title_tag=data_to_add.get("title_tag", None))
+
+    # Пробуем тот же самый тег, к той же самой книге
+    response_add_tag = await auth_new_admin.post(
+        url="admin/tag", json=data_to_add
+    )
+    assert response_add_tag.status_code == 409
+
+    # Пробуем добавить тег к несуществующей книге
+    wrong_data_to_add = {"book_id": 9999, "title_tag": "Много роз!"}
+    response_add_tag = await auth_new_admin.post(
+        url="admin/tag", json=wrong_data_to_add
+    )
+    assert response_add_tag.status_code == 404
+
+
+async def test_edit_tag(db, auth_new_admin, new_tag):
+    # 200 OK 
+    data_to_edit = {"title_tag": "Какой-то тег"}
+    response_edit_tag = await auth_new_admin.put(
+        url=f"admin/tag/{new_tag.id}", json=data_to_edit
+    )
+    assert response_edit_tag.status_code == 200
+    tag_in_db = (await db.tags.get_filtered(id=new_tag.id))[0]
+    assert tag_in_db.title_tag == data_to_edit.get("title_tag", None)
+
+    # Пробуем изменить несуществующий тег
+    response_edit_tag = await auth_new_admin.put(
+        url=f"admin/tag/9999", json=data_to_edit
+    )
+    assert response_edit_tag.status_code == 404

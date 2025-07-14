@@ -506,11 +506,13 @@ async def new_reason(db):
 # -- Жалобы
 @pytest.fixture(scope="function")
 async def new_report(db, new_book, new_reason):
-    report_from_factory = ReportAddFactory()
+    # фабрика возвращает pydantic-модель. берем ее атрибут comment
+    comment_from_factory = ReportAddFactory().comment
     report_to_add = ReportAdd(
-        reason_id=new_reason, book_id=new_book.book_id, comment=report_from_factory
+        reason_id=new_reason.reason_id, book_id=new_book.book_id, comment=comment_from_factory
     )
     db_report = await db.reports.add(report_to_add)
+    await db.commit()
     return db_report
 
 

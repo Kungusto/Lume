@@ -168,3 +168,17 @@ async def test_delete_reason(db, auth_new_admin, new_reason):
     )
     assert response_delete_non_existent_reason.status_code == 200
     assert not await db.reasons.get_one_or_none(reason_id=new_reason.reason_id)
+
+
+async def test_get_all_reports(db, auth_new_admin, new_report): 
+    response = await auth_new_admin.get(url="admin/reports")
+    reports_in_db = await db.reports.get_all()
+    assert response.status_code == 200
+    assert len(response.json()) == len(reports_in_db)
+
+
+async def test_mark_as_checked_report(db, auth_new_admin, new_report): 
+    response = await auth_new_admin.patch(url=f"admin/reports/{new_report.id}")
+    assert response.status_code == 200
+    # Проверяем, что пометилось как проверенное
+    assert await db.reports.get_filtered(is_checked=True, id=new_report.id)

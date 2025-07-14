@@ -9,4 +9,4 @@ class ReportAddFactory(factory.Factory):
     class Meta:
         model = ReportCommentFromFactory
 
-    comment = factory.LazyAttrubute(faker.sentence(nb_words=8))
+    comment = factory.LazyAttribute(lambda _: faker.sentence(nb_words=8))

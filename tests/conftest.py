@@ -21,7 +21,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.schemas.books import GenreAdd, GenresBooksAdd, BookPATCH, TagAdd
 from src.schemas.books_authors import BookAuthorAdd
-from src.schemas.reports import ReasonAdd
+from src.schemas.reports import ReportAdd
 from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
@@ -48,6 +48,7 @@ from tests.factories.reviews_factory import ReviewAddFactory
 from tests.factories.genres_factory import GenreAddFactory
 from tests.factories.tags_factory import TagAddFactory
 from tests.factories.reasons_factory import ReasonAddFactory
+from tests.factories.reports_factory import ReportAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
@@ -500,6 +501,17 @@ async def new_reason(db):
     db_reason = await db.reasons.add(reason)
     await db.commit()
     return db_reason
+
+
+# -- Жалобы
+@pytest.fixture(scope="function")
+async def new_report(db, new_book, new_reason):
+    report_from_factory = ReportAddFactory()
+    report_to_add = ReportAdd(
+        reason_id=new_reason, book_id=new_book.book_id, comment=report_from_factory
+    )
+    db_report = await db.reports.add(report_to_add)
+    return db_report
 
 
 # -- Второй клиент

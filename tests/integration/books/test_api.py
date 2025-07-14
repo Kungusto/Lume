@@ -118,7 +118,10 @@ async def test_report_book(new_book, auth_new_user, new_reason):
     # Пытаемся пожаловаться на несуществующую книгу
     response_add_report = await auth_new_user.post(
         url="books/9999/report",
-        json={"reason_id": new_reason.reason_id, "comment": "Жалуюсь не несуществующую книгу"},
+        json={
+            "reason_id": new_reason.reason_id,
+            "comment": "Жалуюсь не несуществующую книгу",
+        },
     )
 
     # Пытаемся пожаловаться по несуществующей причине

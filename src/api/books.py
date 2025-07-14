@@ -5,7 +5,6 @@ from src.exceptions.books import (
     BookNotFoundHTTPException,
     BookNotFoundException,
     ContentNotFoundHTTPException,
-    PageNotFoundException,
     PageNotFoundHTTPException,
 )
 from src.exceptions.search import (

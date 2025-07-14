@@ -11,7 +11,7 @@ from src.exceptions.books import (
     GenreNotFoundHTTPException,
     TagNotFoundHTTPException,
     BookNotFoundHTTPException,
-    TagAlreadyExistsHTTPException
+    TagAlreadyExistsHTTPException,
 )
 from src.exceptions.auth import (
     UserNotFoundHTTPException,

@@ -4,7 +4,7 @@ import factory
 from faker import Faker
 
 # заранее заготовленный список жанров
-from tests.fake_data.genres import BOOK_GENRES 
+from tests.fake_data.genres import BOOK_GENRES
 
 faker = Faker("ru_RU")
 

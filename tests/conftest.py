@@ -384,7 +384,6 @@ async def new_book(db, new_author):
     return result_data
 
 
-
 @pytest.fixture(scope="function")
 async def authorized_client_with_new_book(new_book, ac):
     login_data = {"email": new_book.author.email, "password": new_book.author.password}
@@ -400,7 +399,9 @@ async def authorized_client_with_new_book(new_book, ac):
 @pytest.fixture(scope="function")
 async def authorized_client_new_book_with_content(authorized_client_with_new_book):
     author_client, book = authorized_client_with_new_book
-    file, filename = await ServiceForTests.get_file_and_name("books/content/test_book_2.pdf")
+    file, filename = await ServiceForTests.get_file_and_name(
+        "books/content/test_book_2.pdf"
+    )
     response_add_content = await author_client.post(
         url=f"/author/content/{book.book_id}", files={"file": (filename, file)}
     )
@@ -417,7 +418,9 @@ async def new_publicated_book(db, new_book):
 
 
 @pytest.fixture(scope="function")
-async def new_publicated_book_with_cover(db, authorized_client_with_new_book_with_cover):
+async def new_publicated_book_with_cover(
+    db, authorized_client_with_new_book_with_cover
+):
     _, book = authorized_client_with_new_book_with_cover
     updated_data = BookPATCH(is_publicated=True)
     await db.books.edit(updated_data, is_patch=True, book_id=book.book_id)
@@ -491,13 +494,12 @@ async def new_genre(db):
 
 # -- Теги
 @pytest.fixture(scope="function")
-async def new_tag(db, new_book): 
+async def new_tag(db, new_book):
     tag = TagAddFactory()
     tag_add = TagAdd(title_tag=tag.title_tag, book_id=new_book.book_id)
     db_tag = await db.tags.add(tag_add)
     await db.commit()
     return db_tag
-
 
 
 # -- Второй клиент
@@ -511,7 +513,6 @@ async def ac2():
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac2:
         yield ac2
-
 
 
 @pytest.fixture(scope="function")
@@ -540,4 +541,3 @@ async def auth_new_second_user(ac2, new_second_user):
     assert response_login.status_code == 200
     assert ac2.cookies
     yield ac2
-

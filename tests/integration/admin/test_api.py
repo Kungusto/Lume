@@ -3,6 +3,7 @@
 pytest -s -v tests/integration/admin/test_api.py
 """
 
+
 async def test_change_user_role(auth_new_admin, new_user, new_general_admin):
     # изменить роль несуществующему пользователю
     response_change_role_non_existent_user = await auth_new_admin.patch(
@@ -29,7 +30,7 @@ async def test_change_user_role(auth_new_admin, new_user, new_general_admin):
     assert response_change_role.status_code == 403
 
 
-async def test_add_already_exist_genre(auth_new_admin, new_genre): 
+async def test_add_already_exist_genre(auth_new_admin, new_genre):
     response_add_already_exist_genre = await auth_new_admin.post(
         "/admin/genres", json={"title": new_genre.title}
     )
@@ -43,7 +44,7 @@ async def test_add_genre(auth_new_admin):
     assert response_add_genre.status_code == 200
 
 
-async def test_edit_genre(db, auth_new_admin, new_genre): 
+async def test_edit_genre(db, auth_new_admin, new_genre):
     update_data = {"title": "Роман_"}
     response_edit_genre = await auth_new_admin.put(
         f"/admin/genres/{new_genre.genre_id}", json=update_data
@@ -58,7 +59,7 @@ async def test_edit_genre(db, auth_new_admin, new_genre):
     assert response_edit_genre.status_code == 404
 
 
-async def test_delete_genre(db, auth_new_admin, new_genre): 
+async def test_delete_genre(db, auth_new_admin, new_genre):
     # 200 OK
     response_delete_genre = await auth_new_admin.delete(
         f"/admin/genres/{new_genre.genre_id}"
@@ -67,40 +68,34 @@ async def test_delete_genre(db, auth_new_admin, new_genre):
     assert not await db.genres.get_filtered(genre_id=new_genre.genre_id)
 
     # Пробуем удалить несуществующий жанр
-    response_delete_genre = await auth_new_admin.delete(
-        f"/admin/genres/9999"
-    )
+    response_delete_genre = await auth_new_admin.delete("/admin/genres/9999")
     assert response_delete_genre.status_code == 404
 
 
 async def test_delete_tag(db, auth_new_admin, new_tag):
     # 200 OK
-    response_delete_tag = await auth_new_admin.delete(
-        url=f"admin/tag/{new_tag.id}"
-    )
+    response_delete_tag = await auth_new_admin.delete(url=f"admin/tag/{new_tag.id}")
     assert response_delete_tag.status_code == 200
     assert not await db.tags.get_filtered(id=new_tag.id)
 
     # Пробуем удалить несуществующий тег
     response_delete_non_existent_tag = await auth_new_admin.delete(
-        url=f"admin/tag/9999"
+        url="admin/tag/9999"
     )
     assert response_delete_non_existent_tag.status_code == 404
 
 
-async def test_add_tag(db, auth_new_admin, new_book): 
-    # 200 OK 
+async def test_add_tag(db, auth_new_admin, new_book):
+    # 200 OK
     data_to_add = {"book_id": new_book.book_id, "title_tag": "Много роз!"}
-    response_add_tag = await auth_new_admin.post(
-        url="admin/tag", json=data_to_add
-    )
+    response_add_tag = await auth_new_admin.post(url="admin/tag", json=data_to_add)
     assert response_add_tag.status_code == 200
-    assert await db.tags.get_filtered(book_id=new_book.book_id, title_tag=data_to_add.get("title_tag", None))
+    assert await db.tags.get_filtered(
+        book_id=new_book.book_id, title_tag=data_to_add.get("title_tag", None)
+    )
 
     # Пробуем тот же самый тег, к той же самой книге
-    response_add_tag = await auth_new_admin.post(
-        url="admin/tag", json=data_to_add
-    )
+    response_add_tag = await auth_new_admin.post(url="admin/tag", json=data_to_add)
     assert response_add_tag.status_code == 409
 
     # Пробуем добавить тег к несуществующей книге
@@ -112,7 +107,7 @@ async def test_add_tag(db, auth_new_admin, new_book):
 
 
 async def test_edit_tag(db, auth_new_admin, new_tag):
-    # 200 OK 
+    # 200 OK
     data_to_edit = {"title_tag": "Какой-то тег"}
     response_edit_tag = await auth_new_admin.put(
         url=f"admin/tag/{new_tag.id}", json=data_to_edit
@@ -123,6 +118,6 @@ async def test_edit_tag(db, auth_new_admin, new_tag):
 
     # Пробуем изменить несуществующий тег
     response_edit_tag = await auth_new_admin.put(
-        url=f"admin/tag/9999", json=data_to_edit
+        url="admin/tag/9999", json=data_to_edit
     )
     assert response_edit_tag.status_code == 404

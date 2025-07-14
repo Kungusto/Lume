@@ -106,11 +106,11 @@ async def test_get_page_from_book_without_content(new_book, auth_new_second_user
     assert response_get_page.json()
 
 
-async def test_report_book(new_book, auth_new_user, seed_reasons):
+async def test_report_book(new_book, auth_new_user, new_reason):
     # Корректные данные - 200 OK
     response_add_report = await auth_new_user.post(
         url=f"books/{new_book.book_id}/report",
-        json={"reason_id": 1, "comment": "Это плагиат!"},
+        json={"reason_id": new_reason.reason_id, "comment": "Это плагиат!"},
     )
     assert response_add_report.status_code == 200
     assert response_add_report.json()
@@ -118,7 +118,7 @@ async def test_report_book(new_book, auth_new_user, seed_reasons):
     # Пытаемся пожаловаться на несуществующую книгу
     response_add_report = await auth_new_user.post(
         url="books/9999/report",
-        json={"reason_id": 1, "comment": "Жалуюсь не несуществующую книгу"},
+        json={"reason_id": new_reason.reason_id, "comment": "Жалуюсь не несуществующую книгу"},
     )
 
     # Пытаемся пожаловаться по несуществующей причине

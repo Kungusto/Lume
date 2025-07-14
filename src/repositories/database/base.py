@@ -82,6 +82,16 @@ class BaseRepository:
             raise ObjectNotFoundException from ex
         return self.schema.model_validate(result, from_attributes=True)
 
+
+    async def get_one_or_none(self, *filter, **filter_by):
+        query = select(self.model).filter(*filter).filter_by(**filter_by)
+        model = await self.session.execute(query)
+        result = model.scalar_one_or_none()
+        if result:
+            return self.schema.model_validate(result, from_attributes=True)
+        return None
+
+
     async def delete(self, *filter, **filter_by):
         delete_stmt = delete(self.model).filter(*filter).filter_by(**filter_by)
         await self.session.execute(delete_stmt)

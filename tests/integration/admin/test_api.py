@@ -121,3 +121,56 @@ async def test_edit_tag(db, auth_new_admin, new_tag):
         url="admin/tag/9999", json=data_to_edit
     )
     assert response_edit_tag.status_code == 404
+
+
+async def test_add_reason(db, auth_new_admin): 
+    data_to_add = {"title": "Дезинформация"}
+    
+    # 200 OK
+    response_add_reason = await auth_new_admin.post(
+        "admin/reasons", json=data_to_add
+    )
+    json_response = response_add_reason.json()
+    assert response_add_reason.status_code == 200
+    assert await db.reasons.get_filtered(reason_id=json_response.get("reason_id"))
+
+    # Пробуем добавить ту же причину
+    response_add_reason = await auth_new_admin.post(
+        "admin/reasons", json=data_to_add
+    )
+    assert response_add_reason.status_code == 409
+
+
+async def test_edit_reason(db, auth_new_admin, new_reason): 
+    data_to_edit = {"title": "Нарушение правил площадки"}
+
+    # 200 OK
+    response_edit_reason =  await auth_new_admin.put(
+        url=f"admin/reasons/{new_reason.reason_id}", json=data_to_edit
+    )
+    response_json = response_edit_reason.json()
+    db_reason = await db.reasons.get_one_or_none(reason_id=new_reason.reason_id)
+    assert response_edit_reason.status_code == 200
+    assert response_json is not None
+    assert db_reason.title.lower() == data_to_edit.get("title", None).lower()
+
+    # Пробуем изменить несуществующую причину
+    response_edit_reason =  await auth_new_admin.put(
+        url=f"admin/reasons/9999", json=data_to_edit
+    )
+    assert response_edit_reason.status_code == 404
+
+
+async def test_delete_reason(db, auth_new_admin, new_reason):
+    # Пробуем удалить несуществующую причину
+    response_delete_non_existent_reason = await auth_new_admin.delete(
+        url=f"admin/reasons/9999"
+    )
+    assert response_delete_non_existent_reason.status_code == 404
+    
+    # 200 OK
+    response_delete_non_existent_reason = await auth_new_admin.delete(
+        url=f"admin/reasons/{new_reason.reason_id}"
+    )
+    assert response_delete_non_existent_reason.status_code == 200
+    assert not db.reasons.get_one_or_none(reason_id=new_reason.reason_id)

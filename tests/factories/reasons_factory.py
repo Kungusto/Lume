@@ -5,7 +5,7 @@ from faker import Faker
 faker = Faker("ru_RU")
 
 
-class TagAddFactory(factory.Factory):
+class ReasonAddFactory(factory.Factory):
     class Meta:
         model = ReasonAdd
 

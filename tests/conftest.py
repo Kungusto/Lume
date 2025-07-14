@@ -47,7 +47,7 @@ from tests.factories.books_factory import BookAddFactory
 from tests.factories.reviews_factory import ReviewAddFactory
 from tests.factories.genres_factory import GenreAddFactory
 from tests.factories.tags_factory import TagAddFactory
-from tests.factories.reasons_factory import ReasonAdd
+from tests.factories.reasons_factory import ReasonAddFactory
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
@@ -496,8 +496,9 @@ async def new_tag(db, new_book):
 # -- Причины банов
 @pytest.fixture(scope="function")
 async def new_reason(db):
-    reason = ReasonAdd()
+    reason = ReasonAddFactory()
     db_reason = await db.reasons.add(reason)
+    await db.commit()
     return db_reason
 
 

@@ -58,5 +58,5 @@ class BanEdit(BaseModel):
     ban_until: datetime = datetime.now(timezone.utc) + timedelta(hours=1)
 
 
-class Reason(BaseModel):
+class Reason(ReasonAdd):
     reason_id: int

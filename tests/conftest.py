@@ -47,6 +47,7 @@ from tests.factories.books_factory import BookAddFactory
 from tests.factories.reviews_factory import ReviewAddFactory
 from tests.factories.genres_factory import GenreAddFactory
 from tests.factories.tags_factory import TagAddFactory
+from tests.factories.reasons_factory import ReasonAdd
 from tests.schemas.users import TestUserWithPassword
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
@@ -106,16 +107,6 @@ async def seed_genres(setup_database):
         with open("tests/mock_genres.json", "r", encoding="utf-8") as file:
             data = [GenreAdd(**genre) for genre in json.load(file)]
             await _db.genres.add_bulk(data)
-        await _db.commit()
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def seed_reasons(setup_database):
-    logging.debug("Заполняю бд перечнем причин бана")
-    async with AsyncDBManager(session_factory=async_session_maker_null_pool) as _db:
-        with open("tests/mock_reasons.json", "r", encoding="utf-8") as file:
-            data = [ReasonAdd(**reason) for reason in json.load(file)]
-            await _db.reasons.add_bulk(data)
         await _db.commit()
 
 
@@ -500,6 +491,14 @@ async def new_tag(db, new_book):
     db_tag = await db.tags.add(tag_add)
     await db.commit()
     return db_tag
+
+
+# -- Причины банов
+@pytest.fixture(scope="function")
+async def new_reason(db):
+    reason = ReasonAdd()
+    db_reason = await db.reasons.add(reason)
+    return db_reason
 
 
 # -- Второй клиент

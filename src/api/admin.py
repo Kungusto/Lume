@@ -234,9 +234,9 @@ async def ban_user_by_id(
         BanORM.ban_until > datetime.now(timezone.utc), user_id=user_id
     ):
         raise AlreadyBannedHTTPException
-    if user_role == user.role.value:
+    if user_role == user.role:
         raise ChangePermissionsOfADMINHTTPException
-    if user.role.value == "GENERAL_ADMIN":
+    if user.role == "GENERAL_ADMIN":
         raise ChangePermissionsOfADMINHTTPException
     # На случай если админ решит понизить другого админа
     ban_data = await db.bans.add(data=BanAdd(**data.model_dump(), user_id=user_id))

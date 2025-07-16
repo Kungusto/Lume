@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     - TEST: выполнение тестов
     - PROD: запуск на боевом сервере
     """
+
     MODE: Literal["LOCAL", "TEST", "PROD"]
 
     # Базы данных
@@ -36,8 +37,7 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str
 
     # Аналитика
-    AUTO_STATEMENT_PATH: str
-
+    STATEMENT_DIR_PATH: str
 
     # Асинхронное подключение
     @property

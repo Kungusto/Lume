@@ -14,5 +14,6 @@ aiobotocore_env
 celerybeat-schedule.*
 users_auto.xlsx
 src/analytics/data/*
+tests/analytics/data/*
 .coverage
 htmlcov/

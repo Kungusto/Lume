@@ -32,4 +32,4 @@ class FileNotFoundException(ObjectNotFoundException):
 
 
 class StatementNotFoundHTTPException(ObjectNotFoundHTTPException):
-    detail = "Автоматический отчет еще не сгенерировал"
+    detail = "Автоматический отчет еще не сгенерирован"

@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import os
 from src.tasks.celery_app import celery_app
 from sqlalchemy import update
 from src.config import Settings, get_settings

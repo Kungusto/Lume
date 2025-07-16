@@ -292,7 +292,9 @@ async def generate_report_inside_app(
     )
     model = await db.session.execute(analytics_query)
     data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
-    stmt_path = f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
+    stmt_path = (
+        f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
+    )
     result = UsersStatement(
         **data.model_dump(),
         stmt_path=stmt_path,
@@ -328,7 +330,9 @@ async def get_statements_by_date(s3: S3Dep, statement_date: date):
 async def save_and_get_auto_statement(s3: S3Dep):
     key = f"analytics/auto/{datetime.today().strftime('%Y-%m-%d_%H-%M')}"
     try:
-        with open(f"{settings.STATEMENT_DIR_PATH}/users_statement_auto.xlsx", "rb") as doc:
+        with open(
+            f"{settings.STATEMENT_DIR_PATH}/users_statement_auto.xlsx", "rb"
+        ) as doc:
             content = doc.read()
             if not content:
                 raise StatementNotFoundHTTPException

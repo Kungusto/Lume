@@ -21,12 +21,12 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.schemas.books import GenreAdd, GenresBooksAdd, BookPATCH, TagAdd
 from src.schemas.books_authors import BookAuthorAdd
-from src.schemas.reports import ReportAdd
+from src.schemas.reports import ReportAdd, BanAdd
 from src.services.auth import AuthService
 from src.api.dependencies import get_db
 from src.database import async_session_maker_null_pool, engine_null_pool, Base
 from src.utils.dbmanager import AsyncDBManager
-from src.config import settings, Settings
+from src.config import Settings
 from src.main import app
 from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
@@ -49,7 +49,8 @@ from tests.factories.genres_factory import GenreAddFactory
 from tests.factories.tags_factory import TagAddFactory
 from tests.factories.reasons_factory import ReasonAddFactory
 from tests.factories.reports_factory import ReportAddFactory
-from tests.schemas.users import TestUserWithPassword
+from tests.factories.bans_factory import BanAddFactory
+from tests.schemas.users import TestUserWithPassword, TestBanInfo
 from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
 from tests.utils import ServiceForTests
@@ -523,7 +524,9 @@ async def new_report(db, new_book, new_reason):
     # фабрика возвращает pydantic-модель. берем ее атрибут comment
     comment_from_factory = ReportAddFactory().comment
     report_to_add = ReportAdd(
-        reason_id=new_reason.reason_id, book_id=new_book.book_id, comment=comment_from_factory
+        reason_id=new_reason.reason_id,
+        book_id=new_book.book_id,
+        comment=comment_from_factory,
     )
     db_report = await db.reports.add(report_to_add)
     await db.commit()

@@ -32,6 +32,7 @@ from src.schemas.analytics import (
 
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.exceptions.files import StatementNotFoundHTTPException
+from src.config import settings
 
 
 router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
@@ -291,13 +292,15 @@ async def generate_report_inside_app(
     )
     model = await db.session.execute(analytics_query)
     data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
+    stmt_path = f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
     result = UsersStatement(
         **data.model_dump(),
+        stmt_path=stmt_path,
         started_date_as_str=(now - interval).strftime(date_template),
         ended_date_as_str=now.strftime(date_template),
     )
     excel_doc = UsersDFExcelRepository(
-        f"src/analytics/data/users_{now.strftime(date_template)}.xlsx"
+        f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
     )
     excel_doc.add(result)
     excel_doc.commit()
@@ -325,7 +328,7 @@ async def get_statements_by_date(s3: S3Dep, statement_date: date):
 async def save_and_get_auto_statement(s3: S3Dep):
     key = f"analytics/auto/{datetime.today().strftime('%Y-%m-%d_%H-%M')}"
     try:
-        with open("src/analytics/data/users_statement_auto.xlsx", "rb") as doc:
+        with open(f"{settings.STATEMENT_DIR_PATH}/users_statement_auto.xlsx", "rb") as doc:
             content = doc.read()
             if not content:
                 raise StatementNotFoundHTTPException
@@ -333,7 +336,7 @@ async def save_and_get_auto_statement(s3: S3Dep):
             await s3.analytics.save_statement(key=key, body=doc)
     except FileNotFoundError as ex:
         raise StatementNotFoundHTTPException from ex
-    # делаем файл пустым
-    with open("src/analytics/data/users_statement_auto.xlsx", "w") as f:
+    # Делаем файл пустым
+    with open(f"{settings.STATEMENT_DIR_PATH}/users_statement_auto.xlsx", "w") as f:
         f.truncate(0)
     return await s3.analytics.generate_url(file_path=key)

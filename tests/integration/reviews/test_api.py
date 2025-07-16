@@ -114,21 +114,21 @@ async def test_check_rate_yourself(authorized_client_with_new_book):
     assert response_add.status_code == 403
 
 
-async def test_admin_edit_alian_reviews(auth_new_admin, new_review, db):
-    response_add_as_admin = await auth_new_admin.post(
+async def test_admin_edit_alian_reviews(auth_new_second_admin, new_review, db):
+    response_add_as_admin = await auth_new_second_admin.post(
         url=f"/reviews/by_book/{new_review.review_id}",
         json={"rating": 5, "text": "Я оцениваю книгу как админ!"},
     )
     assert response_add_as_admin.status_code == 200
 
-    response_add_as_admin_again = await auth_new_admin.post(
+    response_add_as_admin_again = await auth_new_second_admin.post(
         url=f"/reviews/by_book/{new_review.review_id}",
         json={"rating": 5, "text": "Я оцениваю книгу дважды как админ!"},
     )
     assert response_add_as_admin_again.status_code == 200
 
     data_to_edit = {"rating": 1, "text": "Этот отзыв изменил сам админ!"}
-    reponse_edit_alien_review_as_admin = await auth_new_admin.put(
+    reponse_edit_alien_review_as_admin = await auth_new_second_admin.put(
         url=f"/reviews/{new_review.review_id}", json=data_to_edit
     )
     assert reponse_edit_alien_review_as_admin.status_code == 200
@@ -136,7 +136,7 @@ async def test_admin_edit_alian_reviews(auth_new_admin, new_review, db):
     assert edited_review_in_db.rating == data_to_edit.get("rating", None)
     assert edited_review_in_db.text == data_to_edit.get("text", None)
 
-    response_delete_as_admin = await auth_new_admin.delete(
+    response_delete_as_admin = await auth_new_second_admin.delete(
         url=f"/reviews/{new_review.review_id}"
     )
     assert response_delete_as_admin.status_code == 200

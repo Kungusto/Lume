@@ -4,110 +4,116 @@ pytest -s -v tests/integration/admin/test_api.py
 """
 
 
-async def test_change_user_role(auth_new_admin, new_user, new_general_admin):
+async def test_change_user_role(auth_new_second_admin, new_user, new_general_admin):
     # изменить роль несуществующему пользователю
-    response_change_role_non_existent_user = await auth_new_admin.patch(
+    response_change_role_non_existent_user = await auth_new_second_admin.patch(
         url="admin/9999/change_role", json={"role": "AUTHOR"}
     )
     assert response_change_role_non_existent_user.status_code == 404
 
     # изменить роль главного админа на обычного пользователя
-    response_change_role_to_general_admin = await auth_new_admin.patch(
+    response_change_role_to_general_admin = await auth_new_second_admin.patch(
         url=f"admin/{new_general_admin.user_id}/change_role", json={"role": "USER"}
     )
     assert response_change_role_to_general_admin.status_code == 403
 
     # изменить роль пользователя на админа
-    response_change_role = await auth_new_admin.patch(
+    response_change_role = await auth_new_second_admin.patch(
         url=f"admin/{new_user.user_id}/change_role", json={"role": "ADMIN"}
     )
     assert response_change_role.status_code == 200
 
     # изменить роль пользователя, ставшего админом
-    response_change_role = await auth_new_admin.patch(
+    response_change_role = await auth_new_second_admin.patch(
         url=f"admin/{new_user.user_id}/change_role", json={"role": "USER"}
     )
     assert response_change_role.status_code == 403
 
 
-async def test_add_already_exist_genre(auth_new_admin, new_genre):
-    response_add_already_exist_genre = await auth_new_admin.post(
+async def test_add_already_exist_genre(auth_new_second_admin, new_genre):
+    response_add_already_exist_genre = await auth_new_second_admin.post(
         "/admin/genres", json={"title": new_genre.title}
     )
     assert response_add_already_exist_genre.status_code == 409
 
 
-async def test_add_genre(auth_new_admin):
-    response_add_genre = await auth_new_admin.post(
+async def test_add_genre(auth_new_second_admin):
+    response_add_genre = await auth_new_second_admin.post(
         "/admin/genres", json={"title": "Страшилки!"}
     )
     assert response_add_genre.status_code == 200
 
 
-async def test_edit_genre(db, auth_new_admin, new_genre):
+async def test_edit_genre(db, auth_new_second_admin, new_genre):
     update_data = {"title": "Роман_"}
-    response_edit_genre = await auth_new_admin.put(
+    response_edit_genre = await auth_new_second_admin.put(
         f"/admin/genres/{new_genre.genre_id}", json=update_data
     )
     assert response_edit_genre.status_code == 200
     db_genre = await db.genres.get_one(genre_id=new_genre.genre_id)
     assert db_genre.title == update_data.get("title", None)
 
-    response_edit_genre = await auth_new_admin.put(
+    response_edit_genre = await auth_new_second_admin.put(
         "/admin/genres/9999", json={"title": "Изменяю несуществующий жанр!"}
     )
     assert response_edit_genre.status_code == 404
 
 
-async def test_delete_genre(db, auth_new_admin, new_genre):
+async def test_delete_genre(db, auth_new_second_admin, new_genre):
     # 200 OK
-    response_delete_genre = await auth_new_admin.delete(
+    response_delete_genre = await auth_new_second_admin.delete(
         f"/admin/genres/{new_genre.genre_id}"
     )
     assert response_delete_genre.status_code == 200
     assert not await db.genres.get_filtered(genre_id=new_genre.genre_id)
 
     # Пробуем удалить несуществующий жанр
-    response_delete_genre = await auth_new_admin.delete("/admin/genres/9999")
+    response_delete_genre = await auth_new_second_admin.delete("/admin/genres/9999")
     assert response_delete_genre.status_code == 404
 
 
-async def test_delete_tag(db, auth_new_admin, new_tag):
+async def test_delete_tag(db, auth_new_second_admin, new_tag):
     # 200 OK
-    response_delete_tag = await auth_new_admin.delete(url=f"admin/tag/{new_tag.id}")
+    response_delete_tag = await auth_new_second_admin.delete(
+        url=f"admin/tag/{new_tag.id}"
+    )
     assert response_delete_tag.status_code == 200
     assert not await db.tags.get_filtered(id=new_tag.id)
-
-    # Пробуем удалить несуществующий тег
-    response_delete_non_existent_tag = await auth_new_admin.delete(url="admin/tag/9999")
+    response_delete_non_existent_tag = await auth_new_second_admin.delete(
+        url="admin/tag/9999"
+    )
     assert response_delete_non_existent_tag.status_code == 404
 
 
-async def test_add_tag(db, auth_new_admin, new_book):
+async def test_add_tag(db, auth_new_second_admin, new_book):
     # 200 OK
     data_to_add = {"book_id": new_book.book_id, "title_tag": "Много роз!"}
-    response_add_tag = await auth_new_admin.post(url="admin/tag", json=data_to_add)
+    response_add_tag = await auth_new_second_admin.post(
+        url="admin/tag", json=data_to_add
+    )
     assert response_add_tag.status_code == 200
     assert await db.tags.get_filtered(
         book_id=new_book.book_id, title_tag=data_to_add.get("title_tag", None)
     )
 
     # Пробуем тот же самый тег, к той же самой книге
-    response_add_tag = await auth_new_admin.post(url="admin/tag", json=data_to_add)
+    response_add_tag = await auth_new_second_admin.post(
+        url="admin/tag", json=data_to_add
+    )
     assert response_add_tag.status_code == 409
 
     # Пробуем добавить тег к несуществующей книге
     wrong_data_to_add = {"book_id": 9999, "title_tag": "Много роз!"}
-    response_add_tag = await auth_new_admin.post(
+    response_add_tag = await auth_new_second_admin.post(
         url="admin/tag", json=wrong_data_to_add
     )
     assert response_add_tag.status_code == 404
 
 
-async def test_edit_tag(db, auth_new_admin, new_tag):
+async def test_edit_tag(db, auth_new_second_admin, new_tag):
     # 200 OK
     data_to_edit = {"title_tag": "Какой-то тег"}
-    response_edit_tag = await auth_new_admin.put(
+    response_edit_tag = await auth_new_second_admin.put(
         url=f"admin/tag/{new_tag.id}", json=data_to_edit
     )
     assert response_edit_tag.status_code == 200
@@ -115,31 +121,35 @@ async def test_edit_tag(db, auth_new_admin, new_tag):
     assert tag_in_db.title_tag == data_to_edit.get("title_tag", None)
 
     # Пробуем изменить несуществующий тег
-    response_edit_tag = await auth_new_admin.put(
+    response_edit_tag = await auth_new_second_admin.put(
         url="admin/tag/9999", json=data_to_edit
     )
     assert response_edit_tag.status_code == 404
 
 
-async def test_add_reason(db, auth_new_admin):
+async def test_add_reason(db, auth_new_second_admin):
     data_to_add = {"title": "Дезинформация"}
 
     # 200 OK
-    response_add_reason = await auth_new_admin.post("admin/reasons", json=data_to_add)
+    response_add_reason = await auth_new_second_admin.post(
+        "admin/reasons", json=data_to_add
+    )
     json_response = response_add_reason.json()
     assert response_add_reason.status_code == 200
     assert await db.reasons.get_filtered(reason_id=json_response.get("reason_id"))
-
+    response_add_reason = await auth_new_second_admin.post(
+        "admin/reasons", json=data_to_add
+    )
     # Пробуем добавить ту же причину
     response_add_reason = await auth_new_admin.post("admin/reasons", json=data_to_add)
     assert response_add_reason.status_code == 409
 
 
-async def test_edit_reason(db, auth_new_admin, new_reason):
+async def test_edit_reason(db, auth_new_second_admin, new_reason):
     data_to_edit = {"title": "Нарушение правил площадки"}
 
     # 200 OK
-    response_edit_reason = await auth_new_admin.put(
+    response_edit_reason = await auth_new_second_admin.put(
         url=f"admin/reasons/{new_reason.reason_id}", json=data_to_edit
     )
     response_json = response_edit_reason.json()
@@ -149,36 +159,36 @@ async def test_edit_reason(db, auth_new_admin, new_reason):
     assert db_reason.title.lower() == data_to_edit.get("title", None).lower()
 
     # Пробуем изменить несуществующую причину
-    response_edit_reason = await auth_new_admin.put(
-        url=f"admin/reasons/9999", json=data_to_edit
+    response_edit_reason = await auth_new_second_admin.put(
+        url="admin/reasons/9999", json=data_to_edit
     )
     assert response_edit_reason.status_code == 404
 
 
-async def test_delete_reason(db, auth_new_admin, new_reason):
+async def test_delete_reason(db, auth_new_second_admin, new_reason):
     # Пробуем удалить несуществующую причину
-    response_delete_non_existent_reason = await auth_new_admin.delete(
-        url=f"admin/reasons/9999"
+    response_delete_non_existent_reason = await auth_new_second_admin.delete(
+        url="admin/reasons/9999"
     )
     assert response_delete_non_existent_reason.status_code == 404
 
     # 200 OK
-    response_delete_non_existent_reason = await auth_new_admin.delete(
+    response_delete_non_existent_reason = await auth_new_second_admin.delete(
         url=f"admin/reasons/{new_reason.reason_id}"
     )
     assert response_delete_non_existent_reason.status_code == 200
     assert not await db.reasons.get_one_or_none(reason_id=new_reason.reason_id)
 
 
-async def test_get_all_reports(db, auth_new_admin, new_report): 
-    response = await auth_new_admin.get(url="admin/reports")
+async def test_get_all_reports(db, auth_new_second_admin, new_report):
+    response = await auth_new_second_admin.get(url="admin/reports")
     reports_in_db = await db.reports.get_all()
     assert response.status_code == 200
     assert len(response.json()) == len(reports_in_db)
 
 
-async def test_mark_as_checked_report(db, auth_new_admin, new_report): 
-    response = await auth_new_admin.patch(url=f"admin/reports/{new_report.id}")
+async def test_mark_as_checked_report(db, auth_new_second_admin, new_report):
+    response = await auth_new_second_admin.patch(url=f"admin/reports/{new_report.id}")
     assert response.status_code == 200
     # Проверяем, что пометилось как проверенное
     assert await db.reports.get_filtered(is_checked=True, id=new_report.id)

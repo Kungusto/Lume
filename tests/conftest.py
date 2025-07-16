@@ -555,3 +555,41 @@ async def auth_new_second_user(ac2, new_second_user):
     assert response_login.status_code == 200
     assert ac2.cookies
     yield ac2
+
+
+@pytest.fixture(scope="function")
+async def new_second_user_with_ac(ac2, new_second_user):
+    login_data = {"email": new_second_user.email, "password": new_second_user.password}
+    response_login = await ac2.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac2.cookies
+    yield ac2, new_second_user
+
+
+@pytest.fixture(scope="function")
+async def new_second_admin(db):
+    user = AdminAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user.hashed_password)
+    # добавляем в бд автора и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    await db.commit()
+    return TestUserWithPassword(**db_user.model_dump(), password=user_password)
+
+
+@pytest.fixture(scope="function")
+async def auth_new_second_admin(ac2, new_second_admin):
+    login_data = {
+        "email": new_second_admin.email,
+        "password": new_second_admin.password,
+    }
+    response_login = await ac2.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac2.cookies
+    yield ac2

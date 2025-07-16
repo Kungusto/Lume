@@ -551,6 +551,35 @@ async def new_report(db, new_book, new_reason):
     return db_report
 
 
+# -- Забаненный пользователь
+@pytest.fixture(scope="function")
+async def ban_info():
+    return BanAddFactory()
+
+
+@pytest.fixture(scope="function")
+async def new_banned_user(db, ban_info):
+    user = UserAddFactory()
+    user_password = user.hashed_password
+    user.hashed_password = AuthService().hash_password(user_password)
+    # добавляем в бд пользователя и получаем его id с прочими данными
+    db_user = await db.users.add(user)
+    db_ban = await db.bans.add(
+        BanAdd(
+            **ban_info.model_dump(),
+            user_id=db_user.user_id,
+        )
+    )
+    await db.commit()
+
+    return TestBanInfo(
+        ban_id=db_ban.ban_id,
+        user_id=db_user.user_id,
+        comment=ban_info.comment,
+        ban_until=ban_info.ban_until,
+    )
+
+
 # -- Второй клиент
 @pytest.fixture(scope="function")
 async def ac2():

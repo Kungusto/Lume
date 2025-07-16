@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
+import os
 from src.tasks.celery_app import celery_app
 from sqlalchemy import update
-from src.config import get_settings
+from src.config import Settings, get_settings
 from src.models.books import BooksORM
 from src.api.dependencies import get_sync_session
 from src.api.dependencies import get_sync_db_np
@@ -74,9 +75,14 @@ def change_content(book_id: int):
 
 
 @celery_app.task(name="auto_statement")
-def auto_statement():
+def auto_statement(test_mode: bool = False):
+    stmt_dir_path = settings.STATEMENT_DIR_PATH
+    if test_mode:
+        settings_test = Settings(_env_file=".env-test")
+        stmt_dir_path = settings_test.STATEMENT_DIR_PATH
     now = datetime.now()
     analytics_query = AnalyticsQueryFactory.users_data_sql(now=now)
+    stmt_path = f"{stmt_dir_path}/users_statement_auto.xlsx"
     with get_sync_db_np() as db:
         model = db.session.execute(analytics_query)
         data = UsersStatementWithoutDate.model_validate(
@@ -84,10 +90,11 @@ def auto_statement():
         )
     result = UsersStatement(
         **data.model_dump(),
+        stmt_path=stmt_path,
         started_date_as_str=now.strftime("%e/%m/%Y %H:%M:%S"),
         ended_date_as_str=(now + timedelta(minutes=5)).strftime("%e/%m/%Y %H:%M:%S"),
     )
-    excel_doc = UsersDFExcelRepository("src/analytics/data/users_statement_auto.xlsx")
+    excel_doc = UsersDFExcelRepository(stmt_path)
     excel_doc.add(result)
     excel_doc.commit()
     logging.info("Отчеты обновлены!")

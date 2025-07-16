@@ -18,6 +18,7 @@ class UsersStatementWithoutDate(BaseModel):
 
 
 class UsersStatement(BaseModel):
+    stmt_path: str
     started_date_as_str: str
     ended_date_as_str: str
     active_users_in_week: int

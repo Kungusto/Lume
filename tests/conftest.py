@@ -309,6 +309,18 @@ async def new_user(db):
 
 
 @pytest.fixture(scope="function")
+async def new_user_with_ac(ac, new_user):
+    login_data = {"email": new_user.email, "password": new_user.password}
+    response_login = await ac.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac.cookies
+    yield ac, new_user
+
+
+@pytest.fixture(scope="function")
 async def new_general_admin(db):
     user = GeneralAdminAddFactory()
     user_password = user.hashed_password
@@ -347,6 +359,29 @@ async def new_author(db):
 @pytest.fixture(scope="function")
 async def auth_new_author(ac, new_author):
     login_data = {"email": new_author.email, "password": new_author.password}
+    response_login = await ac.post(
+        url="/auth/login",
+        json=login_data,
+    )
+    assert response_login.status_code == 200
+    assert ac.cookies
+    yield ac
+
+
+@pytest.fixture(scope="function")
+async def new_admin(db):
+    admin = AdminAddFactory()
+    admin_password = admin.hashed_password
+    admin.hashed_password = AuthService().hash_password(admin.hashed_password)
+    # добавляем в бд автора и получаем его id с прочими данными
+    db_admin = await db.users.add(admin)
+    await db.commit()
+    return TestUserWithPassword(**db_admin.model_dump(), password=admin_password)
+
+
+@pytest.fixture(scope="function")
+async def auth_new_admin(ac, new_admin):
+    login_data = {"email": new_admin.email, "password": new_admin.password}
     response_login = await ac.post(
         url="/auth/login",
         json=login_data,

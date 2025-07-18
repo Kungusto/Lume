@@ -66,7 +66,6 @@ class UserAdd(BaseModel):
 
 
 class UserPUT(BaseModel):
-    email: EmailStr
     name: str
     surname: str
     nickname: str

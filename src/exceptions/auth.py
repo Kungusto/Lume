@@ -105,9 +105,14 @@ class EmailNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Почта не найдена"
 
 
+# Недостаточно прав
 class ChangePermissionsOfADMINHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете понизить в правах, или забанить, админа, права которого не ниже ваших"
 
 
 class CannotChangeToGeneralAdminHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете изменить права пользователя на главного админа"
+
+
+class CannotChangeDataOtherUserHTTPException(PermissionDeniedHTTPException):
+    detail = "Вы не можете изменить данные другого пользователя"

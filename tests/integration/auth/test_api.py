@@ -213,3 +213,45 @@ async def test_find_user(ac, new_user):
 
     response_with_fake_id = await ac.get(url="auth/9999999")
     assert response_with_fake_id.status_code == 404
+
+
+async def test_edit_user_data(new_user_with_ac, new_second_user):
+    user_client, user = new_user_with_ac
+    correct_data_to_edit = {
+        "name": "Alice",
+        "surname": "Brown",
+        "nickname": "Alice123Brown",
+    }
+    # 200 OK
+    response_edit_user = await user_client.put(
+        url=f"auth/{user.user_id}",
+        json=correct_data_to_edit
+    )
+    assert response_edit_user.status_code == 200
+    
+
+    # Пытаемся обновить имя пользователя, на уже занятое
+    incorrect_data_to_edit = {
+        "name": "Alice",
+        "surname": "Brown",
+        "nickname": new_second_user.nickname,
+    }
+    response_edit_user = await user_client.put(
+        url=f"auth/{user.user_id}",
+        json=incorrect_data_to_edit
+    )
+    assert response_edit_user.status_code == 409
+
+    # Пытаемся изменить данные несуществующего пользователя
+    response_edit_user = await user_client.put(
+        url=f"auth/9999",
+        json=correct_data_to_edit
+    )
+    assert response_edit_user.status_code == 404
+
+    # Пытаемся изменить данные другого пользователя
+    response_edit_user = await user_client.put(
+        url=f"auth/{new_second_user.user_id}",
+        json=correct_data_to_edit
+    )
+    assert response_edit_user.status_code == 403

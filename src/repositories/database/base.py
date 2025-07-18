@@ -67,7 +67,15 @@ class BaseRepository:
             .values(**data.model_dump(exclude_unset=is_patch))
             .returning(self.model)
         )
-        result = await self.session.execute(edit_stmt)
+        try:
+            result = await self.session.execute(edit_stmt)
+        except IntegrityError as ex:
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise AlreadyExistsException
+            elif isinstance(ex.orig.__cause__, ForeignKeyViolationError):
+                raise ForeignKeyException
+            else:
+                raise ex
         models = result.scalars().all()
         return [
             self.schema.model_validate(model, from_attributes=True) for model in models

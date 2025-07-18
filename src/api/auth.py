@@ -4,6 +4,7 @@ from src.exceptions.base import (
     InternalServerErrorHTTPException,
     ObjectNotFoundException,
     PermissionDeniedHTTPException,
+    AlreadyExistsException,
 )
 from src.exceptions.auth import (
     NickAlreadyRegistratedHTTPException,
@@ -15,6 +16,7 @@ from src.exceptions.auth import (
     UserNotFoundHTTPException,
     WrongPasswordOrEmailHTTPException,
     EmailNotFoundException,
+    CannotChangeDataOtherUserHTTPException,
 )
 from src.schemas.users import (
     UserRegistrate,
@@ -94,8 +96,15 @@ async def info_about_user(db: DBDep, user_id: int):
 async def edit_user_data(
     db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep
 ):
+    try:
+        user = await db.users.get_one(user_id=user_id)
+    except:
+        raise UserNotFoundHTTPException
     if user_id != curr_user_id:
-        raise PermissionDeniedHTTPException
-    await db.users.edit(user_id=user_id, data=data)
+        raise CannotChangeDataOtherUserHTTPException
+    try:
+        await db.users.edit(user_id=user_id, data=data)
+    except AlreadyExistsException as ex:
+        raise NickAlreadyRegistratedHTTPException from ex
     await db.commit()
     return {"status": "OK"}

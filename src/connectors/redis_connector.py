@@ -6,7 +6,8 @@ class RedisManager:
     def __init__(self, host: str, port: int):
         self._redis = redis.Redis(host=host, port=port)
 
-    async def get_client(self): 
+    async def get_client(self):
         return self._redis
-    
+
+
 redis_manager = RedisManager(settings.REDIS_HOST, settings.REDIS_PORT)

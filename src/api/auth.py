@@ -3,7 +3,6 @@ from fastapi import APIRouter, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
     ObjectNotFoundException,
-    PermissionDeniedHTTPException,
     AlreadyExistsException,
 )
 from src.exceptions.auth import (
@@ -101,8 +100,8 @@ async def edit_user_data(
     db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep
 ):
     try:
-        user = await db.users.get_one(user_id=user_id)
-    except:
+        await db.users.get_one(user_id=user_id)
+    except ObjectNotFoundException:
         raise UserNotFoundHTTPException
     if user_id != curr_user_id:
         raise CannotChangeDataOtherUserHTTPException

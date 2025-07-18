@@ -25,7 +25,7 @@ from src.schemas.users import (
     UserPublicData,
     UserPUT,
 )
-from src.api.dependencies import DBDep, UserIdDep
+from src.api.dependencies import DBDep, UserIdDep, UsersCacheDep
 from src.services.auth import AuthService
 from src.enums.users import AllUsersRolesEnum
 
@@ -68,8 +68,12 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
 
 
 @router.get("/me")
-async def info_about_current_user(user_id: UserIdDep, db: DBDep):
+async def info_about_current_user(user_id: UserIdDep, db: DBDep, cache: UsersCacheDep):
+    cached_user = await cache.get_cached_user(user_id=user_id)
+    if cached_user:
+        return cached_user
     user = await db.users.get_one(user_id=user_id)
+    await cache.remember_user(user_id=user_id, data=user)
     return user
 
 

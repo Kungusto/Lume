@@ -17,8 +17,9 @@ from src.exceptions.auth import (
 )
 from src.utils.s3_manager import AsyncS3Client, SyncS3Client
 from src.config import settings
-from src.connectors.redis_connector import RedisManager
 from src.enums.users import AllUsersRolesEnum
+from src.connectors.redis_connector import redis_manager
+import redis.asyncio as redis
 
 
 # --- Schemas ---
@@ -177,15 +178,7 @@ S3Dep = Annotated[AsyncS3Client, Depends(get_async_session)]
 
 
 # --- Redis ---
+async def get_session_redis(): 
+    return await redis_manager.get_client()
 
-
-def get_redisMan():
-    return RedisManager(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-
-
-async def get_session_redis():
-    async with get_redisMan() as redis:
-        yield redis
-
-
-RedisDep = Annotated[RedisManager, Depends(get_session_redis)]
+RedisDep = Annotated[redis.Redis, Depends(get_session_redis)]

@@ -5,6 +5,7 @@ import json
 import logging
 import random
 from typing import Generator
+from unittest.mock import patch
 from dotenv import load_dotenv
 import os
 
@@ -76,22 +77,10 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop.close()
 
 
-@pytest.fixture(scope="function")
-async def redis():
-    async with RedisManager(
-        host=settings.REDIS_HOST, port=settings.REDIS_PORT
-    ) as redis:
-        try:
-            result = await redis.session.ping()
-        except Exception as e:
-            logging.warning(f"Не удалось подключиться к Redis: {e}")
-            pytest.skip("Redis не работает — тест пропущен")
-
-        if not result:
-            logging.warning("Не удалось получить успешный ping Redis, тест пропущен")
-            pytest.skip("Redis ping неудачен — тест пропущен")
-
-        yield redis
+@pytest.fixture(autouse=True)
+def mock_redis_cache():
+    with patch("src.decorators.cache.redis_cache", lambda *a, **kw: (lambda f: f)):
+        yield
 
 
 @pytest.fixture(scope="session", autouse=True)

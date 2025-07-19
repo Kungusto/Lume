@@ -18,8 +18,9 @@ from src.exceptions.auth import (
 from src.utils.s3_manager import AsyncS3Client, SyncS3Client
 from src.config import settings
 from src.enums.users import AllUsersRolesEnum
-from src.connectors.redis_connector import redis_manager
-from src.services.cache.users import UsersCacheService
+from src.connectors.redis_connector import redis_conn
+from src.utils.cache_manager import CacheManager
+from functools import lru_cache
 import redis.asyncio as redis
 
 
@@ -180,14 +181,13 @@ S3Dep = Annotated[AsyncS3Client, Depends(get_async_session)]
 
 # --- Redis ---
 async def get_session_redis():
-    return await redis_manager.get_client()
+    return await redis_conn.get_client()
 
 
-RedisDep = Annotated[redis.Redis, Depends(get_session_redis)]
+RedisSessionDep = Annotated[redis.Redis, Depends(get_session_redis)]
 
+@lru_cache
+def get_cache_manager(redis: RedisSessionDep):
+    return CacheManager(redis=redis)
 
-async def get_users_cache(redis_client: RedisDep):
-    return UsersCacheService(redis=redis_client)
-
-
-UsersCacheDep = Annotated[UsersCacheService, Depends(get_users_cache)]
+RedisManagerDep = Annotated[CacheManager, Depends(get_cache_manager)]

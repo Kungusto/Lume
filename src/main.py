@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 import sys
 from pathlib import Path
@@ -37,6 +38,13 @@ app.include_router(read_router)
 app.include_router(reviews_router)
 app.include_router(admin_router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Разрешить все домены
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешить все методы (GET, POST, etc)
+    allow_headers=["*"],  # Разрешить все заголовки
+)
 app.add_middleware(BanCheckMiddleware)
 
 

@@ -10,4 +10,4 @@ class RedisManager:
         return self._redis
 
 
-redis_manager = RedisManager(settings.REDIS_HOST, settings.REDIS_PORT)
+redis_conn = RedisManager(settings.REDIS_HOST, settings.REDIS_PORT)

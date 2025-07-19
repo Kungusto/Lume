@@ -15,7 +15,7 @@ from src.exceptions.files import (
     WrongCoverResolutionHTTPException,
     WrongFileExpensionHTTPException,
 )
-from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id, UserRoleDep
+from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id, UserRoleDep, RedisManagerDep
 from src.schemas.books import (
     BookAdd,
     BookAddWithAuthorsTagsGenres,
@@ -31,6 +31,8 @@ from src.tasks.tasks import render_book, delete_book_images, change_content
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
+from src.decorators.cache import redis_cache
+
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг 📚"])
 
@@ -173,9 +175,15 @@ async def delete_book(
 @router.get("/my_books")
 async def get_my_books(
     db: DBDep,
-    user_id: int = authorize_and_return_user_id(2),
+    cache: RedisManagerDep,
+    author_id: int = authorize_and_return_user_id(2),
 ):
-    return await db.users.get_books_by_user(user_id=user_id)
+    cached_authors_books = await cache.authors.get_authors_books(author_id=author_id)
+    if cached_authors_books:
+        return cached_authors_books
+    books_data = await db.users.get_books_by_user(user_id=author_id)
+    await cache.authors.remember_author_books(author_id=author_id, data=books_data)
+    return books_data
 
 
 # --- Обложки ---

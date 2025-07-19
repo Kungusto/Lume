@@ -22,12 +22,14 @@ from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
 from src.schemas.reports import ReportAdd, ReportAddFromUser
 from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
 from src.validation.search import SearchValidator
+from src.decorators.cache import redis_cache
 import fitz
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
 
 
 @router.get("")
+@redis_cache(prefix_key="search")
 async def get_filtered_publicated_books_with_pagination(
     pagination_data: PaginationDep,
     db: DBDep,
@@ -57,11 +59,13 @@ async def get_filtered_publicated_books_with_pagination(
 
 
 @router.get("/genres")
+@redis_cache(prefix_key="genres")
 async def get_all_genres(db: DBDep):
     return await db.genres.get_all()
 
 
 @router.get("/{book_id}")
+@redis_cache(prefix_key="book")
 async def get_book_by_id(
     db: DBDep,
     book_id: int = Path(le=2**31),
@@ -88,6 +92,7 @@ async def download_book(
 
 
 @router.get("/{book_id}/page/{page_number}")
+@redis_cache(ttl=300, prefix_key="books")
 async def get_page(
     s3: S3Dep,
     db: DBDep,

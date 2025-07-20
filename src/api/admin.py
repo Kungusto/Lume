@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Path
-from src.api.dependencies import S3Dep, authorize_and_return_user_id, DBDep, UserRoleDep
+from src.api.dependencies import S3Dep, DBDep, UserRoleDep, UserIdDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
 from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit
@@ -43,7 +43,7 @@ async def change_role(
     db: DBDep,
     data: UserRolePUT,
     current_user_role: UserRoleDep,
-    admin_id: int = authorize_and_return_user_id(3),
+    admin_id: UserIdDep,
     user_id: int = Path(le=2**31),
 ):
     try:
@@ -66,7 +66,7 @@ async def change_role(
 async def add_genre(
     db: DBDep,
     data: GenreAdd,
-    user_id: int = authorize_and_return_user_id(3),
+    user_id: UserIdDep,
 ):
     try:
         genre = await db.genres.add(data=data)
@@ -80,8 +80,8 @@ async def add_genre(
 async def edit_genre(
     db: DBDep,
     data: GenreEdit,
+    user_id: UserIdDep,
     genre_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.genres.get_one(genre_id=genre_id)
@@ -95,8 +95,8 @@ async def edit_genre(
 @router.delete("/genres/{genre_id}")
 async def delete_genre(
     db: DBDep,
+    user_id: UserIdDep,
     genre_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.genres.get_one(genre_id=genre_id)
@@ -110,8 +110,8 @@ async def delete_genre(
 @router.delete("/tag/{tag_id}")
 async def delete_tag(
     db: DBDep,
+    user_id: UserIdDep,
     tag_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.tags.get_one(id=tag_id)
@@ -126,7 +126,7 @@ async def delete_tag(
 async def add_tag(
     db: DBDep,
     data: TagAdd,
-    user_id: int = authorize_and_return_user_id(3),
+    user_id: UserIdDep,
 ):
     try:
         await db.books.get_one(book_id=data.book_id)
@@ -143,8 +143,8 @@ async def add_tag(
 async def edit_tag(
     db: DBDep,
     data: TagEdit,
+    user_id: UserIdDep,
     tag_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.tags.get_one(id=tag_id)
@@ -159,7 +159,7 @@ async def edit_tag(
 async def add_reason(
     db: DBDep,
     data: ReasonAdd,
-    user_id: int = authorize_and_return_user_id(3),
+    user_id: UserIdDep,
 ):
     try:
         reason = await db.reasons.add(data)
@@ -174,7 +174,6 @@ async def edit_reason(
     db: DBDep,
     data: ReasonEdit,
     reason_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.reasons.get_one(reason_id=reason_id)
@@ -189,7 +188,6 @@ async def edit_reason(
 async def delete_reason(
     db: DBDep,
     reason_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     try:
         await db.reasons.get_one(reason_id=reason_id)
@@ -203,7 +201,6 @@ async def delete_reason(
 @router.get("/reports")
 async def get_not_checked_reports(
     db: DBDep,
-    user_id: int = authorize_and_return_user_id(3),
 ):
     return await db.reports.get_filtered(is_checked=False)
 
@@ -212,7 +209,6 @@ async def get_not_checked_reports(
 async def mark_as_checked(
     db: DBDep,
     report_id: int = Path(le=2**31),
-    user_id: int = authorize_and_return_user_id(3),
 ):
     await db.reports.mark_as_checked(report_id=report_id)
     await db.commit()
@@ -225,7 +221,6 @@ async def ban_user_by_id(
     data: BanAddFromUser,
     user_role: UserRoleDep,
     user_id: int = Path(le=2**31),
-    admin_id: int = authorize_and_return_user_id(3),
 ):
     try:
         user = await db.users.get_one(user_id=user_id)
@@ -249,7 +244,6 @@ async def ban_user_by_id(
 async def unban_user_by_ban_id(
     db: DBDep,
     ban_id: int = Path(le=2**31),
-    admin_id: int = authorize_and_return_user_id(3),
 ):
     if not await db.bans.get_filtered(ban_id=ban_id):
         raise UserNotBannedHTTPException
@@ -263,7 +257,6 @@ async def edit_ban_date(
     db: DBDep,
     data: BanEdit,
     ban_id: int = Path(le=2**31),
-    admin_id: int = authorize_and_return_user_id(3),
 ):
     if not await db.bans.get_filtered(ban_id=ban_id):
         raise UserNotBannedHTTPException
@@ -273,10 +266,7 @@ async def edit_ban_date(
 
 
 @router.get("/banned_users")
-async def get_banned_users(
-    db: DBDep,
-    admin_id: int = authorize_and_return_user_id(3),
-):
+async def get_banned_users(db: DBDep):
     return await db.bans.get_banned_users()
 
 

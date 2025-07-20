@@ -15,7 +15,7 @@ from src.exceptions.files import (
     WrongCoverResolutionHTTPException,
     WrongFileExpensionHTTPException,
 )
-from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id, UserRoleDep
+from src.api.dependencies import S3Dep, DBDep, UserIdDep, UserRoleDep
 from src.schemas.books import (
     BookAdd,
     BookAddWithAuthorsTagsGenres,
@@ -31,16 +31,18 @@ from src.tasks.tasks import render_book, delete_book_images, change_content
 from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
+from src.utils.cache_manager import get_cache_manager
 
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг 📚"])
+cache = get_cache_manager()
 
 
 @router.post("/book")
 async def add_book(
     data: BookAddWithAuthorsTagsGenres,
     db: DBDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     if user_id not in data.authors:
         data.authors.append(user_id)
@@ -80,7 +82,7 @@ async def edit_bood_data(
     db: DBDep,
     data: BookPATCHWithRels,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     try:
         await db.books.get_one(book_id=book_id)
@@ -151,7 +153,7 @@ async def delete_book(
     db: DBDep,
     s3: S3Dep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
@@ -172,9 +174,10 @@ async def delete_book(
 
 
 @router.get("/my_books")
+@cache.base()
 async def get_my_books(
     db: DBDep,
-    author_id: int = authorize_and_return_user_id(2),
+    author_id: UserIdDep,
 ):
     return await db.users.get_books_by_user(user_id=author_id)
 
@@ -189,7 +192,7 @@ async def add_cover(
     db: DBDep,
     s3: S3Dep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
@@ -222,7 +225,7 @@ async def put_cover(
     db: DBDep,
     s3: S3Dep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
@@ -258,7 +261,7 @@ async def add_all_content(
     s3: S3Dep,
     db: DBDep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
@@ -282,7 +285,7 @@ async def edit_content(
     s3: S3Dep,
     db: DBDep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
         await AuthService().verify_user_owns_book(
@@ -305,7 +308,7 @@ async def publicate_book(
     book_id: int,
     db: DBDep,
     user_role: UserRoleDep,
-    user_id: int = authorize_and_return_user_id(2),
+    user_id: UserIdDep,
 ):
     try:
         if user_role not in ["ADMIN", "GENERAL_ADMIN"]:

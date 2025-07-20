@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 from datetime import date
 from fastapi import Depends, Request, Query
 from typing import Annotated
@@ -143,6 +143,12 @@ def get_db_manager():
 
 
 async def get_db():
+    async with get_db_manager() as db:
+        yield db
+
+
+@asynccontextmanager
+async def get_db_as_context_manager():
     async with get_db_manager() as db:
         yield db
 

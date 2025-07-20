@@ -34,7 +34,6 @@ from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.exceptions.files import StatementNotFoundHTTPException
 from src.config import settings
 
-
 router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
 
 
@@ -43,7 +42,6 @@ async def change_role(
     db: DBDep,
     data: UserRolePUT,
     current_user_role: UserRoleDep,
-    admin_id: UserIdDep,
     user_id: int = Path(le=2**31),
 ):
     try:
@@ -66,7 +64,6 @@ async def change_role(
 async def add_genre(
     db: DBDep,
     data: GenreAdd,
-    user_id: UserIdDep,
 ):
     try:
         genre = await db.genres.add(data=data)
@@ -80,7 +77,6 @@ async def add_genre(
 async def edit_genre(
     db: DBDep,
     data: GenreEdit,
-    user_id: UserIdDep,
     genre_id: int = Path(le=2**31),
 ):
     try:
@@ -95,7 +91,6 @@ async def edit_genre(
 @router.delete("/genres/{genre_id}")
 async def delete_genre(
     db: DBDep,
-    user_id: UserIdDep,
     genre_id: int = Path(le=2**31),
 ):
     try:
@@ -110,7 +105,6 @@ async def delete_genre(
 @router.delete("/tag/{tag_id}")
 async def delete_tag(
     db: DBDep,
-    user_id: UserIdDep,
     tag_id: int = Path(le=2**31),
 ):
     try:
@@ -126,7 +120,6 @@ async def delete_tag(
 async def add_tag(
     db: DBDep,
     data: TagAdd,
-    user_id: UserIdDep,
 ):
     try:
         await db.books.get_one(book_id=data.book_id)
@@ -143,7 +136,6 @@ async def add_tag(
 async def edit_tag(
     db: DBDep,
     data: TagEdit,
-    user_id: UserIdDep,
     tag_id: int = Path(le=2**31),
 ):
     try:
@@ -159,7 +151,6 @@ async def edit_tag(
 async def add_reason(
     db: DBDep,
     data: ReasonAdd,
-    user_id: UserIdDep,
 ):
     try:
         reason = await db.reasons.add(data)

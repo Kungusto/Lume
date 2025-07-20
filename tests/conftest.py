@@ -1,11 +1,9 @@
 # ruff: noqa: E402
-
 import asyncio
 import json
 import logging
 import random
 from typing import Generator
-from unittest.mock import patch
 from dotenv import load_dotenv
 import os
 
@@ -56,6 +54,31 @@ from tests.schemas.reviews import TestReviewWithRels
 from tests.utils import ServiceForTests
 
 
+# Мокирование декораторов кеша
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_redis():
+    from unittest import mock
+    # Мок для BaseCacheManager
+    mock_base_patch = mock.patch("src.decorators.base.BaseCacheManager")
+    MockBaseCacheManager = mock_base_patch.start()
+    mock_base_instance = MockBaseCacheManager.return_value
+    mock_base_instance.base_cache = lambda *args, **kwargs: lambda f: f
+
+    # Мок для BooksCacheManager
+    mock_books_patch = mock.patch("src.decorators.books.BooksCacheManager")
+    MockBooksCacheManager = mock_books_patch.start()
+    mock_books_instance = MockBooksCacheManager.return_value
+    mock_books_instance.page = lambda *args, **kwargs: lambda f: f
+
+    yield
+
+    # Остановка моков после завершения фикстуры
+    mock_base_patch.stop()
+    mock_books_patch.stop()
+
+
 settings = Settings()  # noqa: F811
 
 
@@ -74,12 +97,6 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     asyncio.set_event_loop(loop)
     yield loop
     loop.close()
-
-
-@pytest.fixture(autouse=True)
-def mock_redis_cache():
-    with patch("src.decorators.cache.redis_cache", lambda *a, **kw: (lambda f: f)):
-        yield
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -31,6 +31,7 @@ from src.utils.cache_manager import get_cache_manager
 
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
+cache = get_cache_manager()
 
 
 @router.post("/register")

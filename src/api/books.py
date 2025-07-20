@@ -26,6 +26,7 @@ from src.validation.search import SearchValidator
 from src.utils.cache_manager import get_cache_manager
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
+cache = get_cache_manager()
 
 
 @router.get("")

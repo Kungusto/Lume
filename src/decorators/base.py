@@ -22,12 +22,15 @@ class BaseCacheManager:
         Ключ кэша формируется из имени функции и аргументов,
         имеющих тип один из: (int, str, float, bool, date)
         """
+
         def wrapper(func):
             @wraps(func)
-            async def inner(*args, **kwargs): 
+            async def inner(*args, **kwargs):
                 key = make_cache_key(prefix_key, func.__name__, args, kwargs)
-                return await cache_by_key(redis=self.redis, key=key, ttl=ttl, func=func, *args, **kwargs)
-            return inner
-        return wrapper
+                return await cache_by_key(
+                    redis=self.redis, key=key, ttl=ttl, func=func, *args, **kwargs
+                )
 
-    
+            return inner
+
+        return wrapper

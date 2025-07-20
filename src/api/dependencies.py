@@ -186,8 +186,10 @@ async def get_session_redis():
 
 RedisSessionDep = Annotated[redis.Redis, Depends(get_session_redis)]
 
+
 @lru_cache
 def get_cache_manager(redis: RedisSessionDep):
     return CacheManager(redis=redis)
+
 
 RedisManagerDep = Annotated[CacheManager, Depends(get_cache_manager)]

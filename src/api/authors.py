@@ -15,7 +15,7 @@ from src.exceptions.files import (
     WrongCoverResolutionHTTPException,
     WrongFileExpensionHTTPException,
 )
-from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id, UserRoleDep, RedisManagerDep
+from src.api.dependencies import S3Dep, DBDep, authorize_and_return_user_id, UserRoleDep
 from src.schemas.books import (
     BookAdd,
     BookAddWithAuthorsTagsGenres,

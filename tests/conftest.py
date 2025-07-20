@@ -31,7 +31,6 @@ from src.config import Settings
 from src.main import app
 from src.utils.s3_manager import AsyncS3Client
 from src.constants.files import RequiredFilesForTests
-from src.connectors.redis_connector import RedisManager
 from src.tasks.celery_app import celery_app
 from src.exceptions.conftest import (
     MissingFilesException,

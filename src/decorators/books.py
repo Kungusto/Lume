@@ -1,7 +1,6 @@
-from datetime import timedelta
 from functools import wraps
 from src.decorators.utils import cache_by_key
-import pickle
+
 
 class BooksCacheManager:
     def __init__(self, redis):
@@ -13,10 +12,14 @@ class BooksCacheManager:
     ):
         def wrapper(func):
             @wraps(func)
-            async def inner(*args, **kwargs): 
+            async def inner(*args, **kwargs):
                 book_id = kwargs.get("book_id")
                 page_number = kwargs.get("page_number")
                 key = f"page:book_id={book_id}:page_number={page_number}"
-                return await cache_by_key(redis=self.redis, key=key, ttl=ttl, func=func, *args, **kwargs)
+                return await cache_by_key(
+                    redis=self.redis, key=key, ttl=ttl, func=func, *args, **kwargs
+                )
+
             return inner
+
         return wrapper

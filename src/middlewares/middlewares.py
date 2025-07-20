@@ -8,7 +8,7 @@ from fastapi import Request
 from jwt.exceptions import ExpiredSignatureError
 from src.services.auth import AuthService
 from fastapi import status
-from constants.permissions import Permisssions
+from src.constants.permissions import Permissions
 
 
 class BanCheckMiddleware(BaseHTTPMiddleware):
@@ -55,7 +55,7 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
         """Нужно ли проверять, что пользователь забанен"""
         if request.url.path == "/auth/logout":
             return False
-        for (pattern, method) in Permisssions.PUBLIC_ENDPOINTS:
+        for (pattern, method) in Permissions.PUBLIC_ENDPOINTS:
             if re.match(pattern, request.url.path) and request.method == method:
                 return False
         return True
@@ -76,7 +76,7 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
         return parts[0] if parts else ""
 
     def check_permissions_user(self, user_role: str, path: str) -> bool:
-        allowed_prefixes = Permisssions.ROLES_PREFIXES.get(user_role.upper(), [])
+        allowed_prefixes = Permissions.ROLES_PREFIXES.get(user_role.upper(), [])
         prefix = self.get_prefix(path=path)
         if prefix in allowed_prefixes:
             return True
@@ -111,9 +111,10 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
 
         async with get_db_as_context_manager() as db:
             await self._update_user_activity(db=db, user_id=user_id)
-            ban_response = await self.check_ban_user(db=db, user_id=user_id)
-            if ban_response:
-                return ban_response
+            if request.method != "GET":
+                ban_response = await self.check_ban_user(db=db, user_id=user_id)
+                if ban_response:
+                    return ban_response
 
         return await call_next(request)
 

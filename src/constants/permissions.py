@@ -15,6 +15,7 @@ class Permissions:
         (r"^/books/\d+$", "GET"),
         (r"^/books/download/\d+$", "GET"),
         (r"^/reviews/by_book/\d+$", "GET"),
+        ("/reviews/my_reviews", "GET"),
         ("/auth/login", "POST"),
         ("/auth/logout", "POST"),
         ("/auth/register", "POST"),

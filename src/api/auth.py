@@ -24,10 +24,11 @@ from src.schemas.users import (
     UserPublicData,
     UserPUT,
 )
-from src.api.dependencies import DBDep, UserIdDep, RedisManagerDep
+from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 from src.enums.users import AllUsersRolesEnum
-from src.decorators.cache import redis_cache
+from src.utils.cache_manager import get_cache_manager
+
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
 
@@ -67,16 +68,9 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
     return {"access_token": access_token}
 
 
-
 @router.get("/me")
-@redis_cache()
-async def info_about_current_user(user_id: UserIdDep, db: DBDep, cache: RedisManagerDep):
-    cached_user = await cache.users.get_cached_user(user_id=user_id)
-    if cached_user:
-        return cached_user
-    user = await db.users.get_one(user_id=user_id)
-    await cache.users.remember_user(user_id=user_id, data=user)
-    return user
+async def info_about_current_user(user_id: UserIdDep, db: DBDep):
+    return await db.users.get_one(user_id=user_id)
 
 
 @router.post("/logout")
@@ -88,7 +82,7 @@ async def exit_from_account(response: Response, request: Request):
 
 
 @router.get("/{user_id}")
-@redis_cache()
+@cache.base()
 async def info_about_user(db: DBDep, user_id: int):
     try:
         all_data_about_user = await db.users.get_one(user_id=user_id)

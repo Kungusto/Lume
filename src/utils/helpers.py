@@ -81,6 +81,14 @@ class PDFRenderer:
                         page_number=page_number + 1
                     )
                 ) 
+            else:
+                contents.append(
+                    Page(
+                        content="\n",
+                        book_id=book_id,
+                        page_number=page_number + 1
+                    )
+                )
         return images_to_save, contents
 
 
@@ -105,22 +113,6 @@ class PDFRenderer:
                                 "type": "text",
                                 "content": line_text,  # сам текст
                                 "size": span.get("size"),  # размер шрифта
-                                "flags": span.get("flags"),  # флаги шрифта
-                                "bidi": span.get(
-                                    "bidi"
-                                ),  # уровень двунаправленного текста
-                                "char_flags": span.get("char_flags"),  # флаги символов
-                                "font": span.get("font"),  # название шрифта
-                                "color": span.get(
-                                    "color"
-                                ),  # цвет текста (в формате RGB)
-                                "alpha": span.get("alpha"),  # прозрачность
-                                "ascender": span.get(
-                                    "ascender"
-                                ),  # высота восходящей части шрифта
-                                "descender": span.get(
-                                    "descender"
-                                ),  # высота нисходящей части шрифта
                                 "origin": span.get(
                                     "origin"
                                 ),  # координаты начала (x, y)
@@ -181,3 +173,9 @@ class FileManager:
             return set(f.name for f in Path(folder_path).iterdir() if f.is_file())
         except FileNotFoundError as ex:
             raise DirectoryNotFoundException(folder_path=folder_path) from ex
+
+
+class TextFormatingManager:
+    @staticmethod
+    def replace_nbsp(text: str) -> str:
+        return text.replace('\xa0', ' ')

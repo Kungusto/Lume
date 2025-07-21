@@ -8,7 +8,7 @@ class BanORM(Base):
     __tablename__ = "Banned_Users"
 
     ban_id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("Users.user_id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("Users.user_id", ondelete="CASCADE"))
     ban_until: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now() + timedelta(hours=1),
@@ -28,7 +28,7 @@ class ReportsORM(Base):
     __tablename__ = "Book_reports"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
-    reason_id: Mapped[int] = mapped_column(ForeignKey("Book_reasons.reason_id"))
+    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id", ondelete="CASCADE"))
+    reason_id: Mapped[int] = mapped_column(ForeignKey("Book_reasons.reason_id", ondelete="CASCADE"))
     comment: Mapped[str | None] = mapped_column(default=None)
     is_checked: Mapped[bool] = mapped_column(default=False, nullable=False)

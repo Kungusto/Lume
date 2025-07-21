@@ -101,6 +101,10 @@ async def get_page(
         book = await db.books.get_one(book_id=book_id)
     except ObjectNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
+    try:
+        page = await db.pages.get_one(book_id=book_id, page_number=page_number)
+    except ObjectNotFoundException as ex:
+        raise PageNotFoundHTTPException(page_number=page_number)
     if not book.is_rendered:
         raise ContentNotFoundHTTPException
     if (book.total_pages is None) or (page_number > book.total_pages):

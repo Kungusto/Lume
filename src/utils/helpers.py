@@ -2,29 +2,87 @@ from pathlib import Path
 from typing import List, Tuple
 
 import aiofiles
+from src.api.dependencies import get_sync_session
 from src.exceptions.books import PageNotFoundException
 from src.exceptions.conftest import DirectoryNotFoundException, ReadFileException
 from src.exceptions.files import FileNotFoundException
+from src.config import settings
+from src.schemas.books import Page
 
 
 class PDFRenderer:
     """Работа с файлами .pdf"""
 
     @staticmethod
-    def parse_images_from_pdf(doc, book_id: int):
-        result = []
-        for page_num in range(doc.page_count):
-            page = doc.load_page(page_num)
-            images_list = page.get_images(full=True)
-            for img_index, img in enumerate(images_list):
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
-                image_key = (
-                    f"books/{book_id}/images/page_{page_num}_img_{img_index}.png"
-                )
-                result.append({"Body": image_bytes, "Key": image_key})
-        return result
+    def parse_images_and_text_from_pdf(doc, book_id: int):
+        images_to_save = []
+        contents = []
+        for page_number, page in enumerate(doc):
+            page_content: list[dict[str, str]] = []
+            blocks = page.get_text("dict")["blocks"]
+            count_images = 0
+            for block in blocks:
+                if block["type"] == 0:
+                    for line in block.get("lines", []):
+                        line_text = ""
+                        for span in line.get("spans", []):
+                            line_text += span.get("text", "")
+                        if line_text.strip():
+                            page_content.append(
+                                {
+                                    "type": "text",
+                                    "content": line_text,  # сам текст
+                                    "size": span.get("size"),  # размер шрифта
+                                    "flags": span.get("flags"),  # флаги шрифта
+                                    "bidi": span.get(
+                                        "bidi"
+                                    ),  # уровень двунаправленного текста
+                                    "char_flags": span.get("char_flags"),  # флаги символов
+                                    "color": span.get(
+                                        "color"
+                                    ),  # цвет текста (в формате RGB)
+                                    "alpha": span.get("alpha"),  # прозрачность
+                                    "ascender": span.get(
+                                        "ascender"
+                                    ),  # высота восходящей части шрифта
+                                    "descender": span.get(
+                                        "descender"
+                                    ),  # высота нисходящей части шрифта
+                                    "origin": span.get(
+                                        "origin"
+                                    ),  # координаты начала (x, y)
+                                    "bbox": span.get("bbox"),
+                                }
+                            )
+                elif block["type"] == 1:
+                    xref = block.get("image") or block.get("image_ref")
+                    if xref is None:
+                        continue
+                    image_key = (
+                        f"books/{book_id}/images/page_{page_number}_img_{count_images}.png"
+                    )
+                    images_to_save.append({"Body": xref, "Key": image_key})
+                    page_content.append(
+                        {
+                            "type": "image",
+                            "path": image_key,
+                            "bbox": block.get("bbox"),
+                            "mask": block.get("mask"),
+                            "width": block.get("width"),
+                            "height": block.get("height"),
+                        }
+                    )
+                    count_images += 1
+            if page_content:
+                contents.append(
+                    Page(
+                        content=page_content,
+                        book_id=book_id,
+                        page_number=page_number + 1
+                    )
+                ) 
+        return images_to_save, contents
+
 
     @staticmethod
     def parse_text_end_images_from_page(doc, page_number: int, book_id: int):

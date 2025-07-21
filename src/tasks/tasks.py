@@ -1,18 +1,19 @@
 from datetime import datetime, timedelta
 from src.tasks.celery_app import celery_app
-from sqlalchemy import update
+from sqlalchemy import insert, update
 from src.config import Settings, get_settings
-from src.models.books import BooksORM
+from src.models.books import BooksORM, PageORM
 from src.api.dependencies import get_sync_session
 from src.api.dependencies import get_sync_db_np
 import fitz
 from src.utils.helpers import PDFRenderer
 from src.exceptions.files import FileNotFoundException
-from src.schemas.books import Book
+from src.schemas.books import Book, PageAdd
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.repositories.database.utils import AnalyticsQueryFactory
 import logging
+import json
 
 settings = get_settings()
 
@@ -32,14 +33,24 @@ def render_book(book_id: int):
             raise FileNotFoundException from ex
 
     with fitz.open(stream=file_pdf, filetype="pdf") as doc:
-        files_to_add = PDFRenderer.parse_images_from_pdf(doc=doc, book_id=book_id)
+        # Парсинг изображений из книги
+        files_to_add, pages = PDFRenderer.parse_images_and_text_from_pdf(doc=doc, book_id=book_id)
         num_pages = doc.page_count
         with get_sync_session() as s3:
             for file in files_to_add:
                 s3.client.put_object(
                     Key=file["Key"], Bucket=settings.S3_BUCKET_NAME, Body=file["Body"]
                 )
+
     with get_sync_db_np() as db:
+        add_pages_stmt = (
+            insert(PageORM)
+            .values(
+                [PageAdd(**item.model_dump()).model_dump() for item in pages]
+            )
+        )
+        db.session.execute(add_pages_stmt)
+
         update_stmt = (
             update(BooksORM)
             .filter_by(book_id=book_id)

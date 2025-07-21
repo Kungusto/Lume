@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List, Tuple
 
 import aiofiles
-from src.api.dependencies import get_sync_session
 from src.exceptions.books import PageNotFoundException
 from src.exceptions.conftest import DirectoryNotFoundException, ReadFileException
 from src.exceptions.files import FileNotFoundException

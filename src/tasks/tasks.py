@@ -13,7 +13,6 @@ from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.repositories.database.utils import AnalyticsQueryFactory
 import logging
-import json
 
 settings = get_settings()
 

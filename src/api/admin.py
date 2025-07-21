@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Path
-from src.api.dependencies import S3Dep, DBDep, UserRoleDep, UserIdDep
+from src.api.dependencies import S3Dep, DBDep, UserRoleDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
 from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit

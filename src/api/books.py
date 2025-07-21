@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Path
-import fitz
 from src.api.dependencies import PaginationDep, DBDep, S3Dep, UserIdDep, SearchDep
-from src.utils.helpers import PDFRenderer
+from src.utils.helpers import TextFormatingManager
 from src.exceptions.books import (
     BookNotFoundHTTPException,
     BookNotFoundException,

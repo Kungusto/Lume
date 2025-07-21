@@ -73,3 +73,11 @@ class BooksGenresORM(Base):
         ForeignKey("Books.book_id", ondelete="CASCADE")
     )
     genre_id: Mapped[int] = mapped_column(ForeignKey("Genres.genre_id"))
+
+
+class PageORM(Base):
+    __tablename__ = "Pages"
+
+    page_id: Mapped[int] = mapped_column(primary_key=True)
+    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    content: Mapped[str]

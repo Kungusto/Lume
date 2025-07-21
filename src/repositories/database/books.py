@@ -2,7 +2,7 @@ from sqlalchemy import Float, func, select, update, cast
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound
 from src.repositories.database.base import BaseRepository
-from src.models.books import BooksORM, BooksTagsORM, GenresORM
+from src.models.books import BooksORM, BooksTagsORM, GenresORM, PageORM, BooksGenresORM
 from src.models.user_reads import UserBooksReadORM
 from src.schemas.books import (
     Book,
@@ -13,9 +13,9 @@ from src.schemas.books import (
     BookDataWithRelsPrivat,
     BookDataWithAllRels,
     GenresBook,
+    Page
 )
 from src.models.reviews import ReviewsORM
-from src.models.books import BooksGenresORM
 from src.exceptions.books import BookNotFoundException
 
 
@@ -203,3 +203,8 @@ class GenreRepository(BaseRepository):
 class GenresBooksRepository(BaseRepository):
     model = BooksGenresORM
     schema = GenresBook
+
+
+class PageRepository(BaseRepository):
+    model = PageORM
+    schema = Page

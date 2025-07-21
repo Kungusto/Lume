@@ -7,6 +7,15 @@ from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
 
+class PageAdd(BaseModel): 
+    page_number: int
+    book_id: int
+
+
+class Page(PageAdd):
+    content: str
+
+
 # Теги
 class Tag(BaseModel):
     id: int

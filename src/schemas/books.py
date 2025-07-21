@@ -18,7 +18,7 @@ class Page(BaseModel):
     def content_to_str(cls, value: str) -> list[dict]:
         """Преобразуем строку в JSON"""
         if isinstance(value, str):
-            return json.loads(value, ensure_ascii=False)  # превращаем список в JSON-строку
+            return json.loads(value)  # превращаем список в JSON-строку
         return value
 
 

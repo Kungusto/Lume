@@ -165,9 +165,10 @@ async def delete_book(
         raise BookNotFoundHTTPException from ex
     delete_book_images.delay(book_id)
     if book.is_rendered:
-        await s3.books.delete_by_path(f"{book_id}/book.pdf")
+        await s3.books.delete_by_path(f"books/{book_id}/book.pdf")
     if book.cover_link:
-        await s3.books.delete_by_path(f"{book_id}/preview.png")
+        await s3.books.delete_by_path(f"books/{book_id}/preview.png")
+    await db.pages.delete(book_id=book_id)
     await db.books.delete(book_id=book_id)
     await db.commit()
     return {"status": "OK"}
@@ -298,6 +299,7 @@ async def edit_content(
     if not await s3.books.check_file_by_path(f"books/{book_id}/book.pdf"):
         raise ContentAlreadyExistsHTTPException
     await s3.books.save_content(book_id=book_id, file=file)
+    await db.pages.delete(book_id=book_id)
     change_content.delay(book_id)
     await db.commit()
     return {"status": "OK"}

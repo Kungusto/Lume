@@ -80,4 +80,6 @@ class PageORM(Base):
 
     page_id: Mapped[int] = mapped_column(primary_key=True)
     book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    page_number: Mapped[int] 
     content: Mapped[str]
+    

@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import json
 from typing import Annotated, List
 from pydantic import BaseModel, EmailStr, Field, constr, field_validator, conint
 from src.enums.users import AllUsersRolesEnum
@@ -7,14 +8,32 @@ from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
 
-class PageAdd(BaseModel): 
+
+class Page(BaseModel):
     page_number: int
     book_id: int
+    content: str | list[dict]
+
+    @field_validator("content")
+    def content_to_str(cls, value: str) -> list[dict]:
+        """Преобразуем строку в JSON"""
+        if isinstance(value, str):
+            return json.loads(value, ensure_ascii=False)  # превращаем список в JSON-строку
+        return value
 
 
-class Page(PageAdd):
-    content: str
+class PageAdd(BaseModel):
+    page_number: int
+    book_id: int
+    content: str | list[dict]
 
+    @field_validator("content")
+    def content_to_str(cls, value: list[dict]) -> str:
+        """Мы будем хранить JSON в виде строки, поэтому требуется преобразование"""
+        if isinstance(value, list):
+            return json.dumps(value, ensure_ascii=False)  # превращаем список в JSON-строку
+        return value
+    
 
 # Теги
 class Tag(BaseModel):

@@ -120,7 +120,6 @@ async def get_page(
         )
     await db.commit()
 
-
     page = await db.pages.get_one(book_id=book_id, page_number=page_number)
     page_content = page.content
     # Убрать лишние пробелы из текста
@@ -129,11 +128,13 @@ async def get_page(
             path_in_s3 = content_info["path"]
             access_url = await s3.books.generate_url(
                 file_path=path_in_s3,
-                expires_in=60*60*24 # 1 день
+                expires_in=60 * 60 * 24,  # 1 день
             )
             content_info["path"] = access_url
         else:
-            content_info["content"] = TextFormatingManager.replace_nbsp(content_info["content"])
+            content_info["content"] = TextFormatingManager.replace_nbsp(
+                content_info["content"]
+            )
         page_content[ind] = content_info
 
     page.content = page_content

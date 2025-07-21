@@ -65,9 +65,7 @@ async def login_user(data: UserLogin, db: DBDep, response: Response, request: Re
     access_token = AuthService().create_access_token(
         {"user_id": user.user_id, "role": user.role}
     )
-    response.set_cookie(
-        key="access_token", value=access_token
-    )
+    response.set_cookie(key="access_token", value=access_token)
     return {"access_token": access_token}
 
 

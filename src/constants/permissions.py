@@ -1,8 +1,8 @@
 class Permissions:
     ROLES_PREFIXES = {
-        "USER":          {"auth", "books", "reviews"},
-        "AUTHOR":        {"auth", "books", "reviews", "author"},
-        "ADMIN":         {"admin", "auth", "books", "reviews", "author"},
+        "USER": {"auth", "books", "reviews"},
+        "AUTHOR": {"auth", "books", "reviews", "author"},
+        "ADMIN": {"admin", "auth", "books", "reviews", "author"},
         "GENERAL_ADMIN": {"admin", "auth", "books", "reviews", "author"},
     }
 
@@ -23,4 +23,3 @@ class Permissions:
         (r"^/docs$", "GET"),
         (r"^/redoc$", "GET"),
     }
-

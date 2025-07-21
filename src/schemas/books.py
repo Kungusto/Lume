@@ -8,7 +8,6 @@ from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
 
-
 class Page(BaseModel):
     page_number: int
     book_id: int
@@ -31,9 +30,11 @@ class PageAdd(BaseModel):
     def content_to_str(cls, value: list[dict]) -> str:
         """Мы будем хранить JSON в виде строки, поэтому требуется преобразование"""
         if isinstance(value, list):
-            return json.dumps(value, ensure_ascii=False)  # превращаем список в JSON-строку
+            return json.dumps(
+                value, ensure_ascii=False
+            )  # превращаем список в JSON-строку
         return value
-    
+
 
 # Теги
 class Tag(BaseModel):

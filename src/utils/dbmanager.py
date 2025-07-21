@@ -5,7 +5,7 @@ from src.repositories.database.books import (
     GenresBooksRepository,
     TagRepository,
     GenreRepository,
-    PageRepository
+    PageRepository,
 )
 from src.repositories.database.books_authors import BooksAuthorsRepository
 from src.repositories.database.reviews import ReviewsRepository

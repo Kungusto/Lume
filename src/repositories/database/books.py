@@ -13,7 +13,7 @@ from src.schemas.books import (
     BookDataWithRelsPrivat,
     BookDataWithAllRels,
     GenresBook,
-    Page
+    Page,
 )
 from src.models.reviews import ReviewsORM
 from src.exceptions.books import BookNotFoundException

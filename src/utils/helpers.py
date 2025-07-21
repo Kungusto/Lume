@@ -5,7 +5,6 @@ import aiofiles
 from src.exceptions.books import PageNotFoundException
 from src.exceptions.conftest import DirectoryNotFoundException, ReadFileException
 from src.exceptions.files import FileNotFoundException
-from src.config import settings
 from src.schemas.books import Page
 
 
@@ -36,7 +35,9 @@ class PDFRenderer:
                                     "bidi": span.get(
                                         "bidi"
                                     ),  # уровень двунаправленного текста
-                                    "char_flags": span.get("char_flags"),  # флаги символов
+                                    "char_flags": span.get(
+                                        "char_flags"
+                                    ),  # флаги символов
                                     "color": span.get(
                                         "color"
                                     ),  # цвет текста (в формате RGB)
@@ -57,9 +58,7 @@ class PDFRenderer:
                     xref = block.get("image") or block.get("image_ref")
                     if xref is None:
                         continue
-                    image_key = (
-                        f"books/{book_id}/images/page_{page_number}_img_{count_images}.png"
-                    )
+                    image_key = f"books/{book_id}/images/page_{page_number}_img_{count_images}.png"
                     images_to_save.append({"Body": xref, "Key": image_key})
                     page_content.append(
                         {
@@ -77,19 +76,14 @@ class PDFRenderer:
                     Page(
                         content=page_content,
                         book_id=book_id,
-                        page_number=page_number + 1
-                    )
-                ) 
-            else:
-                contents.append(
-                    Page(
-                        content="\n",
-                        book_id=book_id,
-                        page_number=page_number + 1
+                        page_number=page_number + 1,
                     )
                 )
+            else:
+                contents.append(
+                    Page(content="\n", book_id=book_id, page_number=page_number + 1)
+                )
         return images_to_save, contents
-
 
     @staticmethod
     def parse_text_end_images_from_page(doc, page_number: int, book_id: int):
@@ -177,4 +171,4 @@ class FileManager:
 class TextFormatingManager:
     @staticmethod
     def replace_nbsp(text: str) -> str:
-        return text.replace('\xa0', ' ')
+        return text.replace("\xa0", " ")

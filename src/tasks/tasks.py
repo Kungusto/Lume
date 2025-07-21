@@ -33,7 +33,9 @@ def render_book(book_id: int):
 
     with fitz.open(stream=file_pdf, filetype="pdf") as doc:
         # Парсинг изображений из книги
-        files_to_add, pages = PDFRenderer.parse_images_and_text_from_pdf(doc=doc, book_id=book_id)
+        files_to_add, pages = PDFRenderer.parse_images_and_text_from_pdf(
+            doc=doc, book_id=book_id
+        )
         num_pages = doc.page_count
         with get_sync_session() as s3:
             for file in files_to_add:
@@ -42,11 +44,8 @@ def render_book(book_id: int):
                 )
 
     with get_sync_db_np() as db:
-        add_pages_stmt = (
-            insert(PageORM)
-            .values(
-                [PageAdd(**item.model_dump()).model_dump() for item in pages]
-            )
+        add_pages_stmt = insert(PageORM).values(
+            [PageAdd(**item.model_dump()).model_dump() for item in pages]
         )
         db.session.execute(add_pages_stmt)
 

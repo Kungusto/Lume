@@ -27,7 +27,6 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
             content={"detail": "Срок действия токена истек"},
         )
 
-    
     def unauthenticated_user_response(self) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -55,7 +54,7 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
         """Нужно ли проверять, что пользователь забанен"""
         if request.url.path == "/auth/logout":
             return False
-        for (pattern, method) in Permissions.PUBLIC_ENDPOINTS:
+        for pattern, method in Permissions.PUBLIC_ENDPOINTS:
             if re.match(pattern, request.url.path) and request.method == method:
                 return False
         return True
@@ -81,7 +80,7 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
         if prefix in allowed_prefixes:
             return True
         return False
-    
+
     async def dispatch(self, request: Request, call_next):
         """
         Проверяет, забанен ли пользователь, на всех методах, кроме GET,
@@ -117,4 +116,3 @@ class BanCheckMiddleware(BaseHTTPMiddleware):
                     return ban_response
 
         return await call_next(request)
-

@@ -33,4 +33,3 @@ class ServiceForTests:
         file = await FileManager().get_file_by_rel_path(file_path)
         filename = Path(file_path).name
         return file, filename
-

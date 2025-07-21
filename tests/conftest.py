@@ -60,6 +60,7 @@ from tests.utils import ServiceForTests
 @pytest.fixture(scope="session", autouse=True)
 def mock_redis():
     from unittest import mock
+
     # Мок для BaseCacheManager
     mock_base_patch = mock.patch("src.decorators.base.BaseCacheManager")
     MockBaseCacheManager = mock_base_patch.start()

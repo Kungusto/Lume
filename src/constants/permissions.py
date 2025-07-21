@@ -19,5 +19,8 @@ class Permissions:
         ("/auth/login", "POST"),
         ("/auth/logout", "POST"),
         ("/auth/register", "POST"),
+        (r"^/openapi.json$", "GET"),
+        (r"^/docs$", "GET"),
+        (r"^/redoc$", "GET"),
     }
 

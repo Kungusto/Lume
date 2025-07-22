@@ -37,6 +37,9 @@ class BadRequestException(LumeException):
     detail = "Некорректный запрос"
 
 
+class PermissionDeniedException(LumeException):
+    detail = "Недостаточно прав для совершения данной операции"
+
 # ------------------------------------ HTTP Exceptions ------------------------------------
 
 

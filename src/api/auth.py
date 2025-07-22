@@ -11,22 +11,24 @@ from src.exceptions.auth import (
     EmailAlreadyRegistratedHTTPException,
     EmailAlreadyRegistratedException,
     NotAuthentificatedHTTPException,
+    NotAuthentificatedException,
     AlreadyAuthentificatedHTTPException,
+    AlreadyAuthentificatedException,
     UserNotFoundHTTPException,
     WrongPasswordOrEmailHTTPException,
-    EmailNotFoundException,
+    WrongPasswordOrEmailException,
+    CannotChangeDataOtherUserException,
     CannotChangeDataOtherUserHTTPException,
+    UserNotFoundException
 )
 from src.schemas.users import (
     UserRegistrate,
-    UserAdd,
     UserLogin,
     UserPublicData,
     UserPUT,
 )
 from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
-from src.enums.users import AllUsersRolesEnum
 from src.utils.cache_manager import get_cache_manager
 
 
@@ -35,12 +37,9 @@ cache = get_cache_manager()
 
 
 @router.post("/register")
-async def registrate_users(data: UserRegistrate, db: DBDep):
-    hashed_password = AuthService().hash_password(data.password)
-    data.role = AllUsersRolesEnum(data.role)
-    data = UserAdd(**data.model_dump(), hashed_password=hashed_password)
+async def registrate_user(data: UserRegistrate, db: DBDep):
     try:
-        result = await db.users.add(data=data)
+        result = await AuthService(db=db).registrate_user(data=data)
     except NickAlreadyRegistratedException as ex:
         raise NickAlreadyRegistratedHTTPException from ex
     except EmailAlreadyRegistratedException as ex:
@@ -53,32 +52,27 @@ async def registrate_users(data: UserRegistrate, db: DBDep):
 
 
 @router.post("/login")
-async def login_user(data: UserLogin, db: DBDep, response: Response, request: Request):
-    if request.cookies.get("access_token"):
-        raise AlreadyAuthentificatedHTTPException
+async def login_user(db: DBDep, data: UserLogin, request: Request, response: Response):
     try:
-        user = await db.users.get_user_with_hashed_password(email=data.email)
-    except EmailNotFoundException as ex:
+        access_token = await AuthService(db=db).login_user(data=data, request=request, response=response)
+    except AlreadyAuthentificatedException as ex:
+        raise AlreadyAuthentificatedHTTPException from ex
+    except WrongPasswordOrEmailException as ex:
         raise WrongPasswordOrEmailHTTPException from ex
-    if not AuthService().verify_password(data.password, user.hashed_password):
-        raise WrongPasswordOrEmailHTTPException
-    access_token = AuthService().create_access_token(
-        {"user_id": user.user_id, "role": user.role}
-    )
-    response.set_cookie(key="access_token", value=access_token)
     return {"access_token": access_token}
 
 
 @router.get("/me")
 async def info_about_current_user(user_id: UserIdDep, db: DBDep):
-    return await db.users.get_one(user_id=user_id)
+    return await AuthService(db=db).info_about_current_user(user_id=user_id)
 
 
 @router.post("/logout")
-async def exit_from_account(response: Response, request: Request):
-    if not request.cookies.get("access_token"):
-        raise NotAuthentificatedHTTPException
-    response.delete_cookie("access_token")
+async def exit_from_account(request: Request, response: Response):
+    try:
+        AuthService().logout_user(request=request, response=response)
+    except NotAuthentificatedException as ex:
+        raise NotAuthentificatedHTTPException from ex
     return {"status": "OK"}
 
 
@@ -86,12 +80,10 @@ async def exit_from_account(response: Response, request: Request):
 @cache.base()
 async def info_about_user(db: DBDep, user_id: int):
     try:
-        all_data_about_user = await db.users.get_one(user_id=user_id)
-    except ObjectNotFoundException as ex:
+        user = await AuthService(db=db).info_about_user(user_id=user_id)
+    except UserNotFoundException as ex:
         raise UserNotFoundHTTPException from ex
-    user_public = UserPublicData(**all_data_about_user.model_dump())
-    await db.commit()
-    return user_public
+    return user
 
 
 @router.put("/{user_id}")
@@ -99,14 +91,11 @@ async def edit_user_data(
     db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep
 ):
     try:
-        await db.users.get_one(user_id=user_id)
-    except ObjectNotFoundException:
-        raise UserNotFoundHTTPException
-    if user_id != curr_user_id:
-        raise CannotChangeDataOtherUserHTTPException
-    try:
-        await db.users.edit(user_id=user_id, data=data)
-    except AlreadyExistsException as ex:
+        await AuthService(db=db).edit_user_data(data=data, user_id=user_id, curr_user_id=curr_user_id)
+    except UserNotFoundException as ex:
+        raise UserNotFoundHTTPException from ex
+    except CannotChangeDataOtherUserException as ex:
+        raise CannotChangeDataOtherUserHTTPException from ex
+    except NickAlreadyRegistratedException as ex:
         raise NickAlreadyRegistratedHTTPException from ex
-    await db.commit()
     return {"status": "OK"}

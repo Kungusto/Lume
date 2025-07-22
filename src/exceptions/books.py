@@ -2,6 +2,7 @@ from src.exceptions.base import (
     ObjectNotFoundHTTPException,
     AlreadyExistsHTTPException,
     AlreadyExistsException,
+    PermissionDeniedException,
     PermissionDeniedHTTPException,
     ObjectNotFoundException,
     LumeHTTPException,
@@ -52,6 +53,10 @@ class AuthorNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Автор не найден"
 
 
+class AuthorNotFoundException(ObjectNotFoundException):
+    detail = "Автор не найден"
+
+
 class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Контент книги уже был опубликован"
 
@@ -65,6 +70,10 @@ class BookAlreadyPublicatedHTTPException(AlreadyExistsHTTPException):
 
 
 class BookNotExistsOrYouNotOwnerHTTPException(PermissionDeniedHTTPException):
+    detail = "Книга не существует, либо у вас нет доступа к ее изменению"
+
+
+class BookNotExistsOrYouNotOwnerException(PermissionDeniedException):
     detail = "Книга не существует, либо у вас нет доступа к ее изменению"
 
 

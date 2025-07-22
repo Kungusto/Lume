@@ -111,6 +111,10 @@ class ChangePermissionsOfADMINHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете понизить в правах, или забанить, админа, права которого не ниже ваших"
 
 
+class ChangePermissionsOfADMINException(PermissionDeniedException):
+    detail = "Вы не можете понизить в правах, или забанить, админа, права которого не ниже ваших"
+
+
 class CannotChangeToGeneralAdminHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете изменить права пользователя на главного админа"
 

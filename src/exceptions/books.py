@@ -29,7 +29,6 @@ class CoverNotFoundException(ObjectNotFoundException):
     detail = "Обложка не найдена"
 
 
-
 class BookNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Книга не найдена"
 
@@ -104,6 +103,16 @@ class GenreAlreadyExistsException(AlreadyExistsException):
 
 class GenreAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Жанр с таким названием уже существует"
+
+
+class CannotDeleteGenreHTTPException(PermissionDeniedHTTPException):
+    """Данное исключение создано на случай если админ перепутает id и удалит не тот жанр вместе со всеми его книгами"""
+
+    detail = "Даже будучи админом, вы не можете удалить этот жанр, т.к. на него ссылаются некоторые книги"
+
+
+class CannotDeleteGenreException(PermissionDeniedException):
+    detail = "Даже будучи админом, вы не можете удалить этот жанр, т.к. на него ссылаются некоторые книги"
 
 
 class TagNotFoundHTTPException(ObjectNotFoundHTTPException):

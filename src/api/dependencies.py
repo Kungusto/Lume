@@ -78,9 +78,18 @@ def user_role_from_token(access_token=Depends(get_token)):
     return data.get("role", None)
 
 
+def should_check_owner(user_role=Depends(user_role_from_token)):
+    """Нужно ли проверять, владеет ли пользователь книгой"""
+    if user_role.upper() not in {"ADMIN", "GENERAL_ADMIN"}:
+        return True
+    return False
+
+ShouldCheckOwnerDep = Annotated[bool, Depends(should_check_owner)]
+
 UserIdDep = Annotated[int, Depends(user_id_from_token)]
 
 UserRoleDep = Annotated[AllUsersRolesEnum, Depends(user_role_from_token)]
+
 
 
 # --- Authorization ---

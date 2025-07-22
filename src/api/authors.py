@@ -1,6 +1,8 @@
 from fastapi import APIRouter, UploadFile
 from src.services.auth import AuthService
 from src.exceptions.books import (
+    BookNotExistsOrYouNotOwnerException,
+    BookNotExistsOrYouNotOwnerHTTPException,
     CoverNotFoundHTTPException,
     ContentAlreadyExistsHTTPException,
     BookNotFoundHTTPException,
@@ -8,6 +10,10 @@ from src.exceptions.books import (
     CoverAlreadyExistsHTTPException,
     BookAlreadyPublicatedHTTPException,
     ContentNotFoundHTTPException,
+    AuthorNotFoundException,
+    AuthorNotFoundHTTPException,
+    GenreNotFoundException,
+    GenreNotFoundHTTPException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -15,7 +21,7 @@ from src.exceptions.files import (
     WrongCoverResolutionHTTPException,
     WrongFileExpensionHTTPException,
 )
-from src.api.dependencies import S3Dep, DBDep, UserIdDep, UserRoleDep
+from src.api.dependencies import S3Dep, DBDep, UserIdDep, UserRoleDep, ShouldCheckOwnerDep
 from src.schemas.books import (
     BookAdd,
     BookAddWithAuthorsTagsGenres,
@@ -32,6 +38,7 @@ from src.schemas.books_authors import BookAuthorAdd
 from src.models.books import BooksTagsORM
 from src.validation.files import FileValidator
 from src.utils.cache_manager import get_cache_manager
+from src.services.books import BookService
 
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг 📚"])
@@ -40,6 +47,7 @@ cache = get_cache_manager()
 
 @router.post("/book")
 async def add_book(
+    db: DBDep,
     data: BookAddWithAuthorsTagsGenres,
     user_id: UserIdDep,
 ):
@@ -80,10 +88,10 @@ async def delete_book(
     book_id: int,
     db: DBDep,
     s3: S3Dep,
-    user_role: UserRoleDep,
     user_id: UserIdDep,
+    should_check_owner: ShouldCheckOwnerDep,
 ):
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
+    if should_check_owner:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -120,10 +128,10 @@ async def add_cover(
     book_id: int,
     db: DBDep,
     s3: S3Dep,
-    user_role: UserRoleDep,
     user_id: UserIdDep,
+    should_check_owner: ShouldCheckOwnerDep,
 ):
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
+    if should_check_owner:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -153,10 +161,10 @@ async def put_cover(
     book_id: int,
     db: DBDep,
     s3: S3Dep,
-    user_role: UserRoleDep,
     user_id: UserIdDep,
+    should_check_owner: ShouldCheckOwnerDep,
 ):
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
+    if should_check_owner:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -189,10 +197,10 @@ async def add_all_content(
     book_id: int,
     s3: S3Dep,
     db: DBDep,
-    user_role: UserRoleDep,
     user_id: UserIdDep,
+    should_check_owner: ShouldCheckOwnerDep,
 ):
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
+    if should_check_owner:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -213,10 +221,10 @@ async def edit_content(
     file: UploadFile,
     s3: S3Dep,
     db: DBDep,
-    user_role: UserRoleDep,
     user_id: UserIdDep,
+    should_check_owner: ShouldCheckOwnerDep,
 ):
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
+    if should_check_owner:
         await AuthService().verify_user_owns_book(
             user_id=user_id, book_id=book_id, db=db
         )
@@ -237,11 +245,11 @@ async def edit_content(
 async def publicate_book(
     book_id: int,
     db: DBDep,
-    user_role: UserRoleDep,
     user_id: UserIdDep,
+    should_check_owner: ShouldCheckOwnerDep,
 ):
     try:
-        if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
+        if should_check_owner:
             book = await AuthService().verify_user_owns_book(
                 user_id=user_id, book_id=book_id, db=db
             )

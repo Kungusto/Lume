@@ -1,5 +1,4 @@
 from fastapi import APIRouter, UploadFile
-from src.services.auth import AuthService
 from src.exceptions.books import (
     BookAlreadyPublicatedException,
     BookNotExistsOrYouNotOwnerException,
@@ -182,7 +181,7 @@ async def add_all_content(
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
 ):
-    try: 
+    try:
         await BookService(db=db, s3=s3).add_all_content(
             should_check_owner=should_check_owner,
             user_id=user_id,
@@ -190,7 +189,7 @@ async def add_all_content(
             file=file,
         )
     except WrongFileExpensionException as ex:
-        raise WrongFileExpensionHTTPException from ex 
+        raise WrongFileExpensionHTTPException from ex
     except ContentAlreadyExistsException as ex:
         raise ContentAlreadyExistsHTTPException from ex
     except BookNotExistsOrYouNotOwnerException as ex:
@@ -207,7 +206,7 @@ async def edit_content(
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
 ):
-    try: 
+    try:
         await BookService(db=db, s3=s3).edit_content(
             should_check_owner=should_check_owner,
             user_id=user_id,
@@ -215,7 +214,7 @@ async def edit_content(
             file=file,
         )
     except WrongFileExpensionException as ex:
-        raise WrongFileExpensionHTTPException from ex 
+        raise WrongFileExpensionHTTPException from ex
     except ContentNotFoundException as ex:
         raise ContentNotFoundHTTPException from ex
     except BookNotExistsOrYouNotOwnerException as ex:
@@ -237,7 +236,7 @@ async def publicate_book(
             should_check_owner=should_check_owner,
         )
     except BookNotFoundException as ex:
-        raise BookNotFoundHTTPException from ex    
+        raise BookNotFoundHTTPException from ex
     except ContentNotFoundException as ex:
         raise ContentNotFoundHTTPException from ex
     except CoverNotFoundException as ex:

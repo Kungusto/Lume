@@ -19,7 +19,6 @@ from src.exceptions.base import ForeignKeyException
 from src.exceptions.books import (
     AuthorNotFoundException,
     BookAlreadyPublicatedException,
-    BookAlreadyPublicatedHTTPException,
     BookNotExistsOrYouNotOwnerException,
     BookNotFoundException,
     ContentAlreadyExistsException,
@@ -27,7 +26,6 @@ from src.exceptions.books import (
     CoverAlreadyExistsException,
     CoverNotFoundException,
     GenreNotFoundException,
-    ContentNotFoundHTTPException
 )
 from src.tasks.tasks import change_content, delete_book_images, render_book
 from validation.files import FileValidator
@@ -213,7 +211,9 @@ class BookService(BaseService):
         self, should_check_owner, user_id: int, book_id: int, file: UploadFile
     ):
         if should_check_owner:
-            await AuthService(db=self.db).verify_user_owns_book(user_id=user_id, book_id=book_id)
+            await AuthService(db=self.db).verify_user_owns_book(
+                user_id=user_id, book_id=book_id
+            )
         try:
             FileValidator.check_expansion_books(file_name=file.filename)
         except WrongFileExpensionException as ex:
@@ -223,12 +223,13 @@ class BookService(BaseService):
         await self.s3.books.save_content(book_id, file=file)
         render_book.delay(book_id)
 
-    
     async def edit_content(
         self, should_check_owner, user_id: int, book_id: int, file: UploadFile
     ):
         if should_check_owner:
-            await AuthService(db=self.db).verify_user_owns_book(user_id=user_id, book_id=book_id)
+            await AuthService(db=self.db).verify_user_owns_book(
+                user_id=user_id, book_id=book_id
+            )
         try:
             FileValidator.check_expansion_books(file_name=file.filename)
         except WrongFileExpensionException as ex:
@@ -240,9 +241,11 @@ class BookService(BaseService):
         change_content.delay(book_id)
         await self.db.commit()
 
-
     async def publicate_book(
-        self, book_id, user_id, should_check_owner,
+        self,
+        book_id,
+        user_id,
+        should_check_owner,
     ):
         try:
             if should_check_owner:
@@ -251,8 +254,8 @@ class BookService(BaseService):
                 )
             else:
                 book = await self.db.books.get_one(book_id=book_id)
-        except BookNotFoundException as ex:
-            raise 
+        except BookNotFoundException:
+            raise
         if (not book.is_rendered) or (book.total_pages is None):
             raise ContentNotFoundException
         if book.cover_link is None:

@@ -1,4 +1,5 @@
 from src.exceptions.books import (
+    BookNotExistsOrYouNotOwnerException,
     BookNotExistsOrYouNotOwnerHTTPException,
 )
 from src.exceptions.base import PermissionDeniedHTTPException, ObjectNotFoundException
@@ -66,19 +67,17 @@ class AuthService(BaseService):
         else:
             raise PermissionDeniedHTTPException
 
-    async def verify_user_owns_book(
-        self, user_id: int, book_id: int, db: AsyncDBManager
-    ):
+    async def verify_user_owns_book(self, user_id: int, book_id: int):
         """Проверяем, действительно ли пользователь владеет книгой"""
         try:
-            book = await db.books.get_one_with_rels(
+            book = await self.db.books.get_one_with_rels(
                 book_id=book_id, privat_data=True
             )  # для того чтобы получить id
         except ObjectNotFoundException as ex:
-            raise BookNotExistsOrYouNotOwnerHTTPException from ex
+            raise BookNotExistsOrYouNotOwnerException from ex
         author_ids = [author.user_id for author in book.authors]
         if user_id not in author_ids:
-            raise BookNotExistsOrYouNotOwnerHTTPException
+            raise BookNotExistsOrYouNotOwnerException
         return book
 
     async def registrate_user(self, data):

@@ -85,28 +85,20 @@ async def edit_book(
 
 @router.delete("/book/{book_id}")
 async def delete_book(
-    book_id: int,
     db: DBDep,
     s3: S3Dep,
+    book_id: int,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
 ):
-    if should_check_owner:
-        await AuthService().verify_user_owns_book(
-            user_id=user_id, book_id=book_id, db=db
-        )
     try:
-        book = await db.books.get_one(book_id=book_id)
+        await BookService(db=db, s3=s3).delete_book(
+            should_check_owner=should_check_owner,
+            book_id=book_id,
+            user_id=user_id,
+        )
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    delete_book_images.delay(book_id)
-    if book.is_rendered:
-        await s3.books.delete_by_path(f"books/{book_id}/book.pdf")
-    if book.cover_link:
-        await s3.books.delete_by_path(f"books/{book_id}/preview.png")
-    await db.pages.delete(book_id=book_id)
-    await db.books.delete(book_id=book_id)
-    await db.commit()
     return {"status": "OK"}
 
 
@@ -116,7 +108,7 @@ async def get_my_books(
     db: DBDep,
     author_id: UserIdDep,
 ):
-    return await db.users.get_books_by_user(user_id=author_id)
+    return await BookService(db=db).get_my_books(author_id=author_id)
 
 
 # --- Обложки ---

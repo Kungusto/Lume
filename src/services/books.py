@@ -19,6 +19,7 @@ from src.exceptions.books import (
     BookNotFoundException,
     GenreNotFoundException,
 )
+from src.tasks.tasks import delete_book_images
 
 
 class BookService(BaseService):
@@ -125,3 +126,25 @@ class BookService(BaseService):
                 data=book_patch_data, is_patch=True, book_id=book_id
             )
         await self.db.commit()
+
+    async def delete_book(self, should_check_owner: bool, book_id: int, user_id: int):
+        if should_check_owner:
+            await AuthService(db=self.db).verify_user_owns_book(
+                user_id=user_id, book_id=book_id
+            )
+        try:
+            book = await self.db.books.get_one(book_id=book_id)
+        except BookNotFoundException:
+            raise 
+        delete_book_images.delay(book_id)
+        if book.is_rendered:
+            await self.s3.books.delete_by_path(f"books/{book_id}/book.pdf")
+        if book.cover_link:
+            await self.s3.books.delete_by_path(f"books/{book_id}/preview.png")
+        await self.db.pages.delete(book_id=book_id)
+        await self.db.books.delete(book_id=book_id)
+        await self.db.commit()
+
+    
+    async def get_my_books(self, author_id: int):
+        return await self.db.users.get_books_by_user(user_id=author_id)

@@ -67,6 +67,7 @@ class AuthService(BaseService):
         else:
             raise PermissionDeniedHTTPException
 
+
     async def verify_user_owns_book(self, user_id: int, book_id: int):
         """Проверяем, действительно ли пользователь владеет книгой"""
         try:

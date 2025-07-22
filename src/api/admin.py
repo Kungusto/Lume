@@ -7,13 +7,19 @@ from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, B
 from src.models.reports import BanORM
 from src.exceptions.base import AlreadyExistsException, ObjectNotFoundException
 from src.exceptions.books import (
+    CannotDeleteGenreException,
+    CannotDeleteGenreHTTPException,
+    GenreAlreadyExistsException,
     GenreAlreadyExistsHTTPException,
+    GenreNotFoundException,
     GenreNotFoundHTTPException,
     TagNotFoundHTTPException,
     BookNotFoundHTTPException,
     TagAlreadyExistsHTTPException,
 )
 from src.exceptions.auth import (
+    ChangePermissionsOfADMINException,
+    UserNotFoundException,
     UserNotFoundHTTPException,
     ChangePermissionsOfADMINHTTPException,
 )
@@ -32,6 +38,7 @@ from src.schemas.analytics import (
 
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.exceptions.files import StatementNotFoundHTTPException
+from src.services.admin import AdminService
 from src.config import settings
 
 router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
@@ -45,18 +52,15 @@ async def change_role(
     user_id: int = Path(le=2**31),
 ):
     try:
-        user = await db.users.get_one(user_id=user_id)
-    except ObjectNotFoundException as ex:
+        await AdminService(db=db).change_role(
+            data=data,
+            current_user_role=current_user_role,
+            user_id=user_id,
+        )
+    except UserNotFoundException as ex:
         raise UserNotFoundHTTPException from ex
-
-    # На случай если админ решит понизить другого админа
-    if current_user_role == user.role:
-        raise ChangePermissionsOfADMINHTTPException
-    if user.role == "GENERAL_ADMIN":
-        raise ChangePermissionsOfADMINHTTPException
-
-    await db.users.edit(data=data, user_id=user_id)
-    await db.commit()
+    except ChangePermissionsOfADMINException as ex:
+        raise ChangePermissionsOfADMINHTTPException from ex
     return {"status": "OK"}
 
 
@@ -66,10 +70,9 @@ async def add_genre(
     data: GenreAdd,
 ):
     try:
-        genre = await db.genres.add(data=data)
-    except AlreadyExistsException as ex:
+        genre = await AdminService(db=db).add_genre(data=data)
+    except GenreAlreadyExistsException as ex:
         raise GenreAlreadyExistsHTTPException from ex
-    await db.commit()
     return genre
 
 
@@ -80,11 +83,9 @@ async def edit_genre(
     genre_id: int = Path(le=2**31),
 ):
     try:
-        await db.genres.get_one(genre_id=genre_id)
-    except ObjectNotFoundException as ex:
+        await AdminService(db=db).edit_genre(data=data, genre_id=genre_id)
+    except GenreNotFoundException as ex:
         raise GenreNotFoundHTTPException from ex
-    await db.genres.edit(data=data, genre_id=genre_id)
-    await db.commit()
     return {"status": "OK"}
 
 
@@ -94,11 +95,11 @@ async def delete_genre(
     genre_id: int = Path(le=2**31),
 ):
     try:
-        await db.genres.get_one(genre_id=genre_id)
-    except ObjectNotFoundException as ex:
+        await AdminService(db=db).delete_genre(genre_id=genre_id)
+    except GenreNotFoundException as ex:
         raise GenreNotFoundHTTPException from ex
-    await db.genres.delete(genre_id=genre_id)
-    await db.commit()
+    except CannotDeleteGenreException as ex:
+        raise CannotDeleteGenreHTTPException from ex
     return {"status": "OK"}
 
 

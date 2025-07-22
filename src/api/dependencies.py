@@ -84,12 +84,12 @@ def should_check_owner(user_role=Depends(user_role_from_token)):
         return True
     return False
 
+
 ShouldCheckOwnerDep = Annotated[bool, Depends(should_check_owner)]
 
 UserIdDep = Annotated[int, Depends(user_id_from_token)]
 
 UserRoleDep = Annotated[AllUsersRolesEnum, Depends(user_role_from_token)]
-
 
 
 # --- Authorization ---

@@ -21,21 +21,20 @@ from src.exceptions.files import (
     WrongCoverResolutionHTTPException,
     WrongFileExpensionHTTPException,
 )
-from src.api.dependencies import S3Dep, DBDep, UserIdDep, UserRoleDep, ShouldCheckOwnerDep
+from src.api.dependencies import (
+    S3Dep,
+    DBDep,
+    UserIdDep,
+    UserRoleDep,
+    ShouldCheckOwnerDep,
+)
 from src.schemas.books import (
-    BookAdd,
     BookAddWithAuthorsTagsGenres,
     BookPATCHWithRels,
     BookPATCHOnPublication,
-    TagAdd,
-    GenresBooksAdd,
     BookPATCH,
 )
-from src.exceptions.books import GenreNotFoundHTTPException, AuthorNotFoundHTTPException
-from src.exceptions.base import ForeignKeyException
-from src.tasks.tasks import render_book, delete_book_images, change_content
-from src.schemas.books_authors import BookAuthorAdd
-from src.models.books import BooksTagsORM
+from src.tasks.tasks import render_book, change_content
 from src.validation.files import FileValidator
 from src.utils.cache_manager import get_cache_manager
 from src.services.books import BookService

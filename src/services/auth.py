@@ -1,13 +1,11 @@
 from src.exceptions.books import (
     BookNotExistsOrYouNotOwnerException,
-    BookNotExistsOrYouNotOwnerHTTPException,
 )
 from src.exceptions.base import PermissionDeniedHTTPException, ObjectNotFoundException
 from src.enums.users import AllUsersRolesEnum
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 import jwt
-from src.utils.dbmanager import AsyncDBManager
 from src.config import settings
 from fastapi import Request, Response
 from src.services.base import BaseService
@@ -66,7 +64,6 @@ class AuthService(BaseService):
             return True
         else:
             raise PermissionDeniedHTTPException
-
 
     async def verify_user_owns_book(self, user_id: int, book_id: int):
         """Проверяем, действительно ли пользователь владеет книгой"""

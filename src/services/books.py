@@ -4,9 +4,7 @@ from src.services.auth import AuthService
 from src.schemas.books import BookAddWithAuthorsTagsGenres
 from src.schemas.books import (
     BookAdd,
-    BookAddWithAuthorsTagsGenres,
     BookPATCHWithRels,
-    BookPATCHOnPublication,
     TagAdd,
     GenresBooksAdd,
     BookPATCH,
@@ -61,14 +59,14 @@ class BookService(BaseService):
     ):
         try:
             await self.db.books.get_one(book_id=book_id)
-        except BookNotFoundException as ex:
+        except BookNotFoundException:
             raise
         if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
             try:
                 await AuthService(db=self.db).verify_user_owns_book(
                     user_id=user_id, book_id=book_id
                 )  # Проверяем, владеет ли пользователь этой книгой
-            except BookNotExistsOrYouNotOwnerException as ex:
+            except BookNotExistsOrYouNotOwnerException:
                 raise
         book_patch_data = BookPATCH(
             **data.model_dump(exclude_unset=True)
@@ -135,7 +133,7 @@ class BookService(BaseService):
         try:
             book = await self.db.books.get_one(book_id=book_id)
         except BookNotFoundException:
-            raise 
+            raise
         delete_book_images.delay(book_id)
         if book.is_rendered:
             await self.s3.books.delete_by_path(f"books/{book_id}/book.pdf")
@@ -145,6 +143,5 @@ class BookService(BaseService):
         await self.db.books.delete(book_id=book_id)
         await self.db.commit()
 
-    
     async def get_my_books(self, author_id: int):
         return await self.db.users.get_books_by_user(user_id=author_id)

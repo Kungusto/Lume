@@ -3,6 +3,8 @@ from src.services.auth import AuthService
 from src.exceptions.books import (
     BookNotExistsOrYouNotOwnerException,
     BookNotExistsOrYouNotOwnerHTTPException,
+    CoverAlreadyExistsException,
+    CoverNotFoundException,
     CoverNotFoundHTTPException,
     ContentAlreadyExistsHTTPException,
     BookNotFoundHTTPException,
@@ -98,6 +100,8 @@ async def delete_book(
         )
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
+    except BookNotExistsOrYouNotOwnerException as ex:
+        raise BookNotExistsOrYouNotOwnerHTTPException from ex
     return {"status": "OK"}
 
 
@@ -115,34 +119,28 @@ async def get_my_books(
 
 @router.post("/cover/{book_id}")
 async def add_cover(
-    file: UploadFile,
     book_id: int,
     db: DBDep,
     s3: S3Dep,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
+    file: UploadFile,
 ):
-    if should_check_owner:
-        await AuthService().verify_user_owns_book(
-            user_id=user_id, book_id=book_id, db=db
-        )
     try:
-        FileValidator.check_expansion_images(file_name=file.filename)
-        await FileValidator.validate_cover(file_img=file)
-    except WrongCoverResolutionException as ex:
-        raise WrongCoverResolutionHTTPException from ex
+        await BookService(db=db, s3=s3).add_cover(
+            should_check_owner=should_check_owner,
+            book_id=book_id,
+            user_id=user_id,
+            file=file
+        )
     except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
-    book = await db.books.get_one(book_id=book_id)
-    if book.cover_link is not None:
-        raise CoverAlreadyExistsHTTPException
-    cover_link = await s3.books.save_cover(file=file, book_id=book_id)
-    await db.books.edit(
-        is_patch=True,
-        data=BookPATCHOnPublication(cover_link=cover_link),
-        book_id=book_id,
-    )
-    await db.commit()
+    except WrongCoverResolutionException as ex:
+        raise WrongCoverResolutionHTTPException from ex
+    except CoverAlreadyExistsException as ex:
+        raise CoverAlreadyExistsHTTPException from ex
+    except BookNotExistsOrYouNotOwnerException as ex:
+        raise BookNotExistsOrYouNotOwnerHTTPException from ex
     return {"status": "OK"}
 
 
@@ -155,27 +153,21 @@ async def put_cover(
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
 ):
-    if should_check_owner:
-        await AuthService().verify_user_owns_book(
-            user_id=user_id, book_id=book_id, db=db
-        )
     try:
-        FileValidator.check_expansion_images(file_name=file.filename)
-        await FileValidator.validate_cover(file_img=file)
-    except WrongCoverResolutionException as ex:
-        raise WrongCoverResolutionHTTPException from ex
+        await BookService(db=db, s3=s3).put_cover(
+            should_check_owner=should_check_owner,
+            book_id=book_id,
+            user_id=user_id,
+            file=file
+        )
     except WrongFileExpensionException as ex:
         raise WrongFileExpensionHTTPException from ex
-    book = await db.books.get_one(book_id=book_id)
-    if not book.cover_link:
-        raise CoverNotFoundHTTPException
-    await s3.books.save_cover(file=file, book_id=book_id)
-    await db.books.edit(
-        is_patch=True,
-        data=BookPATCHOnPublication(cover_link=f"books/{book_id}/preview.png"),
-        book_id=book_id,
-    )
-    await db.commit()
+    except WrongCoverResolutionException as ex:
+        raise WrongCoverResolutionHTTPException from ex
+    except CoverNotFoundException as ex:
+        raise CoverNotFoundHTTPException from ex
+    except BookNotExistsOrYouNotOwnerException as ex:
+        raise BookNotExistsOrYouNotOwnerHTTPException from ex
     return {"status": "OK"}
 
 
@@ -192,8 +184,8 @@ async def add_all_content(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     if should_check_owner:
-        await AuthService().verify_user_owns_book(
-            user_id=user_id, book_id=book_id, db=db
+        await AuthService(db=db).verify_user_owns_book(
+            user_id=user_id, book_id=book_id
         )
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
@@ -216,8 +208,8 @@ async def edit_content(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     if should_check_owner:
-        await AuthService().verify_user_owns_book(
-            user_id=user_id, book_id=book_id, db=db
+        await AuthService(db=db).verify_user_owns_book(
+            user_id=user_id, book_id=book_id
         )
     try:
         FileValidator.check_expansion_books(file_name=file.filename)
@@ -241,8 +233,8 @@ async def publicate_book(
 ):
     try:
         if should_check_owner:
-            book = await AuthService().verify_user_owns_book(
-                user_id=user_id, book_id=book_id, db=db
+            book = await AuthService(db=db).verify_user_owns_book(
+                user_id=user_id, book_id=book_id
             )
         else:
             book = await db.books.get_one(book_id=book_id)

@@ -1,7 +1,9 @@
+from fastapi import UploadFile
+from src.exceptions.files import WrongCoverResolutionException, WrongFileExpensionException
 from src.models.books import BooksTagsORM
 from src.services.base import BaseService
 from src.services.auth import AuthService
-from src.schemas.books import BookAddWithAuthorsTagsGenres
+from src.schemas.books import BookAddWithAuthorsTagsGenres, BookPATCHOnPublication
 from src.schemas.books import (
     BookAdd,
     BookPATCHWithRels,
@@ -15,16 +17,19 @@ from src.exceptions.books import (
     AuthorNotFoundException,
     BookNotExistsOrYouNotOwnerException,
     BookNotFoundException,
+    CoverAlreadyExistsException,
+    CoverNotFoundException,
     GenreNotFoundException,
 )
 from src.tasks.tasks import delete_book_images
+from validation.files import FileValidator
 
 
 class BookService(BaseService):
     async def add_book(self, user_id: int, data: BookAddWithAuthorsTagsGenres):
         if user_id not in data.authors:
             data.authors.append(user_id)
-        book = await self.self.db.books.add(BookAdd(**data.model_dump()))
+        book = await self.db.books.add(BookAdd(**data.model_dump()))
         data_to_add_m2m = [
             BookAuthorAdd(book_id=book.book_id, author_id=author_id)
             for author_id in set(data.authors) or []
@@ -38,20 +43,20 @@ class BookService(BaseService):
             for gen_id in set(data.genres) or []
         ]
         try:
-            await self.self.db.books_authors.add_bulk(data_to_add_m2m)
+            await self.db.books_authors.add_bulk(data_to_add_m2m)
         except ForeignKeyException as ex:
             raise AuthorNotFoundException from ex
         try:
             if data_to_tags_m2m:
-                await self.self.db.tags.add_bulk(data_to_tags_m2m)
+                await self.db.tags.add_bulk(data_to_tags_m2m)
         except ForeignKeyException as ex:
             raise BookNotFoundException from ex
         try:
             if data_to_genres_m2m:
-                await self.self.db.books_genres.add_bulk(data_to_genres_m2m)
+                await self.db.books_genres.add_bulk(data_to_genres_m2m)
         except ForeignKeyException as ex:
             raise GenreNotFoundException from ex
-        await self.self.db.commit()
+        await self.db.commit()
         return book
 
     async def edit_book(
@@ -145,3 +150,51 @@ class BookService(BaseService):
 
     async def get_my_books(self, author_id: int):
         return await self.db.users.get_books_by_user(user_id=author_id)
+
+
+    async def add_cover(self, should_check_owner: bool, book_id: int, user_id: int, file: UploadFile):
+        if should_check_owner:
+            await AuthService(db=self.db).verify_user_owns_book(
+                user_id=user_id, book_id=book_id
+            )
+        try:
+            FileValidator.check_expansion_images(file_name=file.filename)
+            await FileValidator.validate_cover(file_img=file)
+        except WrongCoverResolutionException:
+            raise 
+        except WrongFileExpensionException:
+            raise 
+        book = await self.db.books.get_one(book_id=book_id)
+        if book.cover_link is not None:
+            raise CoverAlreadyExistsException
+        cover_link = await self.s3.books.save_cover(file=file, book_id=book_id)
+        await self.db.books.edit(
+            is_patch=True,
+            data=BookPATCHOnPublication(cover_link=cover_link),
+            book_id=book_id,
+        )
+        await self.db.commit()
+
+    
+    async def put_cover(self, should_check_owner: bool, book_id: int, user_id: int, file: UploadFile):
+        if should_check_owner:
+            await AuthService(db=self.db).verify_user_owns_book(
+                user_id=user_id, book_id=book_id
+            )
+        try:
+            FileValidator.check_expansion_images(file_name=file.filename)
+            await FileValidator.validate_cover(file_img=file)
+        except WrongCoverResolutionException as ex:
+            raise WrongCoverResolutionException from ex
+        except WrongFileExpensionException as ex:
+            raise WrongFileExpensionException from ex
+        book = await self.db.books.get_one(book_id=book_id)
+        if not book.cover_link:
+            raise CoverNotFoundException
+        await self.s3.books.save_cover(file=file, book_id=book_id)
+        await self.db.books.edit(
+            is_patch=True,
+            data=BookPATCHOnPublication(cover_link=f"books/{book_id}/preview.png"),
+            book_id=book_id,
+        )
+        await self.db.commit()

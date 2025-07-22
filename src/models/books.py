@@ -79,6 +79,8 @@ class PageORM(Base):
     __tablename__ = "Pages"
 
     page_id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(ForeignKey("Books.book_id"))
+    book_id: Mapped[int] = mapped_column(
+        ForeignKey("Books.book_id", ondelete="CASCADE")
+    )
     page_number: Mapped[int]
     content: Mapped[str]

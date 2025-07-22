@@ -69,17 +69,9 @@ class NickAlreadyRegistratedHTTPException(AlreadyExistsHTTPException):
     detail = "Это имя пользователя уже занято"
 
 
-class NickAlreadyRegistratedException(AlreadyExistsException):
-    detail = "Это имя пользователя уже занято"
-
-
 class AlreadyAuthentificatedHTTPException(AlreadyExistsHTTPException):
     detail = "Вы уже аутентифицированы"
     status_code = 400
-
-
-class AlreadyAuthentificatedException(AlreadyExistsException):
-    detail = "Вы уже аутентифицированы"
 
 
 # Ошибка аутентификации
@@ -97,15 +89,7 @@ class WrongPasswordOrEmailHTTPException(AuthentificationHTTPException):
     detail = "Неправильный пароль, либо почта"
 
 
-class WrongPasswordOrEmailException(AuthentificationException):
-    detail = "Неправильный пароль, либо почта"
-
-
 class NotAuthentificatedHTTPException(AuthentificationHTTPException):
-    detail = "Вы не аутентифицированы"
-
-
-class NotAuthentificatedException(AuthentificationException):
     detail = "Вы не аутентифицированы"
 
 
@@ -115,9 +99,6 @@ class ExpireTokenHTTPException(AuthentificationHTTPException):
 
 # Объекта не существует
 class UserNotFoundHTTPException(ObjectNotFoundHTTPException):
-    detail = "Пользователь не найден"
-
-class UserNotFoundException(ObjectNotFoundException):
     detail = "Пользователь не найден"
 
 

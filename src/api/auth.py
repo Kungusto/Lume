@@ -2,8 +2,6 @@ import logging
 from fastapi import APIRouter, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
-    ObjectNotFoundException,
-    AlreadyExistsException,
 )
 from src.exceptions.auth import (
     NickAlreadyRegistratedHTTPException,
@@ -19,12 +17,11 @@ from src.exceptions.auth import (
     WrongPasswordOrEmailException,
     CannotChangeDataOtherUserException,
     CannotChangeDataOtherUserHTTPException,
-    UserNotFoundException
+    UserNotFoundException,
 )
 from src.schemas.users import (
     UserRegistrate,
     UserLogin,
-    UserPublicData,
     UserPUT,
 )
 from src.api.dependencies import DBDep, UserIdDep
@@ -54,7 +51,9 @@ async def registrate_user(data: UserRegistrate, db: DBDep):
 @router.post("/login")
 async def login_user(db: DBDep, data: UserLogin, request: Request, response: Response):
     try:
-        access_token = await AuthService(db=db).login_user(data=data, request=request, response=response)
+        access_token = await AuthService(db=db).login_user(
+            data=data, request=request, response=response
+        )
     except AlreadyAuthentificatedException as ex:
         raise AlreadyAuthentificatedHTTPException from ex
     except WrongPasswordOrEmailException as ex:
@@ -91,7 +90,9 @@ async def edit_user_data(
     db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep
 ):
     try:
-        await AuthService(db=db).edit_user_data(data=data, user_id=user_id, curr_user_id=curr_user_id)
+        await AuthService(db=db).edit_user_data(
+            data=data, user_id=user_id, curr_user_id=curr_user_id
+        )
     except UserNotFoundException as ex:
         raise UserNotFoundHTTPException from ex
     except CannotChangeDataOtherUserException as ex:

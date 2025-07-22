@@ -1,5 +1,8 @@
 from fastapi import UploadFile
-from src.exceptions.files import WrongCoverResolutionException, WrongFileExpensionException
+from src.exceptions.files import (
+    WrongCoverResolutionException,
+    WrongFileExpensionException,
+)
 from src.models.books import BooksTagsORM
 from src.services.base import BaseService
 from src.services.auth import AuthService
@@ -15,13 +18,18 @@ from src.schemas.books_authors import BookAuthorAdd
 from src.exceptions.base import ForeignKeyException
 from src.exceptions.books import (
     AuthorNotFoundException,
+    BookAlreadyPublicatedException,
+    BookAlreadyPublicatedHTTPException,
     BookNotExistsOrYouNotOwnerException,
     BookNotFoundException,
+    ContentAlreadyExistsException,
+    ContentNotFoundException,
     CoverAlreadyExistsException,
     CoverNotFoundException,
     GenreNotFoundException,
+    ContentNotFoundHTTPException
 )
-from src.tasks.tasks import delete_book_images
+from src.tasks.tasks import change_content, delete_book_images, render_book
 from validation.files import FileValidator
 
 
@@ -151,8 +159,9 @@ class BookService(BaseService):
     async def get_my_books(self, author_id: int):
         return await self.db.users.get_books_by_user(user_id=author_id)
 
-
-    async def add_cover(self, should_check_owner: bool, book_id: int, user_id: int, file: UploadFile):
+    async def add_cover(
+        self, should_check_owner: bool, book_id: int, user_id: int, file: UploadFile
+    ):
         if should_check_owner:
             await AuthService(db=self.db).verify_user_owns_book(
                 user_id=user_id, book_id=book_id
@@ -161,9 +170,9 @@ class BookService(BaseService):
             FileValidator.check_expansion_images(file_name=file.filename)
             await FileValidator.validate_cover(file_img=file)
         except WrongCoverResolutionException:
-            raise 
+            raise
         except WrongFileExpensionException:
-            raise 
+            raise
         book = await self.db.books.get_one(book_id=book_id)
         if book.cover_link is not None:
             raise CoverAlreadyExistsException
@@ -175,8 +184,9 @@ class BookService(BaseService):
         )
         await self.db.commit()
 
-    
-    async def put_cover(self, should_check_owner: bool, book_id: int, user_id: int, file: UploadFile):
+    async def put_cover(
+        self, should_check_owner: bool, book_id: int, user_id: int, file: UploadFile
+    ):
         if should_check_owner:
             await AuthService(db=self.db).verify_user_owns_book(
                 user_id=user_id, book_id=book_id
@@ -198,3 +208,60 @@ class BookService(BaseService):
             book_id=book_id,
         )
         await self.db.commit()
+
+    async def add_all_content(
+        self, should_check_owner, user_id: int, book_id: int, file: UploadFile
+    ):
+        if should_check_owner:
+            await AuthService(db=self.db).verify_user_owns_book(user_id=user_id, book_id=book_id)
+        try:
+            FileValidator.check_expansion_books(file_name=file.filename)
+        except WrongFileExpensionException as ex:
+            raise WrongFileExpensionException from ex
+        if await self.s3.books.check_file_by_path(f"books/{book_id}/book.pdf"):
+            raise ContentAlreadyExistsException
+        await self.s3.books.save_content(book_id, file=file)
+        render_book.delay(book_id)
+
+    
+    async def edit_content(
+        self, should_check_owner, user_id: int, book_id: int, file: UploadFile
+    ):
+        if should_check_owner:
+            await AuthService(db=self.db).verify_user_owns_book(user_id=user_id, book_id=book_id)
+        try:
+            FileValidator.check_expansion_books(file_name=file.filename)
+        except WrongFileExpensionException as ex:
+            raise WrongFileExpensionException from ex
+        if not await self.s3.books.check_file_by_path(f"books/{book_id}/book.pdf"):
+            raise ContentNotFoundException
+        await self.s3.books.save_content(book_id=book_id, file=file)
+        await self.db.pages.delete(book_id=book_id)
+        change_content.delay(book_id)
+        await self.db.commit()
+
+
+    async def publicate_book(
+        self, book_id, user_id, should_check_owner,
+    ):
+        try:
+            if should_check_owner:
+                book = await AuthService(db=self.db).verify_user_owns_book(
+                    user_id=user_id, book_id=book_id
+                )
+            else:
+                book = await self.db.books.get_one(book_id=book_id)
+        except BookNotFoundException as ex:
+            raise 
+        if (not book.is_rendered) or (book.total_pages is None):
+            raise ContentNotFoundException
+        if book.cover_link is None:
+            raise CoverNotFoundException
+        if book.is_publicated:
+            raise BookAlreadyPublicatedException
+        data_to_update = BookPATCH(is_publicated=True)
+        updated_data = await self.db.books.edit(
+            data=data_to_update, is_patch=True, book_id=book_id
+        )
+        await self.db.commit()
+        return updated_data

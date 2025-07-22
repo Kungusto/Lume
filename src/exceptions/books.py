@@ -29,11 +29,16 @@ class CoverNotFoundException(ObjectNotFoundException):
     detail = "Обложка не найдена"
 
 
+
 class BookNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Книга не найдена"
 
 
 class ContentNotFoundHTTPException(ObjectNotFoundHTTPException):
+    detail = "Контент книги не найден"
+
+
+class ContentNotFoundException(ObjectNotFoundException):
     detail = "Контент книги не найден"
 
 
@@ -65,6 +70,10 @@ class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Контент книги уже был опубликован"
 
 
+class ContentAlreadyExistsException(AlreadyExistsException):
+    detail = "Контент книги уже был опубликован"
+
+
 class CoverAlreadyExistsHTTPException(AlreadyExistsHTTPException):
     detail = "Обложка книги уже была опубликована"
 
@@ -74,6 +83,10 @@ class CoverAlreadyExistsException(AlreadyExistsException):
 
 
 class BookAlreadyPublicatedHTTPException(AlreadyExistsHTTPException):
+    detail = "Книга уже опубликована"
+
+
+class BookAlreadyPublicatedException(AlreadyExistsException):
     detail = "Книга уже опубликована"
 
 

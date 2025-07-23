@@ -37,7 +37,7 @@ from src.schemas.books import (
     BookPATCHWithRels,
 )
 from src.utils.cache_manager import get_cache_manager
-from src.services.books import BookService
+from src.services.authors import AuthorsService
 
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг 📚"])
@@ -51,7 +51,7 @@ async def add_book(
     user_id: UserIdDep,
 ):
     try:
-        book = await BookService(db=db).add_book(data=data, user_id=user_id)
+        book = await AuthorsService(db=db).add_book(data=data, user_id=user_id)
     except AuthorNotFoundException as ex:
         raise AuthorNotFoundHTTPException from ex
     except BookNotFoundException as ex:
@@ -70,7 +70,7 @@ async def edit_book(
     data: BookPATCHWithRels,
 ):
     try:
-        await BookService(db=db).edit_book(
+        await AuthorsService(db=db).edit_book(
             book_id=book_id, user_id=user_id, user_role=user_role, data=data
         )
     except BookNotFoundException as ex:
@@ -91,7 +91,7 @@ async def delete_book(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     try:
-        await BookService(db=db, s3=s3).delete_book(
+        await AuthorsService(db=db, s3=s3).delete_book(
             should_check_owner=should_check_owner,
             book_id=book_id,
             user_id=user_id,
@@ -109,7 +109,7 @@ async def get_my_books(
     db: DBDep,
     author_id: UserIdDep,
 ):
-    return await BookService(db=db).get_my_books(author_id=author_id)
+    return await AuthorsService(db=db).get_my_books(author_id=author_id)
 
 
 # --- Обложки ---
@@ -125,7 +125,7 @@ async def add_cover(
     file: UploadFile,
 ):
     try:
-        await BookService(db=db, s3=s3).add_cover(
+        await AuthorsService(db=db, s3=s3).add_cover(
             should_check_owner=should_check_owner,
             book_id=book_id,
             user_id=user_id,
@@ -152,7 +152,7 @@ async def put_cover(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     try:
-        await BookService(db=db, s3=s3).put_cover(
+        await AuthorsService(db=db, s3=s3).put_cover(
             should_check_owner=should_check_owner,
             book_id=book_id,
             user_id=user_id,
@@ -182,7 +182,7 @@ async def add_all_content(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     try:
-        await BookService(db=db, s3=s3).add_all_content(
+        await AuthorsService(db=db, s3=s3).add_all_content(
             should_check_owner=should_check_owner,
             user_id=user_id,
             book_id=book_id,
@@ -207,7 +207,7 @@ async def edit_content(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     try:
-        await BookService(db=db, s3=s3).edit_content(
+        await AuthorsService(db=db, s3=s3).edit_content(
             should_check_owner=should_check_owner,
             user_id=user_id,
             book_id=book_id,
@@ -230,7 +230,7 @@ async def publicate_book(
     should_check_owner: ShouldCheckOwnerDep,
 ):
     try:
-        updated_data = await BookService(db=db).publicate_book(
+        updated_data = await AuthorsService(db=db).publicate_book(
             book_id=book_id,
             user_id=user_id,
             should_check_owner=should_check_owner,

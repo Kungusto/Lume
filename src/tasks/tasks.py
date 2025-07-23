@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from src.tasks.celery_app import celery_app
-from sqlalchemy import insert, update
+from sqlalchemy import insert, select, update
 from src.config import Settings, get_settings
 from src.models.books import BooksORM, PageORM
 from src.api.dependencies import get_sync_session
@@ -12,6 +12,7 @@ from src.schemas.books import Book, PageAdd
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.repositories.database.utils import AnalyticsQueryFactory
+from src.connectors.redis_connector import redis_sync_conn 
 import logging
 
 settings = get_settings()
@@ -106,3 +107,22 @@ def auto_statement(test_mode: bool = False):
     excel_doc.add(result)
     excel_doc.commit()
     logging.info("Отчеты обновлены!")
+
+
+@celery_app.task
+def cache_next_page(book_id: int, page_number: int):
+    """Получает на вход текущую страницу, id книги, и кэширует слудующую страницу этой книги"""
+    with get_sync_db_np() as db:
+        get_page_stmt = (
+            select(PageORM)
+            .filter_by(
+                book_id=book_id, 
+                page_number=page_number
+            )
+        )
+        model = db.session.execute(get_page_stmt)
+        result = model.scalar_one_or_none()
+        if result:
+            ...
+        else:
+            return

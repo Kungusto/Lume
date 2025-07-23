@@ -1,4 +1,7 @@
-from src.exceptions.reports import ReasonAlreadyExistsException
+from datetime import datetime, timezone
+from src.schemas.reports import BanAdd
+from src.models.reports import BanORM
+from src.exceptions.reports import AlreadyBannedException, ReasonAlreadyExistsException, ReasonNotFoundException, ReportNotFoundException, UserNotBannedException
 from src.exceptions.books import (
     BookNotFoundException,
     CannotDeleteGenreException,
@@ -51,7 +54,10 @@ class AdminService(BaseService):
             await self.db.genres.get_one(genre_id=genre_id)
         except ObjectNotFoundException as ex:
             raise GenreNotFoundException from ex
-        await self.db.genres.edit(data=data, genre_id=genre_id)
+        try:
+            await self.db.genres.edit(data=data, genre_id=genre_id)
+        except AlreadyExistsException as ex:
+            raise GenreAlreadyExistsException from ex
         await self.db.commit()
 
     async def delete_genre(self, genre_id: int):
@@ -103,3 +109,61 @@ class AdminService(BaseService):
             raise ReasonAlreadyExistsException from ex
         await self.db.commit()
         return reason
+
+
+    async def edit_reason(self, reason_id: int, data):
+        try:
+            await self.db.reasons.get_one(reason_id=reason_id)
+        except ObjectNotFoundException as ex:
+            raise ReasonNotFoundException from ex
+        try:
+            await self.db.reasons.edit(data=data, reason_id=reason_id)
+        except AlreadyExistsException as ex:
+            raise ReasonAlreadyExistsException from ex
+        await self.db.commit()
+
+    async def delete_reason(self, reason_id: int):
+        try:
+            await self.db.reasons.get_one(reason_id=reason_id)
+        except ObjectNotFoundException as ex:
+            raise ReasonNotFoundException from ex
+        await self.db.reasons.delete(reason_id=reason_id)
+        await self.db.commit()
+
+
+    async def get_not_checked_reports(self):
+        return await self.db.reports.get_filtered(is_checked=False)
+    
+
+    async def mark_as_checked(self, report_id: int):
+        try:
+            await self.db.reports.mark_as_checked(report_id=report_id)
+        except ObjectNotFoundException as ex:
+            raise ReportNotFoundException from ex
+        await self.db.commit()   
+
+
+    async def ban_user_by_id(self, user_id: int, data, user_role):
+        try:
+            user = await self.db.users.get_one(user_id=user_id)
+        except ObjectNotFoundException as ex:
+            raise UserNotFoundException from ex
+        if await self.db.bans.get_filtered(
+            BanORM.ban_until > datetime.now(timezone.utc), user_id=user_id
+        ):
+            raise AlreadyBannedException
+        if user_role == user.role:
+            raise ChangePermissionsOfADMINException
+        if user.role == "GENERAL_ADMIN":
+            raise ChangePermissionsOfADMINException
+        # На случай если админ решит понизить другого админа
+        ban_data = await self.db.bans.add(data=BanAdd(**data.model_dump(), user_id=user_id))
+        await self.db.commit()
+        return ban_data
+    
+
+    async def unban_user_by_id(self, ban_id: int):
+        if not await self.db.bans.get_filtered(ban_id=ban_id):
+            raise UserNotBannedException
+        await self.db.bans.delete(ban_id=ban_id)
+        await self.db.commit()

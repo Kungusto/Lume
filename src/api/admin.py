@@ -27,10 +27,15 @@ from src.exceptions.auth import (
     ChangePermissionsOfADMINHTTPException,
 )
 from src.exceptions.reports import (
+    AlreadyBannedException,
     ReasonAlreadyExistsException,
     ReasonAlreadyExistsHTTPException,
+    ReasonNotFoundException,
     ReasonNotFoundHTTPException,
     AlreadyBannedHTTPException,
+    ReportNotFoundException,
+    ReportNotFoundHTTPException,
+    UserNotBannedException,
     UserNotBannedHTTPException,
 )
 from src.repositories.database.utils import AnalyticsQueryFactory
@@ -90,6 +95,8 @@ async def edit_genre(
         await AdminService(db=db).edit_genre(data=data, genre_id=genre_id)
     except GenreNotFoundException as ex:
         raise GenreNotFoundHTTPException from ex
+    except GenreAlreadyExistsException as ex:
+        raise GenreAlreadyExistsHTTPException from ex
     return {"status": "OK"}
 
 
@@ -143,6 +150,8 @@ async def edit_tag(
         await AdminService(db=db).edit_tag(tag_id=tag_id, data=data)
     except TagNotFoundException as ex:
         raise TagNotFoundHTTPException from ex
+    except TagAlreadyExistsException as ex:
+        raise TagAlreadyExistsHTTPException from ex
     return {"status": "OK"}
 
 
@@ -165,11 +174,11 @@ async def edit_reason(
     reason_id: int = Path(le=2**31),
 ):
     try:
-        await db.reasons.get_one(reason_id=reason_id)
-    except ObjectNotFoundException as ex:
+        await AdminService(db=db).edit_reason(reason_id=reason_id, data=data)
+    except ReasonNotFoundException as ex:
         raise ReasonNotFoundHTTPException from ex
-    await db.reasons.edit(data=data, reason_id=reason_id)
-    await db.commit()
+    except ReasonAlreadyExistsException as ex:
+        raise ReasonAlreadyExistsHTTPException from ex
     return {"status": "OK"}
 
 
@@ -179,11 +188,9 @@ async def delete_reason(
     reason_id: int = Path(le=2**31),
 ):
     try:
-        await db.reasons.get_one(reason_id=reason_id)
-    except ObjectNotFoundException as ex:
+        await AdminService(db=db).delete_reason(reason_id=reason_id)
+    except ReasonNotFoundException as ex:
         raise ReasonNotFoundHTTPException from ex
-    await db.reasons.delete(reason_id=reason_id)
-    await db.commit()
     return {"status": "OK"}
 
 
@@ -191,7 +198,7 @@ async def delete_reason(
 async def get_not_checked_reports(
     db: DBDep,
 ):
-    return await db.reports.get_filtered(is_checked=False)
+    return await AdminService(db=db).get_not_checked_reports()
 
 
 @router.patch("/reports/{report_id}")
@@ -199,8 +206,10 @@ async def mark_as_checked(
     db: DBDep,
     report_id: int = Path(le=2**31),
 ):
-    await db.reports.mark_as_checked(report_id=report_id)
-    await db.commit()
+    try:
+        await AdminService(db=db).mark_as_checked(report_id=report_id)
+    except ReportNotFoundException as ex:
+        raise ReportNotFoundHTTPException from ex
     return {"status": "OK"}
 
 
@@ -212,20 +221,15 @@ async def ban_user_by_id(
     user_id: int = Path(le=2**31),
 ):
     try:
-        user = await db.users.get_one(user_id=user_id)
-    except ObjectNotFoundException as ex:
-        raise UserNotFoundHTTPException from ex
-    if await db.bans.get_filtered(
-        BanORM.ban_until > datetime.now(timezone.utc), user_id=user_id
-    ):
-        raise AlreadyBannedHTTPException
-    if user_role == user.role:
-        raise ChangePermissionsOfADMINHTTPException
-    if user.role == "GENERAL_ADMIN":
-        raise ChangePermissionsOfADMINHTTPException
-    # На случай если админ решит понизить другого админа
-    ban_data = await db.bans.add(data=BanAdd(**data.model_dump(), user_id=user_id))
-    await db.commit()
+        ban_data = await AdminService(db=db).ban_user_by_id(
+            data=data,
+            user_role=user_role,
+            user_id=user_id,
+        )
+    except AlreadyBannedException as ex: 
+        raise AlreadyBannedHTTPException from ex
+    except ChangePermissionsOfADMINException as ex: 
+        raise ChangePermissionsOfADMINHTTPException from ex
     return ban_data
 
 
@@ -234,10 +238,10 @@ async def unban_user_by_ban_id(
     db: DBDep,
     ban_id: int = Path(le=2**31),
 ):
-    if not await db.bans.get_filtered(ban_id=ban_id):
-        raise UserNotBannedHTTPException
-    await db.bans.delete(ban_id=ban_id)
-    await db.commit()
+    try:
+        await AdminService(db=db).unban_user_by_id(ban_id=ban_id)
+    except UserNotBannedException as ex:
+        raise UserNotBannedHTTPException from ex
     return {"status": "OK"}
 
 

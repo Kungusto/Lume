@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import NoResultFound
+from src.exceptions.base import ObjectNotFoundException
 from src.repositories.database.base import BaseRepository
 from src.models.reports import BanORM, ReasonsORM, ReportsORM
 from src.models.users import UsersORM
@@ -66,4 +68,7 @@ class ReportsRepository(BaseRepository):
             .returning(ReportsORM)
         )
         model = await self.session.execute(update_stmt)
-        return Report.model_validate(model.scalar_one(), from_attributes=True)
+        try:
+            return Report.model_validate(model.scalar_one(), from_attributes=True)
+        except NoResultFound as ex:
+            raise ObjectNotFoundException from ex

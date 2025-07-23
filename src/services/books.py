@@ -126,6 +126,7 @@ class BooksService(BaseService):
             page_content[ind] = content_info
 
         page.content = page_content
+        return page_content
 
 
     async def report_book(self, book_id: int, data: BaseModel):
@@ -140,3 +141,4 @@ class BooksService(BaseService):
         except ForeignKeyException as ex:
             raise ReasonNotFoundException from ex
         await self.db.commit()
+        return report

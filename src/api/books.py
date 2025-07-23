@@ -81,11 +81,12 @@ async def download_book(
     book_id: int = Path(le=2**31),
 ):
     try:
-        url = await BooksService(db=db, s3=s3, book_id=book_id)
+        url = await BooksService(db=db, s3=s3).download_book(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     except ContentNotFoundException as ex:
         raise ContentNotFoundHTTPException from ex
+    return url
 
 
 @router.get("/{book_id}/page/{page_number}")
@@ -106,11 +107,9 @@ async def get_page(
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     except PageNotFoundException as ex:
-        raise PageNotFoundHTTPException from ex
+        raise PageNotFoundHTTPException(page_number=page_number) from ex
     except ContentNotFoundException as ex:
         raise ContentNotFoundHTTPException from ex
-    except PageNotFoundException as ex:
-        raise PageNotFoundHTTPException from ex
     return page
 
 

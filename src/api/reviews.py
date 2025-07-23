@@ -52,6 +52,7 @@ async def edit_review(
            user_id=user_id, 
            user_role=user_role, 
            review_id=review_id, 
+           data=data,
         )
     except ReviewNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex

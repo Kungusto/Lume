@@ -17,3 +17,4 @@ src/analytics/data/*
 tests/analytics/data/*
 !tests/analytics/data/users_statement_auto.xlsx
 htmlcov/
+.coverage

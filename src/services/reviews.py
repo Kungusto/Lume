@@ -62,3 +62,12 @@ class ReviewsService(BaseService):
                 raise CannotDeleteOthersReviewException
         await self.db.reviews.delete(review_id=review_id)
         await self.db.commit()
+
+
+    async def get_my_reviews(self, user_id: int):
+        return await self.db.reviews.get_filtered(user_id=user_id)
+    
+
+    async def get_book_reviews(self, book_id: int):
+        return await self.db.reviews.get_filtered(book_id=book_id)
+

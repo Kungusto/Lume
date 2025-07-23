@@ -85,12 +85,11 @@ async def get_my_reviews(
     db: DBDep,
     user_id: UserIdDep,
 ):
-    return await db.reviews.get_filtered(user_id=user_id)
-
+    return await ReviewsService(db=db).get_my_reviews(user_id=user_id)
 
 @router.get("/by_book/{book_id}")
 async def get_book_reviews(
     db: DBDep,
     book_id: int = Path(le=2**31),
 ):
-    return await db.reviews.get_filtered(book_id=book_id)
+    return await ReviewsService(db=db).get_book_reviews(book_id=book_id)

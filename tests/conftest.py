@@ -62,13 +62,13 @@ def mock_redis():
     from unittest import mock
 
     # Мок для BaseCacheManager
-    mock_base_patch = mock.patch("src.decorators.base.BaseCacheManager")
+    mock_base_patch = mock.patch("src.decorators.cache.base.BaseCacheManager")
     MockBaseCacheManager = mock_base_patch.start()
     mock_base_instance = MockBaseCacheManager.return_value
     mock_base_instance.base_cache = lambda *args, **kwargs: lambda f: f
 
     # Мок для BooksCacheManager
-    mock_books_patch = mock.patch("src.decorators.books.BooksCacheManager")
+    mock_books_patch = mock.patch("src.decorators.cache.books.BooksCacheManager")
     MockBooksCacheManager = mock_books_patch.start()
     mock_books_instance = MockBooksCacheManager.return_value
     mock_books_instance.page = lambda *args, **kwargs: lambda f: f

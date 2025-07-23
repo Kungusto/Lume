@@ -1,5 +1,5 @@
 from functools import wraps
-from src.decorators.utils import cache_by_key
+from src.decorators.cache.utils import cache_by_key
 
 
 class BooksCacheManager:

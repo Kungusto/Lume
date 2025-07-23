@@ -1,5 +1,5 @@
-from src.decorators.base import BaseCacheManager
-from src.decorators.books import BooksCacheManager
+from src.decorators.cache.base import BaseCacheManager
+from src.decorators.cache.books import BooksCacheManager
 from src.connectors.redis_connector import redis_conn as redis
 
 

@@ -1,5 +1,5 @@
 from functools import wraps
-from src.decorators.utils import make_cache_key, cache_by_key
+from src.decorators.cache.utils import make_cache_key, cache_by_key
 
 
 class BaseCacheManager:

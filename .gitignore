@@ -15,5 +15,5 @@ celerybeat-schedule.*
 users_auto.xlsx
 src/analytics/data/*
 tests/analytics/data/*
-.coverage
+!tests/analytics/data/users_statement_auto.xlsx
 htmlcov/

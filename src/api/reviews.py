@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Path
 from src.services.reviews import ReviewsService
 from src.api.dependencies import DBDep, UserIdDep, UserRoleDep
-from src.schemas.reviews import ReviewAddFromUser, ReviewAdd, ReviewPut
+from src.schemas.reviews import ReviewAddFromUser, ReviewPut
 from src.exceptions.reviews import (
     CannotDeleteOthersReviewException,
     CannotEditOthersReviewException,
@@ -15,7 +15,6 @@ from src.exceptions.reviews import (
     CannotDeleteOthersReviewHTTPException,
 )
 from src.exceptions.books import BookNotFoundException, BookNotFoundHTTPException
-from src.exceptions.base import ObjectNotFoundException
 
 router = APIRouter(prefix="/reviews", tags=["Отзывы на книги 🌟"])
 
@@ -29,7 +28,9 @@ async def add_review(
     book_id: int = Path(le=2**31),
 ):
     try:
-        review = await ReviewsService(db=db).add_review(data=data, user_id=user_id, user_role=user_role, book_id=book_id)
+        review = await ReviewsService(db=db).add_review(
+            data=data, user_id=user_id, user_role=user_role, book_id=book_id
+        )
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
     except ReviewAtThisBookAlreadyExistsException as ex:
@@ -49,10 +50,10 @@ async def edit_review(
 ):
     try:
         await ReviewsService(db=db).edit_review(
-           user_id=user_id, 
-           user_role=user_role, 
-           review_id=review_id, 
-           data=data,
+            user_id=user_id,
+            user_role=user_role,
+            review_id=review_id,
+            data=data,
         )
     except ReviewNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex
@@ -70,9 +71,9 @@ async def delete_review(
 ):
     try:
         await ReviewsService(db=db).delete_review(
-           user_id=user_id,
-           user_role=user_role,
-           review_id=review_id,
+            user_id=user_id,
+            user_role=user_role,
+            review_id=review_id,
         )
     except ReviewNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex
@@ -87,6 +88,7 @@ async def get_my_reviews(
     user_id: UserIdDep,
 ):
     return await ReviewsService(db=db).get_my_reviews(user_id=user_id)
+
 
 @router.get("/by_book/{book_id}")
 async def get_book_reviews(

@@ -1,29 +1,21 @@
 from pydantic import BaseModel
 from src.services.base import BaseService
-from fastapi import APIRouter, Path
-from src.api.dependencies import PaginationDep, DBDep, S3Dep, UserIdDep, SearchDep
+from src.api.dependencies import UserIdDep
 from src.utils.helpers import TextFormatingManager
 from src.exceptions.books import (
-    BookNotFoundHTTPException,
     BookNotFoundException,
     ContentNotFoundException,
-    ContentNotFoundHTTPException,
     PageNotFoundException,
-    PageNotFoundHTTPException,
 )
 from src.exceptions.search import (
     LaterThanAfterEarlierThanException,
-    LaterThanAfterEarlierThanHTTPException,
     MinAgeGreaterThanMaxAgeException,
-    MinAgeGreaterThanMaxAgeHTTPException,
     MinRatingGreaterThanMaxRatingException,
-    MinRatingGreaterThanMaxRatingHTTPException,
     MinReadersGreaterThanMaxReadersException,
-    MinReadersGreaterThanMaxReadersHTTPException,
 )
-from src.exceptions.reports import ReasonNotFoundException, ReasonNotFoundHTTPException
+from src.exceptions.reports import ReasonNotFoundException
 from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
-from src.schemas.reports import ReportAdd, ReportAddFromUser
+from src.schemas.reports import ReportAdd
 from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
 from src.validation.search import SearchValidator
 
@@ -127,7 +119,6 @@ class BooksService(BaseService):
 
         page.content = page_content
         return page_content
-
 
     async def report_book(self, book_id: int, data: BaseModel):
         try:

@@ -46,4 +46,3 @@ class CannotDeleteOthersReviewHTTPException(PermissionDeniedHTTPException):
 
 class CannotDeleteOthersReviewException(PermissionDeniedException):
     detail = "Вы не можете удалять чужые отзывы"
-

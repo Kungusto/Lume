@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Path
 from src.api.dependencies import PaginationDep, DBDep, S3Dep, UserIdDep, SearchDep
-from src.utils.helpers import TextFormatingManager
 from src.exceptions.books import (
     BookNotFoundHTTPException,
     BookNotFoundException,
@@ -20,10 +19,7 @@ from src.exceptions.search import (
     MinReadersGreaterThanMaxReadersHTTPException,
 )
 from src.exceptions.reports import ReasonNotFoundException, ReasonNotFoundHTTPException
-from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
-from src.schemas.reports import ReportAdd, ReportAddFromUser
-from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
-from src.validation.search import SearchValidator
+from src.schemas.reports import ReportAddFromUser
 from src.utils.cache_manager import get_cache_manager
 from src.services.books import BooksService
 
@@ -100,9 +96,9 @@ async def get_page(
 ):
     try:
         page = await BooksService(db=db, s3=s3).get_page(
-           user_id=user_id,
-           page_number=page_number,
-           book_id=book_id,
+            user_id=user_id,
+            page_number=page_number,
+            book_id=book_id,
         )
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
@@ -119,7 +115,7 @@ async def report_book(
     data: ReportAddFromUser,
     book_id: int = Path(le=2**31),
 ):
-    try: 
+    try:
         report = await BooksService(db=db).report_book(book_id=book_id, data=data)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex

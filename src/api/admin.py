@@ -45,7 +45,6 @@ from src.exceptions.files import (
     StatementNotFoundHTTPException,
 )
 from src.services.admin import AdminService
-from src.config import settings
 
 router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
 

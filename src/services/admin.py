@@ -6,7 +6,13 @@ from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.schemas.reports import BanAdd
 from src.models.reports import BanORM
 from src.config import settings
-from src.exceptions.reports import AlreadyBannedException, ReasonAlreadyExistsException, ReasonNotFoundException, ReportNotFoundException, UserNotBannedException
+from src.exceptions.reports import (
+    AlreadyBannedException,
+    ReasonAlreadyExistsException,
+    ReasonNotFoundException,
+    ReportNotFoundException,
+    UserNotBannedException,
+)
 from src.exceptions.books import (
     BookNotFoundException,
     CannotDeleteGenreException,
@@ -76,20 +82,20 @@ class AdminService(BaseService):
             raise CannotDeleteGenreException from ex
         await self.db.commit()
 
-    
     async def add_tag(self, data):
         try:
             await self.db.books.get_one(book_id=data.book_id)
         except ObjectNotFoundException as ex:
             raise BookNotFoundException from ex
-        if await self.db.tags.get_filtered(book_id=data.book_id, title_tag=data.title_tag):
+        if await self.db.tags.get_filtered(
+            book_id=data.book_id, title_tag=data.title_tag
+        ):
             raise TagAlreadyExistsException
         tag = await self.db.tags.add(data=data)
         await self.db.commit()
         return tag
-    
 
-    async def delete_tag(self, tag_id: int): 
+    async def delete_tag(self, tag_id: int):
         try:
             await self.db.tags.get_one(id=tag_id)
         except ObjectNotFoundException as ex:
@@ -97,7 +103,6 @@ class AdminService(BaseService):
         await self.db.tags.delete(id=tag_id)
         await self.db.commit()
 
-    
     async def edit_tag(self, tag_id: int, data):
         try:
             await self.db.tags.get_one(id=tag_id)
@@ -106,7 +111,6 @@ class AdminService(BaseService):
         await self.db.tags.edit(data=data, id=tag_id)
         await self.db.commit()
 
-
     async def add_reason(self, data):
         try:
             reason = await self.db.reasons.add(data)
@@ -114,7 +118,6 @@ class AdminService(BaseService):
             raise ReasonAlreadyExistsException from ex
         await self.db.commit()
         return reason
-
 
     async def edit_reason(self, reason_id: int, data):
         try:
@@ -135,18 +138,15 @@ class AdminService(BaseService):
         await self.db.reasons.delete(reason_id=reason_id)
         await self.db.commit()
 
-
     async def get_not_checked_reports(self):
         return await self.db.reports.get_filtered(is_checked=False)
-    
 
     async def mark_as_checked(self, report_id: int):
         try:
             await self.db.reports.mark_as_checked(report_id=report_id)
         except ObjectNotFoundException as ex:
             raise ReportNotFoundException from ex
-        await self.db.commit()   
-
+        await self.db.commit()
 
     async def ban_user_by_id(self, user_id: int, data, user_role):
         try:
@@ -162,17 +162,17 @@ class AdminService(BaseService):
         if user.role == "GENERAL_ADMIN":
             raise ChangePermissionsOfADMINException
         # На случай если админ решит понизить другого админа
-        ban_data = await self.db.bans.add(data=BanAdd(**data.model_dump(), user_id=user_id))
+        ban_data = await self.db.bans.add(
+            data=BanAdd(**data.model_dump(), user_id=user_id)
+        )
         await self.db.commit()
         return ban_data
-    
 
     async def unban_user_by_id(self, ban_id: int):
         if not await self.db.bans.get_filtered(ban_id=ban_id):
             raise UserNotBannedException
         await self.db.bans.delete(ban_id=ban_id)
         await self.db.commit()
-
 
     async def edit_ban_date(self, ban_id: int, data):
         if not await self.db.bans.get_filtered(ban_id=ban_id):
@@ -182,7 +182,6 @@ class AdminService(BaseService):
 
     async def get_banned_users(self):
         return await self.db.bans.get_banned_users()
-    
 
     async def generate_report_inside_app(self, data):
         interval = data.interval
@@ -192,7 +191,9 @@ class AdminService(BaseService):
             now=now, interval_td=interval
         )
         model = await self.db.session.execute(analytics_query)
-        data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
+        data = UsersStatementWithoutDate.model_validate(
+            model.first(), from_attributes=True
+        )
         stmt_path = (
             f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
         )
@@ -214,7 +215,6 @@ class AdminService(BaseService):
         )
         return result
 
-
     async def get_statements_by_date(self, statement_date):
         statemenets = await self.s3.analytics.list_objects_by_prefix(
             f"analytics/{statement_date.strftime('%Y-%m-%d')}"
@@ -224,7 +224,6 @@ class AdminService(BaseService):
             key_url = await self.s3.analytics.generate_url(file_path=statement)
             urls.append({"key": statement, "url": key_url})
         return urls
-
 
     async def save_and_get_auto_statement(self):
         key = f"analytics/auto/{datetime.today().strftime('%Y-%m-%d_%H-%M')}"

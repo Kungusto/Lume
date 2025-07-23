@@ -40,7 +40,10 @@ from src.schemas.analytics import (
     StatementRequestFromADMIN,
 )
 
-from src.exceptions.files import StatementNotFoundException, StatementNotFoundHTTPException
+from src.exceptions.files import (
+    StatementNotFoundException,
+    StatementNotFoundHTTPException,
+)
 from src.services.admin import AdminService
 from src.config import settings
 
@@ -220,9 +223,9 @@ async def ban_user_by_id(
             user_role=user_role,
             user_id=user_id,
         )
-    except AlreadyBannedException as ex: 
+    except AlreadyBannedException as ex:
         raise AlreadyBannedHTTPException from ex
-    except ChangePermissionsOfADMINException as ex: 
+    except ChangePermissionsOfADMINException as ex:
         raise ChangePermissionsOfADMINHTTPException from ex
     except UserNotFoundException as ex:
         raise UserNotBannedHTTPException from ex
@@ -268,7 +271,9 @@ async def generate_report_inside_app(
 
 @router.get("/statement")
 async def get_statements_by_date(s3: S3Dep, statement_date: date):
-    return await AdminService(s3=s3).get_statements_by_date(statement_date=statement_date)
+    return await AdminService(s3=s3).get_statements_by_date(
+        statement_date=statement_date
+    )
 
 
 @router.get("/statement/auto")

@@ -4,7 +4,9 @@ from src.utils.helpers import TextFormatingManager
 from src.exceptions.books import (
     BookNotFoundHTTPException,
     BookNotFoundException,
+    ContentNotFoundException,
     ContentNotFoundHTTPException,
+    PageNotFoundException,
     PageNotFoundHTTPException,
 )
 from src.exceptions.search import (
@@ -17,7 +19,7 @@ from src.exceptions.search import (
     MinReadersGreaterThanMaxReadersException,
     MinReadersGreaterThanMaxReadersHTTPException,
 )
-from src.exceptions.reports import ReasonNotFoundHTTPException
+from src.exceptions.reports import ReasonNotFoundException, ReasonNotFoundHTTPException
 from src.exceptions.base import ObjectNotFoundException, ForeignKeyException
 from src.schemas.reports import ReportAdd, ReportAddFromUser
 from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
@@ -38,7 +40,9 @@ async def get_filtered_publicated_books_with_pagination(
     search_data: SearchDep,
 ):
     try:
-        books = await BooksService(db=db, s3=s3).get_filtered_publicated_books_with_pagination(
+        books = await BooksService(
+            db=db, s3=s3
+        ).get_filtered_publicated_books_with_pagination(
             pagination_data=pagination_data,
             search_data=search_data,
         )
@@ -55,7 +59,7 @@ async def get_filtered_publicated_books_with_pagination(
 
 @router.get("/genres")
 async def get_all_genres(db: DBDep):
-    return await db.genres.get_all()
+    return await BooksService(db=db).get_all_genres()
 
 
 @router.get("/{book_id}")
@@ -64,9 +68,10 @@ async def get_book_by_id(
     book_id: int = Path(le=2**31),
 ):
     try:
-        return await db.books.get_one_with_rels(book_id=book_id)
+        book = await BooksService(db=db).get_book_by_id(book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
+    return book
 
 
 @router.get("/download/{book_id}")
@@ -76,12 +81,11 @@ async def download_book(
     book_id: int = Path(le=2**31),
 ):
     try:
-        book = await db.books.get_one(book_id=book_id)
+        url = await BooksService(db=db, s3=s3, book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    if not book.is_rendered:
-        raise ContentNotFoundHTTPException
-    return await s3.books.generate_url(f"books/{book_id}/book.pdf")
+    except ContentNotFoundException as ex:
+        raise ContentNotFoundHTTPException from ex
 
 
 @router.get("/{book_id}/page/{page_number}")
@@ -94,50 +98,19 @@ async def get_page(
     book_id: int = Path(le=2**31),
 ):
     try:
-        book = await db.books.get_one(book_id=book_id)
-    except ObjectNotFoundException as ex:
+        page = await BooksService(db=db, s3=s3).get_page(
+           user_id=user_id,
+           page_number=page_number,
+           book_id=book_id,
+        )
+    except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    try:
-        page = await db.pages.get_one(book_id=book_id, page_number=page_number)
-    except ObjectNotFoundException:
-        raise PageNotFoundHTTPException(page_number=page_number)
-    if not book.is_rendered:
-        raise ContentNotFoundHTTPException
-    if (book.total_pages is None) or (page_number > book.total_pages):
-        raise PageNotFoundHTTPException(page_number=page_number)
-    user_read_book = await db.user_reads.get_filtered(user_id=user_id, book_id=book_id)
-    if not user_read_book:
-        await db.user_reads.add(
-            UserBookReadAdd(
-                book_id=book_id, user_id=user_id, last_seen_page=page_number
-            )
-        )
-    else:
-        await db.user_reads.edit(
-            UserBookReadEdit(last_seen_page=page_number),
-            user_id=user_id,
-            book_id=book_id,
-        )
-    await db.commit()
-
-    page = await db.pages.get_one(book_id=book_id, page_number=page_number)
-    page_content = page.content
-    # Убрать лишние пробелы из текста
-    for ind, content_info in enumerate(page_content):
-        if content_info["type"] == "image":
-            path_in_s3 = content_info["path"]
-            access_url = await s3.books.generate_url(
-                file_path=path_in_s3,
-                expires_in=60 * 60 * 24,  # 1 день
-            )
-            content_info["path"] = access_url
-        else:
-            content_info["content"] = TextFormatingManager.replace_nbsp(
-                content_info["content"]
-            )
-        page_content[ind] = content_info
-
-    page.content = page_content
+    except PageNotFoundException as ex:
+        raise PageNotFoundHTTPException from ex
+    except ContentNotFoundException as ex:
+        raise ContentNotFoundHTTPException from ex
+    except PageNotFoundException as ex:
+        raise PageNotFoundHTTPException from ex
     return page
 
 
@@ -147,15 +120,10 @@ async def report_book(
     data: ReportAddFromUser,
     book_id: int = Path(le=2**31),
 ):
-    try:
-        await db.books.get_one(book_id=book_id)
-    except ObjectNotFoundException as ex:
+    try: 
+        report = await BooksService(db=db).report_book(book_id=book_id, data=data)
+    except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    try:
-        report = await db.reports.add(
-            data=ReportAdd(**data.model_dump(), book_id=book_id)
-        )
-    except ForeignKeyException as ex:
+    except ReasonNotFoundException as ex:
         raise ReasonNotFoundHTTPException from ex
-    await db.commit()
     return report

@@ -23,20 +23,25 @@ from src.schemas.reports import ReportAdd, ReportAddFromUser
 from src.schemas.user_reads import UserBookReadAdd, UserBookReadEdit
 from src.validation.search import SearchValidator
 from src.utils.cache_manager import get_cache_manager
+from src.services.books import BooksService
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
 cache = get_cache_manager()
 
 
 @router.get("")
+@cache.base()
 async def get_filtered_publicated_books_with_pagination(
-    pagination_data: PaginationDep,
     db: DBDep,
     s3: S3Dep,
+    pagination_data: PaginationDep,
     search_data: SearchDep,
 ):
     try:
-        SearchValidator.validate_book_filters(**search_data.model_dump())
+        books = await BooksService(db=db, s3=s3).get_filtered_publicated_books_with_pagination(
+            pagination_data=pagination_data,
+            search_data=search_data,
+        )
     except LaterThanAfterEarlierThanException as ex:
         raise LaterThanAfterEarlierThanHTTPException from ex
     except MinAgeGreaterThanMaxAgeException as ex:
@@ -45,15 +50,6 @@ async def get_filtered_publicated_books_with_pagination(
         raise MinRatingGreaterThanMaxRatingHTTPException from ex
     except MinReadersGreaterThanMaxReadersException as ex:
         raise MinReadersGreaterThanMaxReadersHTTPException from ex
-
-    limit = pagination_data.per_page
-    offset = (pagination_data.page - 1) * pagination_data.per_page
-    books = await db.books.get_filtered_with_pagination(
-        limit=limit, offset=offset, search_data=search_data
-    )
-    for book in books:
-        if book.cover_link:
-            book.cover_link = await s3.books.generate_url(file_path=book.cover_link)
     return books
 
 

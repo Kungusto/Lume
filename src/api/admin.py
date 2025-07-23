@@ -1,11 +1,9 @@
-from datetime import date, datetime, timezone
+from datetime import date
 from fastapi import APIRouter, Path
 from src.api.dependencies import S3Dep, DBDep, UserRoleDep
 from src.schemas.users import UserRolePUT
 from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
-from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, BanEdit
-from src.models.reports import BanORM
-from src.exceptions.base import AlreadyExistsException, ObjectNotFoundException
+from src.schemas.reports import ReasonAdd, ReasonEdit, BanAddFromUser, BanEdit
 from src.exceptions.books import (
     BookNotFoundException,
     CannotDeleteGenreException,
@@ -38,15 +36,11 @@ from src.exceptions.reports import (
     UserNotBannedException,
     UserNotBannedHTTPException,
 )
-from src.repositories.database.utils import AnalyticsQueryFactory
 from src.schemas.analytics import (
-    UsersStatement,
-    UsersStatementWithoutDate,
     StatementRequestFromADMIN,
 )
 
-from src.analytics.excel.active_users import UsersDFExcelRepository
-from src.exceptions.files import StatementNotFoundHTTPException
+from src.exceptions.files import StatementNotFoundException, StatementNotFoundHTTPException
 from src.services.admin import AdminService
 from src.config import settings
 
@@ -230,6 +224,8 @@ async def ban_user_by_id(
         raise AlreadyBannedHTTPException from ex
     except ChangePermissionsOfADMINException as ex: 
         raise ChangePermissionsOfADMINHTTPException from ex
+    except UserNotFoundException as ex:
+        raise UserNotBannedHTTPException from ex
     return ban_data
 
 
@@ -251,79 +247,34 @@ async def edit_ban_date(
     data: BanEdit,
     ban_id: int = Path(le=2**31),
 ):
-    if not await db.bans.get_filtered(ban_id=ban_id):
-        raise UserNotBannedHTTPException
-    await db.bans.edit(data=data, ban_id=ban_id)
-    await db.commit()
+    try:
+        await AdminService(db=db).edit_ban_date(ban_id=ban_id, data=data)
+    except UserNotBannedException as ex:
+        raise UserNotBannedHTTPException from ex
     return {"status": "OK"}
 
 
 @router.get("/banned_users")
 async def get_banned_users(db: DBDep):
-    return await db.bans.get_banned_users()
+    return await AdminService(db=db).get_banned_users()
 
 
 @router.post("/statement")
 async def generate_report_inside_app(
     db: DBDep, data: StatementRequestFromADMIN, s3: S3Dep
 ):
-    interval = data.interval
-    now = datetime.now()
-    date_template = "%Y-%m-%d_%H-%M-%S"
-    analytics_query = AnalyticsQueryFactory.users_data_sql(
-        now=now, interval_td=interval
-    )
-    model = await db.session.execute(analytics_query)
-    data = UsersStatementWithoutDate.model_validate(model.first(), from_attributes=True)
-    stmt_path = (
-        f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
-    )
-    result = UsersStatement(
-        **data.model_dump(),
-        stmt_path=stmt_path,
-        started_date_as_str=(now - interval).strftime(date_template),
-        ended_date_as_str=now.strftime(date_template),
-    )
-    excel_doc = UsersDFExcelRepository(
-        f"{settings.STATEMENT_DIR_PATH}/users_{now.strftime(date_template)}.xlsx"
-    )
-    excel_doc.add(result)
-    excel_doc.commit()
-    excel_bytes = excel_doc.to_bytes()
-    await s3.analytics.save_statement(
-        key=f"analytics/{now.strftime('%Y-%m-%d')}/users_{now.strftime(date_template)}.xlsx",
-        body=excel_bytes,
-    )
-    return result
+    return await AdminService(db=db, s3=s3).generate_report_inside_app(data=data)
 
 
 @router.get("/statement")
 async def get_statements_by_date(s3: S3Dep, statement_date: date):
-    statemenets = await s3.analytics.list_objects_by_prefix(
-        f"analytics/{statement_date.strftime('%Y-%m-%d')}"
-    )
-    urls = []
-    for statement in statemenets:
-        key_url = await s3.analytics.generate_url(file_path=statement)
-        urls.append({"key": statement, "url": key_url})
-    return urls
+    return await AdminService(s3=s3).get_statements_by_date(statement_date=statement_date)
 
 
 @router.get("/statement/auto")
 async def save_and_get_auto_statement(s3: S3Dep):
-    key = f"analytics/auto/{datetime.today().strftime('%Y-%m-%d_%H-%M')}"
     try:
-        with open(
-            f"{settings.STATEMENT_DIR_PATH}/users_statement_auto.xlsx", "rb"
-        ) as doc:
-            content = doc.read()
-            if not content:
-                raise StatementNotFoundHTTPException
-            doc.seek(0)
-            await s3.analytics.save_statement(key=key, body=doc)
-    except FileNotFoundError as ex:
+        url = await AdminService(s3=s3).save_and_get_auto_statement()
+    except StatementNotFoundException as ex:
         raise StatementNotFoundHTTPException from ex
-    # Делаем файл пустым
-    with open(f"{settings.STATEMENT_DIR_PATH}/users_statement_auto.xlsx", "w") as f:
-        f.truncate(0)
-    return await s3.analytics.generate_url(file_path=key)
+    return url

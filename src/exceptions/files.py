@@ -33,3 +33,7 @@ class FileNotFoundException(ObjectNotFoundException):
 
 class StatementNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Автоматический отчет еще не сгенерирован"
+
+
+class StatementNotFoundException(ObjectNotFoundException):
+    detail = "Автоматический отчет еще не сгенерирован"

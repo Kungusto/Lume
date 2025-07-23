@@ -1,6 +1,7 @@
 from src.exceptions.base import (
     AlreadyExistsException,
     AlreadyExistsHTTPException,
+    PermissionDeniedException,
     PermissionDeniedHTTPException,
     ObjectNotFoundHTTPException,
 )
@@ -18,6 +19,10 @@ class RateYourselfHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете публиковать отзывы на собственные книги"
 
 
+class RateYourselfException(PermissionDeniedException):
+    detail = "Вы не можете публиковать отзывы на собственные книги"
+
+
 class ReviewNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Отзыв не найден"
 
@@ -28,3 +33,4 @@ class CannotEditOthersReviewHTTPException(PermissionDeniedHTTPException):
 
 class CannotDeleteOthersReviewHTTPException(PermissionDeniedHTTPException):
     detail = "Вы не можете удалять чужые отзывы"
+

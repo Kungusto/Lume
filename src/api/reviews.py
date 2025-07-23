@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Path
+from src.services.reviews import ReviewsService
 from src.api.dependencies import DBDep, UserIdDep, UserRoleDep
 from src.schemas.reviews import ReviewAddFromUser, ReviewAdd, ReviewPut
 from src.exceptions.reviews import (
+    RateYourselfException,
     RateYourselfHTTPException,
+    ReviewAtThisBookAlreadyExistsException,
     ReviewAtThisBookAlreadyExistsHTTPException,
     ReviewNotFoundHTTPException,
     CannotEditOthersReviewHTTPException,
@@ -16,30 +19,20 @@ router = APIRouter(prefix="/reviews", tags=["Отзывы на книги 🌟"]
 
 @router.post("/by_book/{book_id}")
 async def add_review(
-    data: ReviewAddFromUser,
     db: DBDep,
+    data: ReviewAddFromUser,
     user_id: UserIdDep,
     user_role: UserRoleDep,
     book_id: int = Path(le=2**31),
 ):
     try:
-        book = await db.books.get_one_with_rels(book_id=book_id, privat_data=True)
+        review = await ReviewsService(db=db).add_review(data=data, user_id=user_id, user_role=user_role, book_id=book_id)
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
-        authors_ids = [author.user_id for author in book.authors]
-        if user_id in authors_ids:
-            raise RateYourselfHTTPException
-        if await db.reviews.get_filtered(book_id=book_id, user_id=user_id):
-            raise ReviewAtThisBookAlreadyExistsHTTPException
-    review = await db.reviews.add(
-        data=ReviewAdd(
-            **data.model_dump(),
-            user_id=user_id,
-            book_id=book_id,
-        )
-    )
-    await db.commit()
+    except ReviewAtThisBookAlreadyExistsException as ex:
+        raise ReviewAtThisBookAlreadyExistsHTTPException from ex
+    except RateYourselfException as ex:
+        raise RateYourselfHTTPException from ex
     return review
 
 

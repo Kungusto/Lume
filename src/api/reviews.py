@@ -3,10 +3,13 @@ from src.services.reviews import ReviewsService
 from src.api.dependencies import DBDep, UserIdDep, UserRoleDep
 from src.schemas.reviews import ReviewAddFromUser, ReviewAdd, ReviewPut
 from src.exceptions.reviews import (
+    CannotDeleteOthersReviewException,
+    CannotEditOthersReviewException,
     RateYourselfException,
     RateYourselfHTTPException,
     ReviewAtThisBookAlreadyExistsException,
     ReviewAtThisBookAlreadyExistsHTTPException,
+    ReviewNotFoundException,
     ReviewNotFoundHTTPException,
     CannotEditOthersReviewHTTPException,
     CannotDeleteOthersReviewHTTPException,
@@ -45,14 +48,15 @@ async def edit_review(
     review_id: int = Path(le=2**31),
 ):
     try:
-        review = await db.reviews.get_one(review_id=review_id)
-    except ObjectNotFoundException as ex:
+        await ReviewsService(db=db).edit_review(
+           user_id=user_id, 
+           user_role=user_role, 
+           review_id=review_id, 
+        )
+    except ReviewNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
-        if user_id != review.user_id:
-            raise CannotEditOthersReviewHTTPException
-    await db.reviews.edit(data=data, review_id=review_id)
-    await db.commit()
+    except CannotEditOthersReviewException as ex:
+        raise CannotEditOthersReviewHTTPException from ex
     return {"status": "OK"}
 
 
@@ -64,14 +68,15 @@ async def delete_review(
     review_id: int = Path(le=2**31),
 ):
     try:
-        review = await db.reviews.get_one(review_id=review_id)
-    except ObjectNotFoundException as ex:
+        await ReviewsService(db=db).delete_review(
+           user_id=user_id,
+           user_role=user_role,
+           review_id=review_id,
+        )
+    except ReviewNotFoundException as ex:
         raise ReviewNotFoundHTTPException from ex
-    if user_role not in ["ADMIN", "GENERAL_ADMIN"]:
-        if user_id != review.user_id:
-            raise CannotDeleteOthersReviewHTTPException
-    await db.reviews.delete(review_id=review_id)
-    await db.commit()
+    except CannotDeleteOthersReviewException as ex:
+        raise CannotDeleteOthersReviewHTTPException from ex
     return {"status": "OK"}
 
 

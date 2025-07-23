@@ -1,7 +1,11 @@
+from src.exceptions.reports import ReasonAlreadyExistsException
 from src.exceptions.books import (
+    BookNotFoundException,
     CannotDeleteGenreException,
     GenreAlreadyExistsException,
     GenreNotFoundException,
+    TagAlreadyExistsException,
+    TagNotFoundException,
 )
 from src.exceptions.auth import (
     ChangePermissionsOfADMINException,
@@ -60,3 +64,42 @@ class AdminService(BaseService):
         except ForeignKeyException as ex:
             raise CannotDeleteGenreException from ex
         await self.db.commit()
+
+    
+    async def add_tag(self, data):
+        try:
+            await self.db.books.get_one(book_id=data.book_id)
+        except ObjectNotFoundException as ex:
+            raise BookNotFoundException from ex
+        if await self.db.tags.get_filtered(book_id=data.book_id, title_tag=data.title_tag):
+            raise TagAlreadyExistsException
+        tag = await self.db.tags.add(data=data)
+        await self.db.commit()
+        return tag
+    
+
+    async def delete_tag(self, tag_id: int): 
+        try:
+            await self.db.tags.get_one(id=tag_id)
+        except ObjectNotFoundException as ex:
+            raise TagNotFoundException from ex
+        await self.db.tags.delete(id=tag_id)
+        await self.db.commit()
+
+    
+    async def edit_tag(self, tag_id: int, data):
+        try:
+            await self.db.tags.get_one(id=tag_id)
+        except ObjectNotFoundException as ex:
+            raise TagNotFoundException from ex
+        await self.db.tags.edit(data=data, id=tag_id)
+        await self.db.commit()
+
+
+    async def add_reason(self, data):
+        try:
+            reason = await self.db.reasons.add(data)
+        except AlreadyExistsException as ex:
+            raise ReasonAlreadyExistsException from ex
+        await self.db.commit()
+        return reason

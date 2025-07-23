@@ -1,4 +1,5 @@
 from src.exceptions.base import (
+    AlreadyExistsException,
     AlreadyExistsHTTPException,
     ObjectNotFoundHTTPException,
     LumeHTTPException,
@@ -6,6 +7,10 @@ from src.exceptions.base import (
 
 
 class ReasonAlreadyExistsHTTPException(AlreadyExistsHTTPException):
+    detail = "Эта причина уже добавлена"
+
+
+class ReasonAlreadyExistsException(AlreadyExistsException):
     detail = "Эта причина уже добавлена"
 
 

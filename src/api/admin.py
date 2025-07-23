@@ -7,12 +7,15 @@ from src.schemas.reports import ReasonAdd, ReasonEdit, BanAdd, BanAddFromUser, B
 from src.models.reports import BanORM
 from src.exceptions.base import AlreadyExistsException, ObjectNotFoundException
 from src.exceptions.books import (
+    BookNotFoundException,
     CannotDeleteGenreException,
     CannotDeleteGenreHTTPException,
     GenreAlreadyExistsException,
     GenreAlreadyExistsHTTPException,
     GenreNotFoundException,
     GenreNotFoundHTTPException,
+    TagAlreadyExistsException,
+    TagNotFoundException,
     TagNotFoundHTTPException,
     BookNotFoundHTTPException,
     TagAlreadyExistsHTTPException,
@@ -24,6 +27,7 @@ from src.exceptions.auth import (
     ChangePermissionsOfADMINHTTPException,
 )
 from src.exceptions.reports import (
+    ReasonAlreadyExistsException,
     ReasonAlreadyExistsHTTPException,
     ReasonNotFoundHTTPException,
     AlreadyBannedHTTPException,
@@ -103,33 +107,29 @@ async def delete_genre(
     return {"status": "OK"}
 
 
-@router.delete("/tag/{tag_id}")
-async def delete_tag(
-    db: DBDep,
-    tag_id: int = Path(le=2**31),
-):
-    try:
-        await db.tags.get_one(id=tag_id)
-    except ObjectNotFoundException as ex:
-        raise TagNotFoundHTTPException from ex
-    await db.tags.delete(id=tag_id)
-    await db.commit()
-    return {"status": "OK"}
-
-
 @router.post("/tag")
 async def add_tag(
     db: DBDep,
     data: TagAdd,
 ):
     try:
-        await db.books.get_one(book_id=data.book_id)
-    except ObjectNotFoundException as ex:
+        tag = await AdminService(db=db).add_tag(data=data)
+    except TagAlreadyExistsException as ex:
+        raise TagAlreadyExistsHTTPException from ex
+    except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    if await db.tags.get_filtered(book_id=data.book_id, title_tag=data.title_tag):
-        raise TagAlreadyExistsHTTPException
-    await db.tags.add(data=data)
-    await db.commit()
+    return tag
+
+
+@router.delete("/tag/{tag_id}")
+async def delete_tag(
+    db: DBDep,
+    tag_id: int = Path(le=2**31),
+):
+    try:
+        await AdminService(db=db).delete_tag(tag_id=tag_id)
+    except TagNotFoundException as ex:
+        raise TagNotFoundHTTPException from ex
     return {"status": "OK"}
 
 
@@ -140,11 +140,9 @@ async def edit_tag(
     tag_id: int = Path(le=2**31),
 ):
     try:
-        await db.tags.get_one(id=tag_id)
-    except ObjectNotFoundException as ex:
+        await AdminService(db=db).edit_tag(tag_id=tag_id, data=data)
+    except TagNotFoundException as ex:
         raise TagNotFoundHTTPException from ex
-    await db.tags.edit(data=data, id=tag_id)
-    await db.commit()
     return {"status": "OK"}
 
 
@@ -154,10 +152,9 @@ async def add_reason(
     data: ReasonAdd,
 ):
     try:
-        reason = await db.reasons.add(data)
-    except AlreadyExistsException as ex:
+        reason = await AdminService(db=db).add_reason(data=data)
+    except ReasonAlreadyExistsException as ex:
         raise ReasonAlreadyExistsHTTPException from ex
-    await db.commit()
     return reason
 
 

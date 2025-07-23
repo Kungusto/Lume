@@ -119,7 +119,15 @@ class TagNotFoundHTTPException(ObjectNotFoundHTTPException):
     detail = "Тег не найден"
 
 
+class TagNotFoundException(ObjectNotFoundException):
+    detail = "Тег не найден"
+
+
 class TagAlreadyExistsHTTPException(AlreadyExistsHTTPException):
+    detail = "Нельзя добавить два одинаковых тега на одну книгу"
+
+
+class TagAlreadyExistsException(AlreadyExistsException):
     detail = "Нельзя добавить два одинаковых тега на одну книгу"
 
 

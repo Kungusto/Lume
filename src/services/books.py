@@ -75,12 +75,12 @@ class BooksService(BaseService):
             book = await self.db.books.get_one(book_id=book_id)
         except ObjectNotFoundException as ex:
             raise BookNotFoundException from ex
+        if not book.is_rendered:
+            raise ContentNotFoundException
         try:
             page = await self.db.pages.get_one(book_id=book_id, page_number=page_number)
         except ObjectNotFoundException:
             raise PageNotFoundException(page_number=page_number)
-        if not book.is_rendered:
-            raise ContentNotFoundException
         if (book.total_pages is None) or (page_number > book.total_pages):
             raise PageNotFoundException(page_number=page_number)
         user_read_book = await self.db.user_reads.get_filtered(

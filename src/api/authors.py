@@ -194,6 +194,8 @@ async def add_all_content(
         raise ContentAlreadyExistsHTTPException from ex
     except BookNotExistsOrYouNotOwnerException as ex:
         raise BookNotExistsOrYouNotOwnerHTTPException from ex
+    except BookNotFoundException as ex:
+        raise BookNotFoundHTTPException from ex
     return {"status": "OK"}
 
 

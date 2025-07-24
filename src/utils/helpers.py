@@ -81,7 +81,7 @@ class PDFRenderer:
                 )
             else:
                 contents.append(
-                    Page(content="\n", book_id=book_id, page_number=page_number + 1)
+                    Page(content="[]", book_id=book_id, page_number=page_number + 1)
                 )
         return images_to_save, contents
 

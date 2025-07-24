@@ -156,12 +156,6 @@ async def get_db():
         yield db
 
 
-@asynccontextmanager
-async def get_db_as_context_manager():
-    async with get_db_manager() as db:
-        yield db
-
-
 def get_db_manager_np():
     return AsyncDBManager(session_factory=async_session_maker_null_pool)
 

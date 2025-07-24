@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Tuple
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from src.api.dependencies import get_db_as_context_manager
+from src.context.database import get_db_as_context_manager
 from fastapi import Request
 from jwt.exceptions import ExpiredSignatureError
 from src.services.auth import AuthService

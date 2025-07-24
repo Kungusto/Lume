@@ -18,6 +18,12 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 
+# Мокирование декораторов кеша
+from unittest import mock
+from tests.mock.cache import fake_cache_by_key
+
+mock.patch("src.decorators.cache.utils.cache_by_key", fake_cache_by_key).start()
+
 from src.schemas.books import GenreAdd, GenresBooksAdd, BookPATCH, TagAdd
 from src.schemas.books_authors import BookAuthorAdd
 from src.schemas.reports import ReportAdd, BanAdd
@@ -53,31 +59,6 @@ from tests.schemas.books import TestBookWithRels
 from tests.schemas.reviews import TestReviewWithRels
 from tests.utils import ServiceForTests
 
-
-# Мокирование декораторов кеша
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_redis():
-    from unittest import mock
-
-    # Мок для BaseCacheManager
-    mock_base_patch = mock.patch("src.decorators.cache.base.BaseCacheManager")
-    MockBaseCacheManager = mock_base_patch.start()
-    mock_base_instance = MockBaseCacheManager.return_value
-    mock_base_instance.base_cache = lambda *args, **kwargs: lambda f: f
-
-    # Мок для BooksCacheManager
-    mock_books_patch = mock.patch("src.decorators.cache.books.BooksCacheManager")
-    MockBooksCacheManager = mock_books_patch.start()
-    mock_books_instance = MockBooksCacheManager.return_value
-    mock_books_instance.page = lambda *args, **kwargs: lambda f: f
-
-    yield
-
-    # Остановка моков после завершения фикстуры
-    mock_base_patch.stop()
-    mock_books_patch.stop()
 
 
 settings = Settings()  # noqa: F811

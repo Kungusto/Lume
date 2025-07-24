@@ -2,7 +2,7 @@ from datetime import date
 from sqlalchemy import ForeignKey, Enum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from src.database import Base
-from src.enums.books import LanguagesEnum
+from src.enums.books import LanguagesEnum, RenderStatus
 import typing
 
 if typing.TYPE_CHECKING:
@@ -34,6 +34,9 @@ class BooksORM(Base):
     )
     is_rendered: Mapped[bool] = mapped_column(default=False)
     cover_link: Mapped[str | None] = mapped_column(default=None)
+    render_status: Mapped[RenderStatus | None] = mapped_column(
+        Enum(RenderStatus, name="render_status"), default=None
+    )
     is_publicated: Mapped[bool] = mapped_column(default=False)
     total_pages: Mapped[int] = mapped_column(default=1, nullable=True)
 

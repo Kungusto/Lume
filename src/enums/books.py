@@ -17,3 +17,10 @@ class LanguagesEnum(pyEnum):
     TURKISH = "Turkish"
     POLISH = "Polish"
     UKRAINIAN = "Ukrainian"
+
+
+class RenderStatus(pyEnum):
+    UPLOADED = "uploaded"       # Контент загружен, но ещё не рендерился
+    RENDERING = "rendering"     # Идёт рендеринг
+    READY = "ready"             # Успешно отрендерено
+    FAILED = "failed"           # Ошибка рендеринга

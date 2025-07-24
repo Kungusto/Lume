@@ -20,46 +20,54 @@ settings = get_settings()
 
 @celery_app.task
 def render_book(book_id: int):
-    with get_sync_session() as s3:
-        try:
-            bucket_name = settings.S3_BUCKET_NAME
-            response = s3.client.get_object(
-                Bucket=bucket_name, Key=f"books/{book_id}/book.pdf"
-            )
-            with response["Body"] as stream:
-                file_pdf = stream.read()
-        except s3.client.exceptions.NoSuchKey as ex:
-            logging.error("не найден файл book.pdf")
-            raise FileNotFoundException from ex
-
-    with fitz.open(stream=file_pdf, filetype="pdf") as doc:
-        # Парсинг изображений из книги
-        files_to_add, pages = PDFRenderer.parse_images_and_text_from_pdf(
-            doc=doc, book_id=book_id
-        )
-        num_pages = doc.page_count
-        with get_sync_session() as s3:
-            for file in files_to_add:
-                s3.client.put_object(
-                    Key=file["Key"], Bucket=settings.S3_BUCKET_NAME, Body=file["Body"]
-                )
-
     with get_sync_db_np() as db:
-        add_pages_stmt = insert(PageORM).values(
-            [PageAdd(**item.model_dump()).model_dump() for item in pages]
-        )
-        db.session.execute(add_pages_stmt)
-
-        update_stmt = (
+        update_render_status_stmt = (
             update(BooksORM)
             .filter_by(book_id=book_id)
-            .values(is_rendered=True, total_pages=num_pages)
-            .returning(BooksORM)
+            .values(render_status="RENDERING")
         )
-        model = db.session.execute(update_stmt)
-        result = model.scalar_one()
-        book = Book.model_validate(result, from_attributes=True)
-        db.commit()
+        db.session.execute(update_render_status_stmt)
+
+        with get_sync_session() as s3:
+            try:
+                bucket_name = settings.S3_BUCKET_NAME
+                response = s3.client.get_object(
+                    Bucket=bucket_name, Key=f"books/{book_id}/book.pdf"
+                )
+                with response["Body"] as stream:
+                    file_pdf = stream.read()
+            except s3.client.exceptions.NoSuchKey as ex:
+                logging.error("не найден файл book.pdf")
+                raise FileNotFoundException from ex
+
+        with fitz.open(stream=file_pdf, filetype="pdf") as doc:
+            # Парсинг изображений и текста из книги
+            files_to_add, pages = PDFRenderer.parse_images_and_text_from_pdf(
+                doc=doc, book_id=book_id
+            )
+            num_pages = doc.page_count
+            with get_sync_session() as s3:
+                for file in files_to_add:
+                    s3.client.put_object(
+                        Key=file["Key"], Bucket=settings.S3_BUCKET_NAME, Body=file["Body"]
+                    )
+
+            add_pages_stmt = insert(PageORM).values(
+                [PageAdd(**item.model_dump()).model_dump() for item in pages]
+            )
+
+            db.session.execute(add_pages_stmt)
+
+            update_stmt = (
+                update(BooksORM)
+                .filter_by(book_id=book_id)
+                .values(is_rendered=True, render_status="READY", total_pages=num_pages)
+                .returning(BooksORM)
+            )
+            model = db.session.execute(update_stmt)
+            result = model.scalar_one()
+            book = Book.model_validate(result, from_attributes=True)
+            db.commit()
     logging.info(f'Рендеринг книги "{book.title}" завершен')
 
 
@@ -108,21 +116,3 @@ def auto_statement(test_mode: bool = False):
     excel_doc.commit()
     logging.info("Отчеты обновлены!")
 
-
-@celery_app.task
-def cache_next_page(book_id: int, page_number: int):
-    """Получает на вход текущую страницу, id книги, и кэширует слудующую страницу этой книги"""
-    with get_sync_db_np() as db:
-        get_page_stmt = (
-            select(PageORM)
-            .filter_by(
-                book_id=book_id, 
-                page_number=page_number
-            )
-        )
-        model = db.session.execute(get_page_stmt)
-        result = model.scalar_one_or_none()
-        if result:
-            ...
-        else:
-            return

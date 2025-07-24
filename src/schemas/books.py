@@ -3,7 +3,7 @@ import json
 from typing import Annotated, List
 from pydantic import BaseModel, EmailStr, Field, constr, field_validator, conint
 from src.enums.users import AllUsersRolesEnum
-from src.enums.books import LanguagesEnum
+from src.enums.books import LanguagesEnum, RenderStatus
 from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
 
@@ -109,9 +109,14 @@ class Book(BaseModel):
     language: LanguagesEnum
     date_publicated: date
     is_rendered: bool = False
+    render_status: RenderStatus | None
     cover_link: str | None = None
     is_publicated: bool
     total_pages: int | None
+
+
+class BookEditRenderStatus(BaseModel):
+    render_status: RenderStatus
 
 
 class BookPATCHWithRels(BaseModel):

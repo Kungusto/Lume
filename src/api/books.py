@@ -102,10 +102,10 @@ async def get_page(
         )
     except BookNotFoundException as ex:
         raise BookNotFoundHTTPException from ex
-    except PageNotFoundException as ex:
-        raise PageNotFoundHTTPException(page_number=page_number) from ex
     except ContentNotFoundException as ex:
         raise ContentNotFoundHTTPException from ex
+    except PageNotFoundException as ex:
+        raise PageNotFoundHTTPException(page_number=page_number) from ex
     return page
 
 

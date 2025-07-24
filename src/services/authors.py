@@ -1,3 +1,4 @@
+from time import time
 from fastapi import UploadFile
 from src.exceptions.files import (
     WrongCoverResolutionException,
@@ -13,9 +14,10 @@ from src.schemas.books import (
     TagAdd,
     GenresBooksAdd,
     BookPATCH,
+    BookEditRenderStatus
 )
 from src.schemas.books_authors import BookAuthorAdd
-from src.exceptions.base import ForeignKeyException
+from src.exceptions.base import ForeignKeyException, ObjectNotFoundException
 from src.exceptions.books import (
     AuthorNotFoundException,
     BookAlreadyPublicatedException,
@@ -218,10 +220,15 @@ class AuthorsService(BaseService):
             FileValidator.check_expansion_books(file_name=file.filename)
         except WrongFileExpensionException as ex:
             raise WrongFileExpensionException from ex
-        if await self.s3.books.check_file_by_path(f"books/{book_id}/book.pdf"):
+        try:
+            book = await self.db.books.get_one(book_id=book_id)
+        except ObjectNotFoundException as ex:
+            raise BookNotFoundException from ex
+        if book.is_rendered:
             raise ContentAlreadyExistsException
         await self.s3.books.save_content(book_id, file=file)
         render_book.delay(book_id)
+
 
     async def edit_content(
         self, should_check_owner, user_id: int, book_id: int, file: UploadFile

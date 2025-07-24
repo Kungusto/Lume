@@ -66,11 +66,11 @@ class AuthorNotFoundException(ObjectNotFoundException):
 
 
 class ContentAlreadyExistsHTTPException(AlreadyExistsHTTPException):
-    detail = "Контент книги уже был опубликован"
+    detail = "Контент книги уже был добавлен"
 
 
 class ContentAlreadyExistsException(AlreadyExistsException):
-    detail = "Контент книги уже был опубликован"
+    detail = "Контент книги уже был добавлен"
 
 
 class CoverAlreadyExistsHTTPException(AlreadyExistsHTTPException):

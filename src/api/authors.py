@@ -60,8 +60,6 @@ async def add_book(
         book = await AuthorsService(db=db).add_book(data=data, user_id=user_id)
     except AuthorNotFoundException as ex:
         raise AuthorNotFoundHTTPException from ex
-    except BookNotFoundException as ex:
-        raise BookNotFoundHTTPException from ex
     except GenreNotFoundException as ex:
         raise GenreNotFoundHTTPException from ex
     return book

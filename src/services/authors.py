@@ -28,6 +28,7 @@ from src.exceptions.books import (
     CoverAlreadyExistsException,
     CoverNotFoundException,
     GenreNotFoundException,
+    TagNotFoundException,
 )
 from src.tasks.tasks import change_content, delete_book_images, render_book
 from validation.files import FileValidator
@@ -54,11 +55,8 @@ class AuthorsService(BaseService):
             await self.db.books_authors.add_bulk(data_to_add_m2m)
         except ForeignKeyException as ex:
             raise AuthorNotFoundException from ex
-        try:
-            if data_to_tags_m2m:
-                await self.db.tags.add_bulk(data_to_tags_m2m)
-        except ForeignKeyException as ex:
-            raise BookNotFoundException from ex
+        if data_to_tags_m2m:
+            await self.db.tags.add_bulk(data_to_tags_m2m)
         try:
             if data_to_genres_m2m:
                 await self.db.books_genres.add_bulk(data_to_genres_m2m)

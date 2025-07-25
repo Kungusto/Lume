@@ -29,7 +29,14 @@ from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 from src.utils.cache_manager import get_cache_manager
 from src.docs_src.examples.auth import register_example, login_example, edit_example
-from src.docs_src.responses.auth import register_responses, login_responses, info_current_user_responses, logout_responses
+from src.docs_src.responses.auth import (
+    register_responses,
+    login_responses,
+    info_current_user_responses,
+    logout_responses,
+    info_about_user_responses,
+    edit_user_data_responses
+)
 
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
@@ -98,7 +105,7 @@ async def info_about_current_user(user_id: UserIdDep, db: DBDep):
     path="/logout",
     summary="Выход из аккаунта",
     description="Удаляет access_token из cookie файлов",
-    responses=logout_responses
+    responses=logout_responses,
 )
 async def exit_from_account(request: Request, response: Response):
     try:
@@ -108,7 +115,12 @@ async def exit_from_account(request: Request, response: Response):
     return {"status": "OK"}
 
 
-@router.get("/{user_id}")
+@router.get(
+    path="/{user_id}",
+    summary="Получение публичных данных о пользователе",
+    description="Поиск имени, фамилии и ника пользователя по id",
+    responses=info_about_user_responses,
+)
 @cache.base()
 async def info_about_user(db: DBDep, user_id: int):
     try:
@@ -118,7 +130,12 @@ async def info_about_user(db: DBDep, user_id: int):
     return user
 
 
-@router.put("/{user_id}")
+@router.put(
+    path="/{user_id}",
+    summary="Изменить публичные данные",
+    description="Пользователь может изменять только свои данные, админ - любые",
+    responses=edit_user_data_responses
+)
 async def edit_user_data(
     db: DBDep,
     user_id: int,

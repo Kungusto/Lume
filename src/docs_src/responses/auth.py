@@ -88,10 +88,10 @@ info_current_user_responses = {
                     "surname": "Иванов",
                     "nickname": "ivan_the_best",
                     "last_activity": "2025-07-25T10:07:37.162419Z",
-                    "registation_date": "2025-07-25T10:07:16.404139Z"
+                    "registation_date": "2025-07-25T10:07:16.404139Z",
                 }
             }
-        }
+        },
     },
     401: {
         "description": "Пользователь не аутентифицирован",
@@ -99,28 +99,54 @@ info_current_user_responses = {
             "application/json": {
                 "example": {"detail": f"{NotAuthentificatedHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 
 logout_responses = {
     200: {
         "description": "Успешный выход из аккаунта",
-        "content": {
-            "application/json": {
-                "example": {    
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     401: {
         "description": "Пользователь не аутентифицирован",
         "content": {
+            "application/json": {"example": {"detail": "Вы не аутентифицированы"}}
+        },
+    },
+}
+
+
+info_about_user_responses = {
+    200: {
+        "description": "Успешный поиск данных о пользователе",
+        "content": {
             "application/json": {
                 "example": {
-                  "detail": "Вы не аутентифицированы"
+                    "name": "Иван",
+                    "surname": "Иванов",
+                    "nickname": "ivan_the_best",
+                }
+            }
+        },
+    },
+    404: {
+        "descipription": "Пользователя с этим id не существует",
+        "content": {
+            "application/json": {"example": {"detail": "Пользователь не найден"}}
+        },
+    },
+}
+
+
+edit_user_data_responses = {
+    200: {
+        "description": "Успешное изменение публичных данных о пользователе",
+        "content": {
+            "application/json": {
+                "example": {
+                    "status": "OK"
                 }
             }
         }

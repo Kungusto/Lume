@@ -18,7 +18,11 @@ from src.middlewares.middlewares import BanCheckMiddleware
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI()
+app = FastAPI(
+    title="Lume API",
+    description="<h2>Онлайн-библиотека Lume: пользователи, авторы, книги, отзывы, админ панель</h2>",
+    version="1.0.0"
+)
 
 
 @app.get("/docs", include_in_schema=False)

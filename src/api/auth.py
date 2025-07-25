@@ -20,6 +20,7 @@ from src.exceptions.auth import (
     UserNotFoundException,
 )
 from src.schemas.users import (
+    User,
     UserRegistrate,
     UserLogin,
     UserPUT,
@@ -27,14 +28,21 @@ from src.schemas.users import (
 from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 from src.utils.cache_manager import get_cache_manager
-from src.examples.users import register_example, login_example, edit_example
+from src.docs_src.examples.auth import register_example, login_example, edit_example
+from src.docs_src.responses.auth import register_responses, login_responses
 
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
 cache = get_cache_manager()
 
 
-@router.post("/register")
+@router.post(
+    path="/register",
+    summary="Регистрация пользователей",
+    description="Регистрирует пользователей и авторов",
+    responses=register_responses,
+    response_model=User
+)
 async def registrate_user(
     db: DBDep,
     data: UserRegistrate = Body(openapi_examples=register_example), 
@@ -49,10 +57,16 @@ async def registrate_user(
         logging.exception(ex)
         raise InternalServerErrorHTTPException
     await db.commit()
-    return {"status": "OK", "data": result}
+    print(type(result))
+    return result
 
 
-@router.post("/login")
+@router.post(
+    path="/login",
+    summary="Логин пользователя",
+    description="Проверяет почту и пароль на соответствие. Если все ОК - сохраняет в cookies access_token пользователя",
+    responses=login_responses
+)
 async def login_user(
     db: DBDep, 
     request: Request, 

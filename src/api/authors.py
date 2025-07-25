@@ -18,6 +18,8 @@ from src.exceptions.books import (
     AuthorNotFoundHTTPException,
     GenreNotFoundException,
     GenreNotFoundHTTPException,
+    TagNotFoundException,
+    TagNotFoundHTTPException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -38,7 +40,8 @@ from src.schemas.books import (
 )
 from src.utils.cache_manager import get_cache_manager
 from src.services.authors import AuthorsService
-from src.docs_src.examples.books import add_book_example, book_patch_examples
+from src.docs_src.examples.authors import add_book_example, book_patch_examples
+from src.docs_src.responses.authors import add_book_responses
 from src.constants.files import AllowedExtensions
 
 
@@ -49,7 +52,8 @@ cache = get_cache_manager()
 @router.post(
     path="/book",
     summary="Публикация книги от имени автора",
-    description="Книги могут публиковать все, кроме обычных пользователей"
+    description="Книги могут публиковать все, кроме обычных пользователей",
+    responses=add_book_responses
 )
 async def add_book(
     db: DBDep,
@@ -164,7 +168,11 @@ async def add_cover(
     return {"status": "OK"}
 
 
-@router.put("/cover/{book_id}")
+@router.put(
+    path="/cover/{book_id}",
+    summary="Изменить уже добавленную обложку",
+    description=f"Поддерживаемые расширения: {", ".join(AllowedExtensions.IMAGES)}",
+)
 async def put_cover(
     file: UploadFile,
     book_id: int,
@@ -194,7 +202,11 @@ async def put_cover(
 # --- Контент книги ---
 
 
-@router.post("/content/{book_id}")
+@router.post(
+    path="/content/{book_id}",
+    summary="Опубликовать контент книги",
+    description=f"Поддерживаемые форматы: {AllowedExtensions.BOOKS}"
+)
 async def add_all_content(
     s3: S3Dep,
     db: DBDep,
@@ -221,7 +233,11 @@ async def add_all_content(
     return {"status": "OK"}
 
 
-@router.put("/content/{book_id}")
+@router.put(
+    path="/content/{book_id}",
+    summary="Изменить уже опубликованный контент",
+    description=f"Поддерживаемые форматы: {AllowedExtensions.BOOKS}"
+)
 async def edit_content(
     book_id: int,
     file: UploadFile,
@@ -246,7 +262,13 @@ async def edit_content(
     return {"status": "OK"}
 
 
-@router.post("/publicate/{book_id}")
+@router.post(
+    path="/publicate/{book_id}",
+    summary="Опубликовать книгу",
+    description="После того как она будет опубликована, пользователи смогут " \
+    "её видеть в результатах главного поиска. Для того чтобы опубликовать книгу, она должна " \
+    "иметь обложку и контент"
+)
 async def publicate_book(
     db: DBDep,
     book_id: int,

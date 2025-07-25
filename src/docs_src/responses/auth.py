@@ -150,5 +150,11 @@ edit_user_data_responses = {
                 }
             }
         }
-    }
+    },
+    404: {
+        "descipription": "Пользователя с этим id не существует",
+        "content": {
+            "application/json": {"example": {"detail": "Пользователь не найден"}}
+        },
+    },
 }

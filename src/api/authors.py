@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, Body, UploadFile
 from src.exceptions.books import (
     BookAlreadyPublicatedException,
     BookNotExistsOrYouNotOwnerException,
@@ -38,17 +38,23 @@ from src.schemas.books import (
 )
 from src.utils.cache_manager import get_cache_manager
 from src.services.authors import AuthorsService
+from src.docs_src.examples.books import add_book_example, book_patch_examples
+from src.constants.files import AllowedExtensions
 
 
 router = APIRouter(prefix="/author", tags=["Авторы и публикация книг 📚"])
 cache = get_cache_manager()
 
 
-@router.post("/book")
+@router.post(
+    path="/book",
+    summary="Публикация книги от имени автора",
+    description="Книги могут публиковать все, кроме обычных пользователей"
+)
 async def add_book(
     db: DBDep,
-    data: BookAddWithAuthorsTagsGenres,
     user_id: UserIdDep,
+    data: BookAddWithAuthorsTagsGenres = Body(openapi_examples=add_book_example),
 ):
     try:
         book = await AuthorsService(db=db).add_book(data=data, user_id=user_id)
@@ -61,13 +67,18 @@ async def add_book(
     return book
 
 
-@router.patch("/book/{book_id}")
+@router.patch(
+    path="/book/{book_id}",
+    summary="Изменение данных о книге",
+    description="AUTHOR может изменить только свою книгу, " \
+    "ADMIN и GENERAL_ADMIN может изменять любые книги"
+)
 async def edit_book(
     db: DBDep,
     book_id: int,
     user_id: UserIdDep,
     user_role: UserRoleDep,
-    data: BookPATCHWithRels,
+    data: BookPATCHWithRels = Body(openapi_examples=book_patch_examples),
 ):
     try:
         await AuthorsService(db=db).edit_book(
@@ -82,7 +93,12 @@ async def edit_book(
     return {"status": "OK"}
 
 
-@router.delete("/book/{book_id}")
+@router.delete(
+    path="/book/{book_id}",
+    summary="Удаление книги",
+    description="AUTHOR может удалить только свою книгу, " \
+    "ADMIN и GENERAL_ADMIN может удалять любые книги"
+)
 async def delete_book(
     db: DBDep,
     s3: S3Dep,
@@ -103,7 +119,11 @@ async def delete_book(
     return {"status": "OK"}
 
 
-@router.get("/my_books")
+@router.get(
+    path="/my_books",
+    summary="Получение своих книг",
+    description="Автор получает все написанные им книги"
+)
 @cache.base()
 async def get_my_books(
     db: DBDep,
@@ -115,7 +135,11 @@ async def get_my_books(
 # --- Обложки ---
 
 
-@router.post("/cover/{book_id}")
+@router.post(
+    path="/cover/{book_id}",
+    summary="Добавление обложки",
+    description=f"Поддерживаемые расширения: {", ".join(AllowedExtensions.IMAGES)}"
+)
 async def add_cover(
     book_id: int,
     db: DBDep,

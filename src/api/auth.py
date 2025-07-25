@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Body, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
 )
@@ -27,6 +27,7 @@ from src.schemas.users import (
 from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 from src.utils.cache_manager import get_cache_manager
+from src.examples.users import register_example, login_example, edit_example
 
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
@@ -34,7 +35,10 @@ cache = get_cache_manager()
 
 
 @router.post("/register")
-async def registrate_user(data: UserRegistrate, db: DBDep):
+async def registrate_user(
+    db: DBDep,
+    data: UserRegistrate = Body(openapi_examples=register_example), 
+):
     try:
         result = await AuthService(db=db).registrate_user(data=data)
     except NickAlreadyRegistratedException as ex:
@@ -49,7 +53,12 @@ async def registrate_user(data: UserRegistrate, db: DBDep):
 
 
 @router.post("/login")
-async def login_user(db: DBDep, data: UserLogin, request: Request, response: Response):
+async def login_user(
+    db: DBDep, 
+    request: Request, 
+    response: Response,
+    data: UserLogin = Body(openapi_examples=login_example), 
+):
     try:
         access_token = await AuthService(db=db).login_user(
             data=data, request=request, response=response
@@ -87,7 +96,10 @@ async def info_about_user(db: DBDep, user_id: int):
 
 @router.put("/{user_id}")
 async def edit_user_data(
-    db: DBDep, data: UserPUT, user_id: int, curr_user_id: UserIdDep
+    db: DBDep, 
+    user_id: int, 
+    curr_user_id: UserIdDep,
+    data: UserPUT = Body(openapi_examples=edit_example), 
 ):
     try:
         await AuthService(db=db).edit_user_data(

@@ -29,7 +29,9 @@ class BooksCacheManager:
                     if not user_read_book:
                         await db.user_reads.add(
                             UserBookReadAdd(
-                                book_id=book_id, user_id=user_id, last_seen_page=page_number
+                                book_id=book_id,
+                                user_id=user_id,
+                                last_seen_page=page_number,
                             )
                         )
                     else:
@@ -40,7 +42,7 @@ class BooksCacheManager:
                         )
                     await db.commit()
                 return page
-            
+
             return inner
 
         return wrapper

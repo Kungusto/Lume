@@ -12,7 +12,7 @@ from src.schemas.books import Book, PageAdd
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.repositories.database.utils import AnalyticsQueryFactory
-from src.connectors.redis_connector import redis_sync_conn 
+from src.connectors.redis_connector import redis_sync_conn
 import logging
 
 settings = get_settings()
@@ -49,7 +49,9 @@ def render_book(book_id: int):
             with get_sync_session() as s3:
                 for file in files_to_add:
                     s3.client.put_object(
-                        Key=file["Key"], Bucket=settings.S3_BUCKET_NAME, Body=file["Body"]
+                        Key=file["Key"],
+                        Bucket=settings.S3_BUCKET_NAME,
+                        Body=file["Body"],
                     )
 
             add_pages_stmt = insert(PageORM).values(
@@ -115,4 +117,3 @@ def auto_statement(test_mode: bool = False):
     excel_doc.add(result)
     excel_doc.commit()
     logging.info("Отчеты обновлены!")
-

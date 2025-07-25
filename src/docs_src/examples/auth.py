@@ -8,7 +8,7 @@ register_example = {
             "surname": "Иванов",
             "nickname": "ivan_the_best",
             "password": "securePass123",
-        }
+        },
     },
     "2": {
         "summary": "Катя (Пользователь)",
@@ -19,7 +19,7 @@ register_example = {
             "surname": "Смирнова",
             "nickname": "katerina88",
             "password": "12345abcd",
-        }
+        },
     },
     "3": {
         "summary": "Анна (Автор)",
@@ -30,7 +30,7 @@ register_example = {
             "surname": "Петрова",
             "nickname": "annapetrov",
             "password": "MyStrongPassword!",
-        }
+        },
     },
     "4": {
         "summary": "Сергей (Автор)",
@@ -41,7 +41,7 @@ register_example = {
             "surname": "Сидоров",
             "nickname": "super_admin",
             "password": "Qwerty12345",
-        }
+        },
     },
 }
 
@@ -52,28 +52,28 @@ login_example = {
         "value": {
             "email": "ivan@example.com",
             "password": "securePass123",
-        }
+        },
     },
     "2": {
         "summary": "Катя (Пользователь)",
         "value": {
             "email": "kate@example.com",
             "password": "12345abcd",
-        }
+        },
     },
     "3": {
         "summary": "Анна (Автор)",
         "value": {
             "email": "anna@example.com",
             "password": "MyStrongPassword!",
-        }
+        },
     },
     "4": {
         "summary": "Сергей (Автор)",
         "value": {
             "email": "sergey@example.com",
             "password": "Qwerty12345",
-        }
+        },
     },
 }
 
@@ -81,35 +81,19 @@ login_example = {
 edit_example = {
     "1": {
         "summary": "Пример обычного пользователя",
-        "value": {
-            "name": "Иван",
-            "surname": "Иванов",
-            "nickname": "ivan_the_best"
-        },
+        "value": {"name": "Иван", "surname": "Иванов", "nickname": "ivan_the_best"},
     },
     "2": {
         "summary": "Пример пользователя с коротким ником",
-        "value": {
-            "name": "Анна",
-            "surname": "Петрова",
-            "nickname": "anna_petrov"
-        },
+        "value": {"name": "Анна", "surname": "Петрова", "nickname": "anna_petrov"},
     },
     "3": {
         "summary": "Пример администратора",
-        "value": {
-            "name": "Сергей",
-            "surname": "Сидоров",
-            "nickname": "super_admin"
-        },
+        "value": {"name": "Сергей", "surname": "Сидоров", "nickname": "super_admin"},
     },
     "4": {
         "summary": "Пример автора",
-        "value": {
-            "name": "Катя",
-            "surname": "Смирнова",
-            "nickname": "katerina88"
-        },
+        "value": {"name": "Катя", "surname": "Смирнова", "nickname": "katerina88"},
     },
     "5": {
         "summary": "Регистрация тестового автора",

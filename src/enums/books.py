@@ -20,7 +20,7 @@ class LanguagesEnum(pyEnum):
 
 
 class RenderStatus(pyEnum):
-    UPLOADED = "uploaded"       # Контент загружен, но ещё не рендерился
-    RENDERING = "rendering"     # Идёт рендеринг
-    READY = "ready"             # Успешно отрендерено
-    FAILED = "failed"           # Ошибка рендеринга
+    UPLOADED = "uploaded"  # Контент загружен, но ещё не рендерился
+    RENDERING = "rendering"  # Идёт рендеринг
+    READY = "ready"  # Успешно отрендерено
+    FAILED = "failed"  # Ошибка рендеринга

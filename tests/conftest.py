@@ -60,7 +60,6 @@ from tests.schemas.reviews import TestReviewWithRels
 from tests.utils import ServiceForTests
 
 
-
 settings = Settings()  # noqa: F811
 
 

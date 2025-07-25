@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 app = FastAPI(
     title="Lume API",
     description="<h2>Онлайн-библиотека Lume: пользователи, авторы, книги, отзывы, админ панель</h2>",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 

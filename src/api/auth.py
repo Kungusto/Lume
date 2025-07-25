@@ -29,7 +29,7 @@ from src.api.dependencies import DBDep, UserIdDep
 from src.services.auth import AuthService
 from src.utils.cache_manager import get_cache_manager
 from src.docs_src.examples.auth import register_example, login_example, edit_example
-from src.docs_src.responses.auth import register_responses, login_responses
+from src.docs_src.responses.auth import register_responses, login_responses, info_current_user_responses, logout_responses
 
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация 🔐"])
@@ -41,11 +41,11 @@ cache = get_cache_manager()
     summary="Регистрация пользователей",
     description="Регистрирует пользователей и авторов",
     responses=register_responses,
-    response_model=User
+    response_model=User,
 )
 async def registrate_user(
     db: DBDep,
-    data: UserRegistrate = Body(openapi_examples=register_example), 
+    data: UserRegistrate = Body(openapi_examples=register_example),
 ):
     try:
         result = await AuthService(db=db).registrate_user(data=data)
@@ -65,13 +65,13 @@ async def registrate_user(
     path="/login",
     summary="Логин пользователя",
     description="Проверяет почту и пароль на соответствие. Если все ОК - сохраняет в cookies access_token пользователя",
-    responses=login_responses
+    responses=login_responses,
 )
 async def login_user(
-    db: DBDep, 
-    request: Request, 
+    db: DBDep,
+    request: Request,
     response: Response,
-    data: UserLogin = Body(openapi_examples=login_example), 
+    data: UserLogin = Body(openapi_examples=login_example),
 ):
     try:
         access_token = await AuthService(db=db).login_user(
@@ -84,12 +84,22 @@ async def login_user(
     return {"access_token": access_token}
 
 
-@router.get("/me")
+@router.get(
+    path="/me",
+    summary="Получение данных о себе",
+    description="Считывает user_id из cookies, а затем ищет данные об этом пользователе в бд",
+    responses=info_current_user_responses,
+)
 async def info_about_current_user(user_id: UserIdDep, db: DBDep):
     return await AuthService(db=db).info_about_current_user(user_id=user_id)
 
 
-@router.post("/logout")
+@router.post(
+    path="/logout",
+    summary="Выход из аккаунта",
+    description="Удаляет access_token из cookie файлов",
+    responses=logout_responses
+)
 async def exit_from_account(request: Request, response: Response):
     try:
         AuthService().logout_user(request=request, response=response)
@@ -110,10 +120,10 @@ async def info_about_user(db: DBDep, user_id: int):
 
 @router.put("/{user_id}")
 async def edit_user_data(
-    db: DBDep, 
-    user_id: int, 
+    db: DBDep,
+    user_id: int,
     curr_user_id: UserIdDep,
-    data: UserPUT = Body(openapi_examples=edit_example), 
+    data: UserPUT = Body(openapi_examples=edit_example),
 ):
     try:
         await AuthService(db=db).edit_user_data(

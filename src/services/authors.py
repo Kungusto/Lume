@@ -14,7 +14,7 @@ from src.schemas.books import (
     TagAdd,
     GenresBooksAdd,
     BookPATCH,
-    BookEditRenderStatus
+    BookEditRenderStatus,
 )
 from src.schemas.books_authors import BookAuthorAdd
 from src.exceptions.base import ForeignKeyException, ObjectNotFoundException
@@ -228,7 +228,6 @@ class AuthorsService(BaseService):
             raise ContentAlreadyExistsException
         await self.s3.books.save_content(book_id, file=file)
         render_book.delay(book_id)
-
 
     async def edit_content(
         self, should_check_owner, user_id: int, book_id: int, file: UploadFile

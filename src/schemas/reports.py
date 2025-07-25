@@ -27,6 +27,9 @@ class BanAddFromUser(BaseModel):
     @field_validator("ban_until")
     @classmethod
     def check_date(cls, value: date) -> date:
+        if value.tzinfo is None:
+            # Если пришёл naive datetime — делаем его UTC
+            value = value.replace(tzinfo=timezone.utc)
         if value > datetime.now(timezone.utc):
             return value
         else:

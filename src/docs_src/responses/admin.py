@@ -24,124 +24,87 @@ from src.exceptions.files import (
 change_role_responses = {
     200: {
         "description": "Роль пользователя успешно изменена",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для изменения роли",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ChangePermissionsOfADMINHTTPException.detail}"
-                }
+                "example": {"detail": f"{ChangePermissionsOfADMINHTTPException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Пользователь не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{UserNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{UserNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 add_genre_responses = {
     200: {
         "description": "Жанр успешно добавлен",
         "content": {
-            "application/json": {
-                "example": {
-                    "genre_id": 1,
-                    "title": "Фэнтези"
-                }
-            }
-        }
+            "application/json": {"example": {"genre_id": 1, "title": "Фэнтези"}}
+        },
     },
     409: {
         "description": "Жанр с таким названием уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{GenreAlreadyExistsHTTPException.detail}"
-                }
+                "example": {"detail": f"{GenreAlreadyExistsHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 edit_genre_responses = {
     200: {
         "description": "Жанр успешно изменен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Жанр не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{GenreNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{GenreNotFoundHTTPException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Жанр с таким названием уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{GenreAlreadyExistsHTTPException.detail}"
-                }
+                "example": {"detail": f"{GenreAlreadyExistsHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 delete_genre_responses = {
     200: {
         "description": "Жанр успешно удален",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Нельзя удалить жанр, на который ссылаются книги",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{CannotDeleteGenreHTTPException.detail}"
-                }
+                "example": {"detail": f"{CannotDeleteGenreHTTPException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Жанр не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{GenreNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{GenreNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 add_tag_responses = {
@@ -149,170 +112,119 @@ add_tag_responses = {
         "description": "Тег успешно добавлен",
         "content": {
             "application/json": {
-                "example": {
-                    "id": 1,
-                    "book_id": 1,
-                    "title_tag": "приключения"
-                }
+                "example": {"id": 1, "book_id": 1, "title_tag": "приключения"}
             }
-        }
+        },
     },
     404: {
         "description": "Книга не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{BookNotFoundHTTPException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Тег уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{TagAlreadyExistsHTTPException.detail}"
-                }
+                "example": {"detail": f"{TagAlreadyExistsHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 delete_tag_responses = {
     200: {
         "description": "Тег успешно удален",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Тег не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{TagNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{TagNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 edit_tag_responses = {
     200: {
         "description": "Тег успешно изменен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Тег не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{TagNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{TagNotFoundHTTPException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Тег с таким названием уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{TagAlreadyExistsHTTPException.detail}"
-                }
+                "example": {"detail": f"{TagAlreadyExistsHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 add_reason_responses = {
     200: {
         "description": "Причина жалобы успешно добавлена",
         "content": {
-            "application/json": {
-                "example": {
-                    "id": 1,
-                    "title": "Неприемлемый контент"
-                }
-            }
-        }
+            "application/json": {"example": {"id": 1, "title": "Неприемлемый контент"}}
+        },
     },
     409: {
         "description": "Причина жалобы уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReasonAlreadyExistsHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReasonAlreadyExistsHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 edit_reason_responses = {
     200: {
         "description": "Причина жалобы успешно изменена",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Причина жалобы не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReasonNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReasonNotFoundHTTPException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Причина жалобы с таким названием уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReasonAlreadyExistsHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReasonAlreadyExistsHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 delete_reason_responses = {
     200: {
         "description": "Причина жалобы успешно удалена",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Причина жалобы не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReasonNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReasonNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 get_not_checked_reports_responses = {
@@ -326,35 +238,27 @@ get_not_checked_reports_responses = {
                         "book_id": 1,
                         "comment": "string",
                         "id": 1,
-                        "is_checked": False
+                        "is_checked": False,
                     }
                 ]
             }
-        }
+        },
     }
 }
 
 mark_as_checked_responses = {
     200: {
         "description": "Жалоба отмечена как проверенная",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Жалоба не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReportNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReportNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 ban_user_by_id_responses = {
@@ -365,86 +269,64 @@ ban_user_by_id_responses = {
                 "user_id": 1,
                 "ban_until": "2030-01-01T00:00:00Z",
                 "comment": "Вы забанены до 2030 года :o",
-                "ban_id": 2
+                "ban_id": 2,
             }
-        }
+        },
     },
     403: {
         "description": "Недостаточно прав для блокировки пользователя",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ChangePermissionsOfADMINHTTPException.detail}"
-                }
+                "example": {"detail": f"{ChangePermissionsOfADMINHTTPException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Пользователь не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{UserNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{UserNotFoundHTTPException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Пользователь уже забанен",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{AlreadyBannedHTTPException.detail}"
-                }
+                "example": {"detail": f"{AlreadyBannedHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 unban_user_by_ban_id_responses = {
     200: {
         "description": "Пользователь успешно разбанен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Блокировка не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{UserNotBannedHTTPException.detail}"
-                }
+                "example": {"detail": f"{UserNotBannedHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 edit_ban_date_responses = {
     200: {
         "description": "Срок бана успешно изменен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Блокировка не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{UserNotBannedHTTPException.detail}"
-                }
+                "example": {"detail": f"{UserNotBannedHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 get_banned_users_responses = {
@@ -462,11 +344,11 @@ get_banned_users_responses = {
                         "nickname": "ivanov",
                         "last_activity": "2025-07-25T10:30:00",
                         "registation_date": "2025-01-01T00:00:00",
-                        "ban_until": "2025-12-31T23:59:59"
+                        "ban_until": "2025-12-31T23:59:59",
                     }
                 ]
             }
-        }
+        },
     }
 }
 
@@ -477,10 +359,10 @@ generate_report_inside_app_responses = {
             "application/json": {
                 "example": {
                     "path": "s3://reports/users_2025-07-25_10-30-00.xlsx",
-                    "url": "https://s3.example.com/reports/users_2025-07-25_10-30-00.xlsx"
+                    "url": "https://s3.example.com/reports/users_2025-07-25_10-30-00.xlsx",
                 }
             }
-        }
+        },
     }
 }
 
@@ -492,11 +374,11 @@ get_statements_by_date_responses = {
                 "example": [
                     {
                         "path": "s3://reports/users_2025-07-25_10-30-00.xlsx",
-                        "url": "https://s3.example.com/reports/users_2025-07-25_10-30-00.xlsx"
+                        "url": "https://s3.example.com/reports/users_2025-07-25_10-30-00.xlsx",
                     }
                 ]
             }
-        }
+        },
     }
 }
 
@@ -509,18 +391,16 @@ save_and_get_auto_statement_responses = {
                     "url": "https://s3.example.com/reports/users_statement_auto.xlsx"
                 }
             }
-        }
+        },
     },
     404: {
         "description": "Автоматический отчет не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{StatementNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{StatementNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 # [
 #   {

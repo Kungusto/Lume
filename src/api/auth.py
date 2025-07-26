@@ -35,7 +35,7 @@ from src.docs_src.responses.auth import (
     info_current_user_responses,
     logout_responses,
     info_about_user_responses,
-    edit_user_data_responses
+    edit_user_data_responses,
 )
 
 
@@ -134,7 +134,7 @@ async def info_about_user(db: DBDep, user_id: int):
     path="/{user_id}",
     summary="Изменить публичные данные",
     description="Пользователь может изменять только свои данные, админ - любые",
-    responses=edit_user_data_responses
+    responses=edit_user_data_responses,
 )
 async def edit_user_data(
     db: DBDep,

@@ -17,13 +17,7 @@ from src.exceptions.files import (
 add_book_responses = {
     200: {
         "description": "Успешное изменение публичных данных о пользователе",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "description": "Не найден автор, книга, или жанр",
@@ -32,43 +26,31 @@ add_book_responses = {
                 "examples": {
                     "AuthorNotFound": {
                         "summary": "Указанного автора не существует",
-                        "value": {
-                            "detail": f"{AuthorNotFoundException.detail}"
-                        }
+                        "value": {"detail": f"{AuthorNotFoundException.detail}"},
                     },
                     "GenreNotFound": {
-                        "summary": "Указанного жанра не существует", 
-                        "value": {
-                            "detail": f"{GenreNotFoundException.detail}"
-                        }
-                    }
+                        "summary": "Указанного жанра не существует",
+                        "value": {"detail": f"{GenreNotFoundException.detail}"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 
 edit_book_responses = {
     200: {
         "description": "Данные о книге успешно изменены",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для изменения книги",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Не найдена книга или жанр",
@@ -77,53 +59,39 @@ edit_book_responses = {
                 "examples": {
                     "BookNotFound": {
                         "summary": "Книга не найдена",
-                        "value": {
-                            "detail": f"{BookNotFoundException.detail}"
-                        }
+                        "value": {"detail": f"{BookNotFoundException.detail}"},
                     },
                     "GenreNotFound": {
                         "summary": "Жанр не найден",
-                        "value": {
-                            "detail": f"{GenreNotFoundException.detail}"
-                        }
-                    }
+                        "value": {"detail": f"{GenreNotFoundException.detail}"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 delete_book_responses = {
     200: {
         "description": "Книга успешно удалена",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для удаления книги",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Книга не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotFoundException.detail}"
-                }
+                "example": {"detail": f"{BookNotFoundException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 get_my_books_responses = {
@@ -155,59 +123,44 @@ get_my_books_responses = {
                                 "is_publicated": False,
                                 "total_pages": 13,
                                 "authors": [
-                                {
-                                    "name": "string",
-                                    "surname": "string",
-                                    "nickname": "ADMIN"
-                                }
+                                    {
+                                        "name": "string",
+                                        "surname": "string",
+                                        "nickname": "ADMIN",
+                                    }
                                 ],
                                 "tags": [],
-                                "genres": [
-                                {
-                                    "genre_id": 1,
-                                    "title": "Фэнтези"
-                                }
-                                ],
-                                "reviews": []
+                                "genres": [{"genre_id": 1, "title": "Фэнтези"}],
+                                "reviews": [],
                             },
-                        ]
+                        ],
                     }
                 ]
             }
-        }
+        },
     }
 }
 
 add_cover_responses = {
     200: {
         "description": "Обложка успешно добавлена",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для добавления обложки",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Обложка уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{CoverAlreadyExistsException.detail}"
-                }
+                "example": {"detail": f"{CoverAlreadyExistsException.detail}"}
             }
-        }
+        },
     },
     422: {
         "description": "Ошибка валидации файла",
@@ -216,52 +169,38 @@ add_cover_responses = {
                 "examples": {
                     "WrongFileExpension": {
                         "summary": "Неправильное расширение файла",
-                        "value": {
-                            "detail": f"{WrongFileExpensionException.detail}"
-                        }
+                        "value": {"detail": f"{WrongFileExpensionException.detail}"},
                     },
                     "WrongCoverResolution": {
                         "summary": "Неправильное разрешение обложки",
-                        "value": {
-                            "detail": f"{WrongCoverResolutionException.detail}"
-                        }
-                    }
+                        "value": {"detail": f"{WrongCoverResolutionException.detail}"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 put_cover_responses = {
     200: {
         "description": "Обложка успешно обновлена",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для обновления обложки",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Обложка не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{CoverNotFoundException.detail}"
-                }
+                "example": {"detail": f"{CoverNotFoundException.detail}"}
             }
-        }
+        },
     },
     422: {
         "description": "Ошибка валидации файла",
@@ -270,116 +209,86 @@ put_cover_responses = {
                 "examples": {
                     "WrongFileExpension": {
                         "summary": "Неправильное расширение файла",
-                        "value": {
-                            "detail": f"{WrongFileExpensionException.detail}"
-                        }
+                        "value": {"detail": f"{WrongFileExpensionException.detail}"},
                     },
                     "WrongCoverResolution": {
                         "summary": "Неправильное разрешение обложки",
-                        "value": {
-                            "detail": f"{WrongCoverResolutionException.detail}"
-                        }
-                    }
+                        "value": {"detail": f"{WrongCoverResolutionException.detail}"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 add_all_content_responses = {
     200: {
         "description": "Контент книги успешно добавлен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для добавления контента",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Книга не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotFoundException.detail}"
-                }
+                "example": {"detail": f"{BookNotFoundException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Контент уже существует",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ContentAlreadyExistsException.detail}"
-                }
+                "example": {"detail": f"{ContentAlreadyExistsException.detail}"}
             }
-        }
+        },
     },
     422: {
         "description": "Неправильное расширение файла",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{WrongFileExpensionException.detail}"
-                }
+                "example": {"detail": f"{WrongFileExpensionException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 edit_content_responses = {
     200: {
         "description": "Контент книги успешно обновлен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для обновления контента",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Контент не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ContentNotFoundException.detail}"
-                }
+                "example": {"detail": f"{ContentNotFoundException.detail}"}
             }
-        }
+        },
     },
     422: {
         "description": "Неправильное расширение файла",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{WrongFileExpensionException.detail}"
-                }
+                "example": {"detail": f"{WrongFileExpensionException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 publicate_book_responses = {
@@ -387,23 +296,17 @@ publicate_book_responses = {
         "description": "Книга успешно опубликована",
         "content": {
             "application/json": {
-                "example": {
-                    "id": 1,
-                    "title": "Название книги",
-                    "is_publicated": True
-                }
+                "example": {"id": 1, "title": "Название книги", "is_publicated": True}
             }
-        }
+        },
     },
     403: {
         "description": "Недостаточно прав для публикации книги",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotExistsOrYouNotOwnerException.detail}"
-                }
+                "example": {"detail": f"{BookNotExistsOrYouNotOwnerException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Не найдена книга, контент или обложка",
@@ -412,34 +315,26 @@ publicate_book_responses = {
                 "examples": {
                     "BookNotFound": {
                         "summary": "Книга не найдена",
-                        "value": {
-                            "detail": f"{BookNotFoundException.detail}"
-                        }
+                        "value": {"detail": f"{BookNotFoundException.detail}"},
                     },
                     "ContentNotFound": {
                         "summary": "Контент не найден",
-                        "value": {
-                            "detail": f"{ContentNotFoundException.detail}"
-                        }
+                        "value": {"detail": f"{ContentNotFoundException.detail}"},
                     },
                     "CoverNotFound": {
                         "summary": "Обложка не найдена",
-                        "value": {
-                            "detail": f"{CoverNotFoundException.detail}"
-                        }
-                    }
+                        "value": {"detail": f"{CoverNotFoundException.detail}"},
+                    },
                 }
             }
-        }
+        },
     },
     409: {
         "description": "Книга уже опубликована",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookAlreadyPublicatedException.detail}"
-                }
+                "example": {"detail": f"{BookAlreadyPublicatedException.detail}"}
             }
-        }
-    }
+        },
+    },
 }

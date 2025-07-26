@@ -64,7 +64,7 @@ class GenreAdd(BaseModel):
     @field_validator("title")
     def first_letter_to_upper(title: str) -> str:
         return title.capitalize() if title else title
-    
+
 
 class GenreEdit(GenreAdd): ...
 

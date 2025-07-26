@@ -42,7 +42,7 @@ from src.utils.cache_manager import get_cache_manager
 from src.services.authors import AuthorsService
 from src.docs_src.examples.authors import add_book_example, book_patch_examples
 from src.docs_src.responses.authors import (
-    add_book_responses, 
+    add_book_responses,
     add_all_content_responses,
     add_cover_responses,
     delete_book_responses,
@@ -63,7 +63,7 @@ cache = get_cache_manager()
     path="/book",
     summary="Публикация книги от имени автора",
     description="Книги могут публиковать все, кроме обычных пользователей",
-    responses=add_book_responses
+    responses=add_book_responses,
 )
 async def add_book(
     db: DBDep,
@@ -82,9 +82,9 @@ async def add_book(
 @router.patch(
     path="/book/{book_id}",
     summary="Изменение данных о книге",
-    description="AUTHOR может изменить только свою книгу, " \
+    description="AUTHOR может изменить только свою книгу, "
     "ADMIN и GENERAL_ADMIN может изменять любые книги",
-    responses=edit_book_responses
+    responses=edit_book_responses,
 )
 async def edit_book(
     db: DBDep,
@@ -109,9 +109,9 @@ async def edit_book(
 @router.delete(
     path="/book/{book_id}",
     summary="Удаление книги",
-    description="AUTHOR может удалить только свою книгу, " \
+    description="AUTHOR может удалить только свою книгу, "
     "ADMIN и GENERAL_ADMIN может удалять любые книги",
-    responses=delete_book_responses
+    responses=delete_book_responses,
 )
 async def delete_book(
     db: DBDep,
@@ -137,7 +137,7 @@ async def delete_book(
     path="/my_books",
     summary="Получение своих книг",
     description="Автор получает все написанные им книги",
-    responses=get_my_books_responses
+    responses=get_my_books_responses,
 )
 @cache.base()
 async def get_my_books(
@@ -153,8 +153,8 @@ async def get_my_books(
 @router.post(
     path="/cover/{book_id}",
     summary="Добавление обложки",
-    description=f"Поддерживаемые расширения: {", ".join(AllowedExtensions.IMAGES)}",
-    responses=add_cover_responses
+    description=f"Поддерживаемые расширения: {', '.join(AllowedExtensions.IMAGES)}",
+    responses=add_cover_responses,
 )
 async def add_cover(
     book_id: int,
@@ -185,8 +185,8 @@ async def add_cover(
 @router.put(
     path="/cover/{book_id}",
     summary="Изменить уже добавленную обложку",
-    description=f"Поддерживаемые расширения: {", ".join(AllowedExtensions.IMAGES)}",
-    responses=put_cover_responses
+    description=f"Поддерживаемые расширения: {', '.join(AllowedExtensions.IMAGES)}",
+    responses=put_cover_responses,
 )
 async def put_cover(
     file: UploadFile,
@@ -221,7 +221,7 @@ async def put_cover(
     path="/content/{book_id}",
     summary="Опубликовать контент книги",
     description=f"Поддерживаемые форматы: {AllowedExtensions.BOOKS}",
-    responses=add_all_content_responses
+    responses=add_all_content_responses,
 )
 async def add_all_content(
     s3: S3Dep,
@@ -253,7 +253,7 @@ async def add_all_content(
     path="/content/{book_id}",
     summary="Изменить уже опубликованный контент",
     description=f"Поддерживаемые форматы: {AllowedExtensions.BOOKS}",
-    responses=edit_content_responses
+    responses=edit_content_responses,
 )
 async def edit_content(
     book_id: int,
@@ -282,10 +282,10 @@ async def edit_content(
 @router.post(
     path="/publicate/{book_id}",
     summary="Опубликовать книгу",
-    description="После того как она будет опубликована, пользователи смогут " \
-    "её видеть в результатах главного поиска. Для того чтобы опубликовать книгу, она должна " \
+    description="После того как она будет опубликована, пользователи смогут "
+    "её видеть в результатах главного поиска. Для того чтобы опубликовать книгу, она должна "
     "иметь обложку и контент",
-    responses=publicate_book_responses
+    responses=publicate_book_responses,
 )
 async def publicate_book(
     db: DBDep,

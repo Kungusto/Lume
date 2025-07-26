@@ -143,13 +143,7 @@ info_about_user_responses = {
 edit_user_data_responses = {
     200: {
         "description": "Успешное изменение публичных данных о пользователе",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     404: {
         "descipription": "Пользователя с этим id не существует",

@@ -46,15 +46,15 @@ from src.exceptions.files import (
 )
 from src.services.admin import AdminService
 from src.docs_src.examples.admin import (
-    add_genre_example, 
+    add_genre_example,
     edit_tag_example,
     add_reason_example,
     ban_user_by_id_example,
-    get_statements_by_date_example
+    get_statements_by_date_example,
 )
 from src.docs_src.responses.admin import (
     add_genre_responses,
-    add_reason_responses, 
+    add_reason_responses,
     add_tag_responses,
     ban_user_by_id_responses,
     change_role_responses,
@@ -82,7 +82,7 @@ router = APIRouter(prefix="/admin", tags=["Админ панель ⚜️"])
     path="/{user_id}/change_role",
     summary="Изменение роли пользователя",
     description="Доступно только для ролей ADMIN и GENERAL_ADMIN",
-    responses=change_role_responses
+    responses=change_role_responses,
 )
 async def change_role(
     db: DBDep,
@@ -106,10 +106,10 @@ async def change_role(
 @router.post(
     path="/genres",
     summary="Добавление жанра",
-    description="Нельзя добавлять несколько одинаковых жанров. " \
-    "При добавлении, первая буква автоматически становится заглавной, " \
+    description="Нельзя добавлять несколько одинаковых жанров. "
+    "При добавлении, первая буква автоматически становится заглавной, "
     "а остальные - строчными",
-    responses=add_genre_responses
+    responses=add_genre_responses,
 )
 async def add_genre(
     db: DBDep,
@@ -125,7 +125,7 @@ async def add_genre(
 @router.put(
     path="/genres/{genre_id}",
     summary="Изменение названия жанра",
-    responses=edit_genre_responses
+    responses=edit_genre_responses,
 )
 async def edit_genre(
     db: DBDep,
@@ -144,10 +144,10 @@ async def edit_genre(
 @router.delete(
     path="/genres/{genre_id}",
     summary="Удаление жанра",
-    description="Если на жанр ссылается хотя-бы одна книга, " \
-    "то удалить жанр будет невозможно. " \
+    description="Если на жанр ссылается хотя-бы одна книга, "
+    "то удалить жанр будет невозможно. "
     "Это сделано во измежание случайного удаление множества книг",
-    responses=delete_genre_responses
+    responses=delete_genre_responses,
 )
 async def delete_genre(
     db: DBDep,
@@ -163,9 +163,7 @@ async def delete_genre(
 
 
 @router.post(
-    path="/tag",
-    summary="Добавление тега к книге",
-    responses=add_tag_responses
+    path="/tag", summary="Добавление тега к книге", responses=add_tag_responses
 )
 async def add_tag(
     db: DBDep,
@@ -183,7 +181,7 @@ async def add_tag(
 @router.delete(
     path="/tag/{tag_id}",
     summary="Удаление тега книги по его id",
-    responses=delete_tag_responses
+    responses=delete_tag_responses,
 )
 async def delete_tag(
     db: DBDep,
@@ -197,9 +195,7 @@ async def delete_tag(
 
 
 @router.put(
-    path="/tag/{tag_id}",
-    summary="Изменить тег книги",
-    responses=edit_tag_responses
+    path="/tag/{tag_id}", summary="Изменить тег книги", responses=edit_tag_responses
 )
 async def edit_tag(
     db: DBDep,
@@ -218,9 +214,9 @@ async def edit_tag(
 @router.post(
     path="/reasons",
     summary="Добавить причину жалоб",
-    description="Когда пользователь захочет пожаловаться на книгу, " \
+    description="Когда пользователь захочет пожаловаться на книгу, "
     "он должен будет указать причину жалобы",
-    responses=add_reason_responses
+    responses=add_reason_responses,
 )
 async def add_reason(
     db: DBDep,
@@ -236,7 +232,7 @@ async def add_reason(
 @router.put(
     path="/reasons/{reason_id}",
     summary="Изменить названия причины бана",
-    responses=edit_reason_responses
+    responses=edit_reason_responses,
 )
 async def edit_reason(
     db: DBDep,
@@ -254,10 +250,10 @@ async def edit_reason(
 
 @router.delete(
     path="/reasons/{reason_id}",
-    summary="Удалить причину бана", 
-    description="Если есть хотя-бы одна не обработанная жалоба с этой причиной, " \
+    summary="Удалить причину бана",
+    description="Если есть хотя-бы одна не обработанная жалоба с этой причиной, "
     "удалить причину не получится",
-    responses=delete_reason_responses
+    responses=delete_reason_responses,
 )
 async def delete_reason(
     db: DBDep,
@@ -274,7 +270,7 @@ async def delete_reason(
 @router.get(
     path="/reports",
     summary="Получить все не обработанные жалобы",
-    responses=get_not_checked_reports_responses
+    responses=get_not_checked_reports_responses,
 )
 async def get_not_checked_reports(
     db: DBDep,
@@ -284,8 +280,8 @@ async def get_not_checked_reports(
 
 @router.patch(
     path="/reports/{report_id}",
-    summary="Отметить жалобу как \"проверенную\"",
-    responses=mark_as_checked_responses
+    summary='Отметить жалобу как "проверенную"',
+    responses=mark_as_checked_responses,
 )
 async def mark_as_checked(
     db: DBDep,
@@ -301,7 +297,7 @@ async def mark_as_checked(
 @router.post(
     path="/ban/{user_id}",
     summary="Забанить пользователя до указанной даты",
-    responses=ban_user_by_id_responses
+    responses=ban_user_by_id_responses,
 )
 async def ban_user_by_id(
     db: DBDep,
@@ -327,9 +323,9 @@ async def ban_user_by_id(
 @router.delete(
     path="/ban/{ban_id}",
     summary="Снятие бана с пользователя",
-    description="<h2>❗ ВАЖНО ❗</h2> - снятие бана происходит по id бана, " \
+    description="<h2>❗ ВАЖНО ❗</h2> - снятие бана происходит по id бана, "
     "а не id пользователя",
-    responses=unban_user_by_ban_id_responses
+    responses=unban_user_by_ban_id_responses,
 )
 async def unban_user_by_ban_id(
     db: DBDep,
@@ -345,7 +341,7 @@ async def unban_user_by_ban_id(
 @router.put(
     path="/ban/{ban_id}",
     summary="Изменение сроков бана",
-    responses=edit_ban_date_responses
+    responses=edit_ban_date_responses,
 )
 async def edit_ban_date(
     db: DBDep,
@@ -362,7 +358,7 @@ async def edit_ban_date(
 @router.get(
     path="/banned_users",
     summary="Получить всех забаненных пользователей",
-    responses=get_banned_users_responses
+    responses=get_banned_users_responses,
 )
 async def get_banned_users(db: DBDep):
     return await AdminService(db=db).get_banned_users()
@@ -371,15 +367,17 @@ async def get_banned_users(db: DBDep):
 @router.post(
     path="/statement",
     summary="Сгенерировать отчет",
-    description="Путь сохранения подобных файлов указывается в " \
-    "параметре STATEMENT_DIR_PATH (.env)<br>" \
+    description="Путь сохранения подобных файлов указывается в "
+    "параметре STATEMENT_DIR_PATH (.env)<br>"
     "Шаблон нейминга файлов: {STATEMENT_DIR_PATH}/users_{%Y-%m-%d_%H-%M-%S}.xlsx",
-    responses=generate_report_inside_app_responses
+    responses=generate_report_inside_app_responses,
 )
 async def generate_report_inside_app(
-    db: DBDep, 
+    db: DBDep,
     s3: S3Dep,
-    data: StatementRequestFromADMIN = Body(openapi_examples=get_statements_by_date_example), 
+    data: StatementRequestFromADMIN = Body(
+        openapi_examples=get_statements_by_date_example
+    ),
 ):
     return await AdminService(db=db, s3=s3).generate_report_inside_app(data=data)
 
@@ -388,7 +386,7 @@ async def generate_report_inside_app(
     path="/statement",
     summary="Получить все сгенерированные отчеты в определенный день",
     description="Возвращает массив JSON-ов, содержащий путь в S3, а также URL доступа",
-    responses=get_statements_by_date_responses
+    responses=get_statements_by_date_responses,
 )
 async def get_statements_by_date(s3: S3Dep, statement_date: date):
     return await AdminService(s3=s3).get_statements_by_date(
@@ -399,9 +397,9 @@ async def get_statements_by_date(s3: S3Dep, statement_date: date):
 @router.get(
     path="/statement/auto",
     summary="Сохранить в S3 отчеты, сгенерированные автоматически, и получить URL доступа",
-    description="За автоматическую генерацию отвечает Celery beat. " \
+    description="За автоматическую генерацию отвечает Celery beat. "
     "Он обновляет файл users_statement_auto каждые 5 минут",
-    responses=save_and_get_auto_statement_responses
+    responses=save_and_get_auto_statement_responses,
 )
 async def save_and_get_auto_statement(s3: S3Dep):
     try:

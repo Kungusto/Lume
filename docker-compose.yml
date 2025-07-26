@@ -16,7 +16,7 @@ services:
     container_name: lume_db
     image: postgres:16 
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
@@ -36,8 +36,35 @@ services:
     networks:
       - LumeNetwork
 
+
+  lume_celery_worker:
+    container_name: lume_celery_worker
+    env_file:
+      - ".env"
+    volumes:
+      - analytics:/app/${STATEMENT_DIR_PATH}
+    build:
+      context: .
+    networks:
+      - LumeNetwork
+    command: "celery --app=src.tasks.celery_app:celery_app worker -l INFO --pool=solo" 
+  
+  lume_celery_beat:
+    container_name: lume_celery_beat
+    env_file:
+      - ".env"
+    volumes:
+      - analytics:/app/${STATEMENT_DIR_PATH}
+    build:
+      context: .
+    networks:
+      - LumeNetwork
+    command: "celery --app=src.tasks.celery_app:celery_app beat -l INFO"
+
+
 volumes:
   db_data:
+  analytics:
 
 networks:
   LumeNetwork:

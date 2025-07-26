@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Body, Request, Response
+from fastapi import APIRouter, Body, Path, Request, Response
 from src.exceptions.base import (
     InternalServerErrorHTTPException,
 )
@@ -124,7 +124,7 @@ async def exit_from_account(request: Request, response: Response):
     response_model=UserPublicData,
 )
 @cache.base()
-async def info_about_user(db: DBDep, user_id: int):
+async def info_about_user(db: DBDep, user_id: int = Path(le=2**31)):
     try:
         user = await AuthService(db=db).info_about_user(user_id=user_id)
     except UserNotFoundException as ex:
@@ -140,8 +140,8 @@ async def info_about_user(db: DBDep, user_id: int):
 )
 async def edit_user_data(
     db: DBDep,
-    user_id: int,
     curr_user_id: UserIdDep,
+    user_id: int = Path(le=2**31),
     data: UserPUT = Body(openapi_examples=edit_example),
 ):
     try:

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, UploadFile
+from fastapi import APIRouter, Body, Path, UploadFile
 from src.exceptions.books import (
     BookAlreadyPublicatedException,
     BookNotExistsOrYouNotOwnerException,
@@ -87,9 +87,9 @@ async def add_book(
 )
 async def edit_book(
     db: DBDep,
-    book_id: int,
     user_id: UserIdDep,
     user_role: UserRoleDep,
+    book_id: int = Path(le=2**31),
     data: BookPATCHWithRels = Body(openapi_examples=book_patch_examples),
 ):
     try:
@@ -115,9 +115,9 @@ async def edit_book(
 async def delete_book(
     db: DBDep,
     s3: S3Dep,
-    book_id: int,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
+    book_id: int = Path(le=2**31),
 ):
     try:
         await AuthorsService(db=db, s3=s3).delete_book(
@@ -156,12 +156,12 @@ async def get_my_books(
     responses=add_cover_responses,
 )
 async def add_cover(
-    book_id: int,
     db: DBDep,
     s3: S3Dep,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
     file: UploadFile,
+    book_id: int = Path(le=2**31),
 ):
     try:
         await AuthorsService(db=db, s3=s3).add_cover(
@@ -189,11 +189,11 @@ async def add_cover(
 )
 async def put_cover(
     file: UploadFile,
-    book_id: int,
     db: DBDep,
     s3: S3Dep,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
+    book_id: int = Path(le=2**31),
 ):
     try:
         await AuthorsService(db=db, s3=s3).put_cover(
@@ -226,9 +226,9 @@ async def add_all_content(
     s3: S3Dep,
     db: DBDep,
     file: UploadFile,
-    book_id: int,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
+    book_id: int = Path(le=2**31),
 ):
     try:
         await AuthorsService(db=db, s3=s3).add_all_content(
@@ -255,12 +255,12 @@ async def add_all_content(
     responses=edit_content_responses,
 )
 async def edit_content(
-    book_id: int,
     file: UploadFile,
     s3: S3Dep,
     db: DBDep,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
+    book_id: int = Path(le=2**31),
 ):
     try:
         await AuthorsService(db=db, s3=s3).edit_content(
@@ -289,9 +289,9 @@ async def edit_content(
 )
 async def publicate_book(
     db: DBDep,
-    book_id: int,
     user_id: UserIdDep,
     should_check_owner: ShouldCheckOwnerDep,
+    book_id: int = Path(le=2**31),
 ):
     try:
         updated_data = await AuthorsService(db=db).publicate_book(

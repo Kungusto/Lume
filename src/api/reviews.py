@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Body, Path
 from src.services.reviews import ReviewsService
 from src.api.dependencies import DBDep, UserIdDep, UserRoleDep
 from src.schemas.reviews import ReviewAddFromUser, ReviewPut
@@ -15,16 +15,30 @@ from src.exceptions.reviews import (
     CannotDeleteOthersReviewHTTPException,
 )
 from src.exceptions.books import BookNotFoundException, BookNotFoundHTTPException
+from src.docs_src.examples.reviews import add_review_example
+from src.docs_src.responses.reviews import (
+    delete_review_responses,
+    add_review_responses,
+    edit_review_responses,
+    get_book_reviews_responses,
+    get_my_reviews_responses,
+)
 
 router = APIRouter(prefix="/reviews", tags=["Отзывы на книги 🌟"])
 
 
-@router.post("/by_book/{book_id}")
+@router.post(
+    path="/by_book/{book_id}",
+    summary="Опубликовать отзыв на книгу",
+    description="Автор не может оценивать свою книгу, " \
+    "обычные пользователи могут оставить только один отзыв на каждую книгу",
+    responses=add_review_responses
+)
 async def add_review(
     db: DBDep,
-    data: ReviewAddFromUser,
     user_id: UserIdDep,
     user_role: UserRoleDep,
+    data: ReviewAddFromUser = Body(openapi_examples=add_review_example),
     book_id: int = Path(le=2**31),
 ):
     try:
@@ -40,7 +54,13 @@ async def add_review(
     return review
 
 
-@router.put("/{review_id}")
+@router.put(
+    path="/{review_id}",
+    summary="Изменить существующий отзыв",
+    description="Можно изменить только свой отзыв. " \
+    "Изменить любой отзыв может только ADMIN и GENERAL_ADMIN",
+    responses=edit_review_responses
+)
 async def edit_review(
     data: ReviewPut,
     db: DBDep,
@@ -62,7 +82,13 @@ async def edit_review(
     return {"status": "OK"}
 
 
-@router.delete("/{review_id}")
+@router.delete(
+    path="/{review_id}",
+    summary="Удалить отзыв",
+    description="Можно изменить только свой отзыв. " \
+    "Изменить любой отзыв может только ADMIN и GENERAL_ADMIN",
+    responses=delete_review_responses
+)
 async def delete_review(
     db: DBDep,
     user_id: UserIdDep,
@@ -82,7 +108,11 @@ async def delete_review(
     return {"status": "OK"}
 
 
-@router.get("/my_reviews")
+@router.get(
+    path="/my_reviews",
+    summary="Получить все мои отзывы",
+    responses=get_my_reviews_responses
+)
 async def get_my_reviews(
     db: DBDep,
     user_id: UserIdDep,
@@ -90,7 +120,11 @@ async def get_my_reviews(
     return await ReviewsService(db=db).get_my_reviews(user_id=user_id)
 
 
-@router.get("/by_book/{book_id}")
+@router.get(
+    path="/by_book/{book_id}",
+    summary="Получить все отзывы на книгу",
+    responses=get_book_reviews_responses
+)
 async def get_book_reviews(
     db: DBDep,
     book_id: int = Path(le=2**31),

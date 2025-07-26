@@ -110,7 +110,7 @@ async def change_role(
     "При добавлении, первая буква автоматически становится заглавной, "
     "а остальные - строчными",
     responses=add_genre_responses,
-    response_model=Genre
+    response_model=Genre,
 )
 async def add_genre(
     db: DBDep,
@@ -164,7 +164,10 @@ async def delete_genre(
 
 
 @router.post(
-    path="/tag", summary="Добавление тега к книге", responses=add_tag_responses, response_model=Tag
+    path="/tag",
+    summary="Добавление тега к книге",
+    responses=add_tag_responses,
+    response_model=Tag,
 )
 async def add_tag(
     db: DBDep,
@@ -218,7 +221,7 @@ async def edit_tag(
     description="Когда пользователь захочет пожаловаться на книгу, "
     "он должен будет указать причину жалобы",
     responses=add_reason_responses,
-    response_model=Reason
+    response_model=Reason,
 )
 async def add_reason(
     db: DBDep,

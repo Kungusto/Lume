@@ -1,4 +1,3 @@
-from time import time
 from fastapi import UploadFile
 from src.exceptions.files import (
     WrongCoverResolutionException,
@@ -14,7 +13,6 @@ from src.schemas.books import (
     TagAdd,
     GenresBooksAdd,
     BookPATCH,
-    BookEditRenderStatus,
 )
 from src.schemas.books_authors import BookAuthorAdd
 from src.exceptions.base import ForeignKeyException, ObjectNotFoundException
@@ -28,7 +26,6 @@ from src.exceptions.books import (
     CoverAlreadyExistsException,
     CoverNotFoundException,
     GenreNotFoundException,
-    TagNotFoundException,
 )
 from src.tasks.tasks import change_content, delete_book_images, render_book
 from validation.files import FileValidator

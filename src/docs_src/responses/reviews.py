@@ -18,10 +18,10 @@ add_review_responses = {
                     "user_id": 1,
                     "rating": 5,
                     "text": "Отличная книга!",
-                    "publication_date": "2023-10-01T12:00:00"
+                    "publication_date": "2023-10-01T12:00:00",
                 }
             }
-        }
+        },
     },
     403: {
         "description": "Недостаточно прав для добавления отзыва",
@@ -30,23 +30,19 @@ add_review_responses = {
                 "examples": {
                     "RateYourself": {
                         "summary": "Нельзя оценить свою книгу",
-                        "value": {
-                            "detail": f"{RateYourselfHTTPException.detail}"
-                        }
+                        "value": {"detail": f"{RateYourselfHTTPException.detail}"},
                     }
                 }
             }
-        }
+        },
     },
     404: {
         "description": "Книга не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{BookNotFoundHTTPException.detail}"}
             }
-        }
+        },
     },
     409: {
         "description": "Отзыв на эту книгу уже существует",
@@ -56,74 +52,54 @@ add_review_responses = {
                     "detail": f"{ReviewAtThisBookAlreadyExistsHTTPException.detail}"
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 edit_review_responses = {
     200: {
         "description": "Отзыв успешно изменен",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для редактирования отзыва",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{CannotEditOthersReviewHTTPException.detail}"
-                }
+                "example": {"detail": f"{CannotEditOthersReviewHTTPException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Отзыв не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReviewNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReviewNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 delete_review_responses = {
     200: {
         "description": "Отзыв успешно удален",
-        "content": {
-            "application/json": {
-                "example": {
-                    "status": "OK"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для удаления отзыва",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{CannotDeleteOthersReviewHTTPException.detail}"
-                }
+                "example": {"detail": f"{CannotDeleteOthersReviewHTTPException.detail}"}
             }
-        }
+        },
     },
     404: {
         "description": "Отзыв не найден",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{ReviewNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{ReviewNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 get_my_reviews_responses = {
@@ -138,11 +114,11 @@ get_my_reviews_responses = {
                         "user_id": 1,
                         "rating": 5,
                         "text": "Отличная книга!",
-                        "publication_date": "2023-10-01T12:00:00"
+                        "publication_date": "2023-10-01T12:00:00",
                     }
                 ]
             }
-        }
+        },
     }
 }
 
@@ -158,10 +134,10 @@ get_book_reviews_responses = {
                         "user_id": 1,
                         "rating": 5,
                         "text": "Отличная книга!",
-                        "publication_date": "2023-10-01T12:00:00"
+                        "publication_date": "2023-10-01T12:00:00",
                     }
                 ]
             }
-        }
+        },
     }
 }

@@ -76,9 +76,7 @@ class BooksRepository(BaseRepository):
             target_schemaDTO = BookDataWithAllRels
             book_schemaDTO = BookDataWithRels
         return target_schemaDTO(
-            **book_schemaDTO.model_validate(
-                book, from_attributes=True
-            ).model_dump(),
+            **book_schemaDTO.model_validate(book, from_attributes=True).model_dump(),
             avg_rating=avg_rating,
             readers=readers,
         )

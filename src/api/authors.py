@@ -18,8 +18,6 @@ from src.exceptions.books import (
     AuthorNotFoundHTTPException,
     GenreNotFoundException,
     GenreNotFoundHTTPException,
-    TagNotFoundException,
-    TagNotFoundHTTPException,
 )
 from src.exceptions.files import (
     WrongFileExpensionException,
@@ -38,7 +36,6 @@ from src.schemas.books import (
     Book,
     BookAddWithAuthorsTagsGenres,
     BookPATCHWithRels,
-    UserAndBooksWithRels,
 )
 from src.utils.cache_manager import get_cache_manager
 from src.services.authors import AuthorsService
@@ -288,7 +285,7 @@ async def edit_content(
     "её видеть в результатах главного поиска. Для того чтобы опубликовать книгу, она должна "
     "иметь обложку и контент",
     responses=publicate_book_responses,
-    response_model=Book
+    response_model=Book,
 )
 async def publicate_book(
     db: DBDep,

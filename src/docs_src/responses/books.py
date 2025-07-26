@@ -1,7 +1,6 @@
 from src.exceptions.books import (
     BookNotFoundHTTPException,
     ContentNotFoundHTTPException,
-    PageNotFoundHTTPException,
 )
 from src.exceptions.search import (
     LaterThanAfterEarlierThanHTTPException,
@@ -30,33 +29,16 @@ get_filtered_publicated_books_with_pagination_responses = {
                         "is_publicated": True,
                         "total_pages": 898,
                         "authors": [
-                        {
-                            "name": "string",
-                            "surname": "string",
-                            "nickname": "ADMIN"
-                        }
+                            {"name": "string", "surname": "string", "nickname": "ADMIN"}
                         ],
                         "tags": [
-                        {
-                            "id": 3,
-                            "book_id": 1,
-                            "title_tag": "python"
-                        },
-                        {
-                            "id": 4,
-                            "book_id": 1,
-                            "title_tag": "string"
-                        }
+                            {"id": 3, "book_id": 1, "title_tag": "python"},
+                            {"id": 4, "book_id": 1, "title_tag": "string"},
                         ],
-                        "genres": [
-                        {
-                            "genre_id": 1,
-                            "title": "Фэнтези"
-                        }
-                        ],
+                        "genres": [{"genre_id": 1, "title": "Фэнтези"}],
                         "reviews": [],
                         "avg_rating": None,
-                        "readers": 1
+                        "readers": 1,
                     },
                     {
                         "book_id": 2,
@@ -71,32 +53,17 @@ get_filtered_publicated_books_with_pagination_responses = {
                         "is_publicated": True,
                         "total_pages": 10,
                         "authors": [
-                        {
-                            "name": "string",
-                            "surname": "string",
-                            "nickname": "ADMIN"
-                        }
+                            {"name": "string", "surname": "string", "nickname": "ADMIN"}
                         ],
-                        "tags": [
-                        {
-                            "id": 1,
-                            "book_id": 2,
-                            "title_tag": "pytest"
-                        }
-                        ],
-                        "genres": [
-                        {
-                            "genre_id": 1,
-                            "title": "Фэнтези"
-                        }
-                        ],
+                        "tags": [{"id": 1, "book_id": 2, "title_tag": "pytest"}],
+                        "genres": [{"genre_id": 1, "title": "Фэнтези"}],
                         "reviews": [],
                         "avg_rating": None,
-                        "readers": 1
-                    }
+                        "readers": 1,
+                    },
                 ]
             }
-        }
+        },
     },
     400: {
         "description": "Некорректные параметры фильтрации",
@@ -107,30 +74,30 @@ get_filtered_publicated_books_with_pagination_responses = {
                         "summary": "Неправильный диапазон дат",
                         "value": {
                             "detail": f"{LaterThanAfterEarlierThanHTTPException.detail}"
-                        }
+                        },
                     },
                     "MinAgeGreaterThanMaxAge": {
                         "summary": "Неправильный диапазон возрастов",
                         "value": {
                             "detail": f"{MinAgeGreaterThanMaxAgeHTTPException.detail}"
-                        }
+                        },
                     },
                     "MinRatingGreaterThanMaxRating": {
                         "summary": "Неправильный диапазон рейтингов",
                         "value": {
                             "detail": f"{MinRatingGreaterThanMaxRatingHTTPException.detail}"
-                        }
+                        },
                     },
                     "MinReadersGreaterThanMaxReaders": {
                         "summary": "Неправильный диапазон читателей",
                         "value": {
                             "detail": f"{MinReadersGreaterThanMaxReadersHTTPException.detail}"
-                        }
-                    }
+                        },
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 get_all_genres_responses = {
@@ -139,17 +106,11 @@ get_all_genres_responses = {
         "content": {
             "application/json": {
                 "example": [
-                    {
-                        "genre_id": 1,
-                        "title": "Фэнтези"
-                    },
-                    {
-                        "genre_id": 2,
-                        "title": "Научная фантастика"
-                    }
+                    {"genre_id": 1, "title": "Фэнтези"},
+                    {"genre_id": 2, "title": "Научная фантастика"},
                 ]
             }
-        }
+        },
     }
 }
 
@@ -171,47 +132,28 @@ get_book_by_id_responses = {
                     "is_publicated": True,
                     "total_pages": 898,
                     "authors": [
-                        {
-                        "name": "string",
-                        "surname": "string",
-                        "nickname": "ADMIN"
-                        }
+                        {"name": "string", "surname": "string", "nickname": "ADMIN"}
                     ],
                     "tags": [
-                        {
-                        "id": 4,
-                        "book_id": 1,
-                        "title_tag": "string"
-                        },
-                        {
-                        "id": 3,
-                        "book_id": 1,
-                        "title_tag": "python"
-                        }
+                        {"id": 4, "book_id": 1, "title_tag": "string"},
+                        {"id": 3, "book_id": 1, "title_tag": "python"},
                     ],
-                    "genres": [
-                        {
-                        "genre_id": 1,
-                        "title": "Фэнтези"
-                        }
-                    ],
+                    "genres": [{"genre_id": 1, "title": "Фэнтези"}],
                     "reviews": [],
                     "avg_rating": None,
-                    "readers": 1
+                    "readers": 1,
                 }
             }
-        }
+        },
     },
     404: {
         "description": "Книга не найдена",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": f"{BookNotFoundHTTPException.detail}"
-                }
+                "example": {"detail": f"{BookNotFoundHTTPException.detail}"}
             }
-        }
-    }
+        },
+    },
 }
 
 download_book_responses = {
@@ -219,11 +161,9 @@ download_book_responses = {
         "description": "URL для скачивания книги успешно получен",
         "content": {
             "application/json": {
-                "example": {
-                    "url": "https://example.com/books/1/book.pdf"
-                }
+                "example": {"url": "https://example.com/books/1/book.pdf"}
             }
-        }
+        },
     },
     404: {
         "description": "Книга или контент не найдены",
@@ -232,20 +172,16 @@ download_book_responses = {
                 "examples": {
                     "BookNotFound": {
                         "summary": "Книга не найдена",
-                        "value": {
-                            "detail": f"{BookNotFoundHTTPException.detail}"
-                        }
+                        "value": {"detail": f"{BookNotFoundHTTPException.detail}"},
                     },
                     "ContentNotFound": {
                         "summary": "Контент книги не найден",
-                        "value": {
-                            "detail": f"{ContentNotFoundHTTPException.detail}"
-                        }
-                    }
+                        "value": {"detail": f"{ContentNotFoundHTTPException.detail}"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 get_page_responses = {
@@ -254,17 +190,11 @@ get_page_responses = {
         "content": {
             "application/json": {
                 "example": [
-                    {
-                        "type": "text",
-                        "content": "Текст страницы"
-                    },
-                    {
-                        "type": "image",
-                        "path": "https://example.com/images/page1.jpg"
-                    }
+                    {"type": "text", "content": "Текст страницы"},
+                    {"type": "image", "path": "https://example.com/images/page1.jpg"},
                 ]
             }
-        }
+        },
     },
     404: {
         "description": "Книга, контент или страница не найдены",
@@ -273,26 +203,20 @@ get_page_responses = {
                 "examples": {
                     "BookNotFound": {
                         "summary": "Книга не найдена",
-                        "value": {
-                            "detail": f"{BookNotFoundHTTPException.detail}"
-                        }
+                        "value": {"detail": f"{BookNotFoundHTTPException.detail}"},
                     },
                     "ContentNotFound": {
                         "summary": "Контент книги не найден",
-                        "value": {
-                            "detail": f"{ContentNotFoundHTTPException.detail}"
-                        }
+                        "value": {"detail": f"{ContentNotFoundHTTPException.detail}"},
                     },
                     "PageNotFound": {
                         "summary": "Страница не найдена",
-                        "value": {
-                            "detail": "Страница 5 не найдена"
-                        }
-                    }
+                        "value": {"detail": "Страница 5 не найдена"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }
 
 report_book_responses = {
@@ -304,10 +228,10 @@ report_book_responses = {
                     "id": 1,
                     "book_id": 1,
                     "reason_id": 1,
-                    "description": "Неприемлемый контент"
+                    "description": "Неприемлемый контент",
                 }
             }
-        }
+        },
     },
     404: {
         "description": "Книга или причина жалобы не найдены",
@@ -316,18 +240,14 @@ report_book_responses = {
                 "examples": {
                     "BookNotFound": {
                         "summary": "Книга не найдена",
-                        "value": {
-                            "detail": f"{BookNotFoundHTTPException.detail}"
-                        }
+                        "value": {"detail": f"{BookNotFoundHTTPException.detail}"},
                     },
                     "ReasonNotFound": {
                         "summary": "Причина жалобы не найдена",
-                        "value": {
-                            "detail": f"{ReasonNotFoundHTTPException.detail}"
-                        }
-                    }
+                        "value": {"detail": f"{ReasonNotFoundHTTPException.detail}"},
+                    },
                 }
             }
-        }
-    }
+        },
+    },
 }

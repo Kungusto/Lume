@@ -96,7 +96,7 @@ async def login_user(
     summary="Получение данных о себе",
     description="Считывает user_id из cookies, а затем ищет данные об этом пользователе в бд",
     responses=info_current_user_responses,
-    response_model=User
+    response_model=User,
 )
 async def info_about_current_user(user_id: UserIdDep, db: DBDep):
     return await AuthService(db=db).info_about_current_user(user_id=user_id)
@@ -121,7 +121,7 @@ async def exit_from_account(request: Request, response: Response):
     summary="Получение публичных данных о пользователе",
     description="Поиск имени, фамилии и ника пользователя по id",
     responses=info_about_user_responses,
-    response_model=UserPublicData
+    response_model=UserPublicData,
 )
 @cache.base()
 async def info_about_user(db: DBDep, user_id: int):

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from src.tasks.celery_app import celery_app
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, update
 from src.config import Settings, get_settings
 from src.models.books import BooksORM, PageORM
 from src.api.dependencies import get_sync_session
@@ -12,7 +12,6 @@ from src.schemas.books import Book, PageAdd
 from src.analytics.excel.active_users import UsersDFExcelRepository
 from src.schemas.analytics import UsersStatement, UsersStatementWithoutDate
 from src.repositories.database.utils import AnalyticsQueryFactory
-from src.connectors.redis_connector import redis_sync_conn
 import logging
 
 settings = get_settings()

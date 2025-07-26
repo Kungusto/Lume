@@ -37,7 +37,11 @@ router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
 cache = get_cache_manager()
 
 
-@router.get(path="", summary="Получить список книг по фильтрам", responses=get_filtered_publicated_books_with_pagination_responses)
+@router.get(
+    path="",
+    summary="Получить список книг по фильтрам",
+    responses=get_filtered_publicated_books_with_pagination_responses,
+)
 @cache.base(ttl=15)
 async def get_filtered_publicated_books_with_pagination(
     db: DBDep,
@@ -63,12 +67,18 @@ async def get_filtered_publicated_books_with_pagination(
     return books
 
 
-@router.get(path="/genres", summary="Список всех жанров", responses=get_all_genres_responses)
+@router.get(
+    path="/genres", summary="Список всех жанров", responses=get_all_genres_responses
+)
 async def get_all_genres(db: DBDep):
     return await BooksService(db=db).get_all_genres()
 
 
-@router.get(path="/{book_id}", summary="Получить книгу по её id", responses=get_book_by_id_responses)
+@router.get(
+    path="/{book_id}",
+    summary="Получить книгу по её id",
+    responses=get_book_by_id_responses,
+)
 async def get_book_by_id(
     db: DBDep,
     book_id: int = Path(le=2**31),
@@ -84,7 +94,7 @@ async def get_book_by_id(
     path="/download/{book_id}",
     summary="Скачать книгу по её id",
     description="Возвращает URL доступа для скачивания нужной книги",
-    responses=download_book_responses
+    responses=download_book_responses,
 )
 async def download_book(
     s3: S3Dep,
@@ -105,7 +115,7 @@ async def download_book(
     summary="Получить страницу книги",
     description="Возвращает массив из элементов с подробной информацией о каждой строчке в книге. "
     "Если встречаются изображения - возвращает URL доступа на их скачивание",
-    responses=get_page_responses
+    responses=get_page_responses,
 )
 @cache.books.page(ttl=300)
 async def get_page(
@@ -134,7 +144,7 @@ async def get_page(
     path="/{book_id}/report",
     summary="Пожаловаться на книгу",
     description="Все жалобы будут видны админу",
-    responses=report_book_responses
+    responses=report_book_responses,
 )
 async def report_book(
     db: DBDep,

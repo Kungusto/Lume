@@ -20,6 +20,8 @@ class Permissions:
         ("/auth/logout", "POST"),
         ("/auth/register", "POST"),
         (r"^/openapi.json$", "GET"),
-        (r"^/docs$", "GET"),
-        (r"^/redoc$", "GET"),
+        (r"^/docs(/.*)?$", "GET"),
+        (r"^/redoc(/.*)?$", "GET"),
+        (r"^/favicon.ico$", "GET"),
+        ("/", "GET"),
     }

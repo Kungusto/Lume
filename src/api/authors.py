@@ -35,8 +35,10 @@ from src.api.dependencies import (
     ShouldCheckOwnerDep,
 )
 from src.schemas.books import (
+    Book,
     BookAddWithAuthorsTagsGenres,
     BookPATCHWithRels,
+    UserAndBooksWithRels,
 )
 from src.utils.cache_manager import get_cache_manager
 from src.services.authors import AuthorsService
@@ -136,7 +138,7 @@ async def delete_book(
 @router.get(
     path="/my_books",
     summary="Получение своих книг",
-    description="Автор получает все написанные им книги",
+    description="Возвращает список книг с подробностями о них",
     responses=get_my_books_responses,
 )
 @cache.base()
@@ -286,6 +288,7 @@ async def edit_content(
     "её видеть в результатах главного поиска. Для того чтобы опубликовать книгу, она должна "
     "иметь обложку и контент",
     responses=publicate_book_responses,
+    response_model=Book
 )
 async def publicate_book(
     db: DBDep,

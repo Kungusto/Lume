@@ -2,8 +2,8 @@ from datetime import date
 from fastapi import APIRouter, Body, Path
 from src.api.dependencies import S3Dep, DBDep, UserRoleDep
 from src.schemas.users import UserRolePUT
-from src.schemas.books import GenreAdd, GenreEdit, TagAdd, TagEdit
-from src.schemas.reports import ReasonAdd, ReasonEdit, BanAddFromUser, BanEdit
+from src.schemas.books import Genre, GenreAdd, GenreEdit, Tag, TagAdd, TagEdit
+from src.schemas.reports import Reason, ReasonAdd, ReasonEdit, BanAddFromUser, BanEdit
 from src.exceptions.books import (
     BookNotFoundException,
     CannotDeleteGenreException,
@@ -110,6 +110,7 @@ async def change_role(
     "При добавлении, первая буква автоматически становится заглавной, "
     "а остальные - строчными",
     responses=add_genre_responses,
+    response_model=Genre
 )
 async def add_genre(
     db: DBDep,
@@ -163,7 +164,7 @@ async def delete_genre(
 
 
 @router.post(
-    path="/tag", summary="Добавление тега к книге", responses=add_tag_responses
+    path="/tag", summary="Добавление тега к книге", responses=add_tag_responses, response_model=Tag
 )
 async def add_tag(
     db: DBDep,
@@ -217,6 +218,7 @@ async def edit_tag(
     description="Когда пользователь захочет пожаловаться на книгу, "
     "он должен будет указать причину жалобы",
     responses=add_reason_responses,
+    response_model=Reason
 )
 async def add_reason(
     db: DBDep,
@@ -259,7 +261,6 @@ async def delete_reason(
     db: DBDep,
     reason_id: int = Path(le=2**31),
 ):
-    # FIXME: Обработка случая с ссылающимися жалобами на конкретную причину
     try:
         await AdminService(db=db).delete_reason(reason_id=reason_id)
     except ReasonNotFoundException as ex:

@@ -68,6 +68,7 @@ class BooksRepository(BaseRepository):
             model = result.unique().one()
         except NoResultFound as ex:
             raise BookNotFoundException from ex
+        book, avg_rating, readers = model
         if privat_data:
             target_schemaDTO = BookDataWithAllRelsPrivat
             book_schemaDTO = BookDataWithRelsPrivat
@@ -76,10 +77,10 @@ class BooksRepository(BaseRepository):
             book_schemaDTO = BookDataWithRels
         return target_schemaDTO(
             **book_schemaDTO.model_validate(
-                model[0], from_attributes=True
+                book, from_attributes=True
             ).model_dump(),
-            avg_rating=model[1],
-            readers=model[2],
+            avg_rating=avg_rating,
+            readers=readers,
         )
 
     async def get_book_with_rels(self, privat_data=False, **filter_by):

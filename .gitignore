@@ -1,8 +1,9 @@
 venv 
 __pycache__
 .env
-dump.rdb
+.env-prod
 .env-test
+dump.rdb
 awscli_env
 aiobotocore_env
 .vscode

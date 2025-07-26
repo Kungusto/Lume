@@ -10,7 +10,7 @@ services:
     build:
       context: .
     env_file:
-      - ".env"
+      - ".env-prod"
 
   lume_db:
     container_name: lume_db
@@ -24,7 +24,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
     env_file:
-      - ".env"
+      - ".env-prod"
     networks:
       - LumeNetwork
 
@@ -40,7 +40,7 @@ services:
   lume_celery_worker:
     container_name: lume_celery_worker
     env_file:
-      - ".env"
+      - ".env-prod"
     volumes:
       - analytics:/app/${STATEMENT_DIR_PATH}
     build:
@@ -52,7 +52,7 @@ services:
   lume_celery_beat:
     container_name: lume_celery_beat
     env_file:
-      - ".env"
+      - ".env-prod"
     volumes:
       - analytics:/app/${STATEMENT_DIR_PATH}
     build:

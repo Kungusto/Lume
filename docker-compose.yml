@@ -1,0 +1,44 @@
+services:
+  lume_back_service:
+    depends_on:
+      - lume_db
+    container_name: lume_back
+    ports:
+      - "7777:8000"
+    networks:
+      - LumeNetwork
+    build:
+      context: .
+    env_file:
+      - ".env"
+
+  lume_db:
+    container_name: lume_db
+    image: postgres:16 
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    env_file:
+      - ".env"
+    networks:
+      - LumeNetwork
+
+  lume_cache:
+    container_name: lume_cache
+    image: redis:latest
+    ports:
+    - "6379:6379"
+    networks:
+      - LumeNetwork
+
+volumes:
+  db_data:
+
+networks:
+  LumeNetwork:
+    driver: bridge

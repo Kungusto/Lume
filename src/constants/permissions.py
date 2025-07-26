@@ -23,5 +23,5 @@ class Permissions:
         (r"^/docs(/.*)?$", "GET"),
         (r"^/redoc(/.*)?$", "GET"),
         (r"^/favicon.ico$", "GET"),
-        ("/", "GET"),
+        (r"^/$", "GET"),
     }

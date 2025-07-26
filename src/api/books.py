@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Body, Path
 from src.api.dependencies import PaginationDep, DBDep, S3Dep, UserIdDep, SearchDep
 from src.exceptions.books import (
     BookNotFoundHTTPException,
@@ -22,13 +22,23 @@ from src.exceptions.reports import ReasonNotFoundException, ReasonNotFoundHTTPEx
 from src.schemas.reports import ReportAddFromUser
 from src.utils.cache_manager import get_cache_manager
 from src.services.books import BooksService
+from src.docs_src.examples.books import report_book_example
+from src.docs_src.responses.books import (
+    download_book_responses,
+    get_all_genres_responses,
+    get_book_by_id_responses,
+    get_filtered_publicated_books_with_pagination_responses,
+    get_page_responses,
+    report_book_responses,
+)
+
 
 router = APIRouter(prefix="/books", tags=["Чтение книг 📖"])
 cache = get_cache_manager()
 
 
-@router.get("")
-@cache.base()
+@router.get(path="", summary="Получить список книг по фильтрам", responses=get_filtered_publicated_books_with_pagination_responses)
+@cache.base(ttl=15)
 async def get_filtered_publicated_books_with_pagination(
     db: DBDep,
     s3: S3Dep,
@@ -53,12 +63,12 @@ async def get_filtered_publicated_books_with_pagination(
     return books
 
 
-@router.get("/genres")
+@router.get(path="/genres", summary="Список всех жанров", responses=get_all_genres_responses)
 async def get_all_genres(db: DBDep):
     return await BooksService(db=db).get_all_genres()
 
 
-@router.get("/{book_id}")
+@router.get(path="/{book_id}", summary="Получить книгу по её id", responses=get_book_by_id_responses)
 async def get_book_by_id(
     db: DBDep,
     book_id: int = Path(le=2**31),
@@ -70,7 +80,12 @@ async def get_book_by_id(
     return book
 
 
-@router.get("/download/{book_id}")
+@router.get(
+    path="/download/{book_id}",
+    summary="Скачать книгу по её id",
+    description="Возвращает URL доступа для скачивания нужной книги",
+    responses=download_book_responses
+)
 async def download_book(
     s3: S3Dep,
     db: DBDep,
@@ -85,7 +100,13 @@ async def download_book(
     return url
 
 
-@router.get("/{book_id}/page/{page_number}")
+@router.get(
+    path="/{book_id}/page/{page_number}",
+    summary="Получить страницу книги",
+    description="Возвращает массив из элементов с подробной информацией о каждой строчке в книге. "
+    "Если встречаются изображения - возвращает URL доступа на их скачивание",
+    responses=get_page_responses
+)
 @cache.books.page(ttl=300)
 async def get_page(
     s3: S3Dep,
@@ -109,10 +130,15 @@ async def get_page(
     return page
 
 
-@router.post("/{book_id}/report")
+@router.post(
+    path="/{book_id}/report",
+    summary="Пожаловаться на книгу",
+    description="Все жалобы будут видны админу",
+    responses=report_book_responses
+)
 async def report_book(
     db: DBDep,
-    data: ReportAddFromUser,
+    data: ReportAddFromUser = Body(openapi_examples=report_book_example),
     book_id: int = Path(le=2**31),
 ):
     try:

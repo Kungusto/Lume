@@ -2,6 +2,9 @@ services:
   lume_back_service:
     depends_on:
       - lume_db
+      - lume_cache
+      - lume_celery_worker
+      - lume_celery_beat 
     container_name: lume_back
     ports:
       - "7777:8000"
@@ -30,7 +33,7 @@ services:
 
   lume_cache:
     container_name: lume_cache
-    image: redis:latest
+    image: redis:7.4.2
     ports:
     - "6379:6379"
     networks:

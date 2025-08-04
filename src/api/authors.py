@@ -285,7 +285,6 @@ async def edit_content(
     "её видеть в результатах главного поиска. Для того чтобы опубликовать книгу, она должна "
     "иметь обложку и контент",
     responses=publicate_book_responses,
-    response_model=Book,
 )
 async def publicate_book(
     db: DBDep,
@@ -294,7 +293,7 @@ async def publicate_book(
     book_id: int = Path(le=2**31),
 ):
     try:
-        updated_data = await AuthorsService(db=db).publicate_book(
+        await AuthorsService(db=db).publicate_book(
             book_id=book_id,
             user_id=user_id,
             should_check_owner=should_check_owner,
@@ -307,4 +306,4 @@ async def publicate_book(
         raise CoverNotFoundHTTPException from ex
     except BookAlreadyPublicatedException as ex:
         raise BookAlreadyPublicatedHTTPException from ex
-    return updated_data
+    return {"status": "OK"}

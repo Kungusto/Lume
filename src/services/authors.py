@@ -264,8 +264,7 @@ class AuthorsService(BaseService):
         if book.is_publicated:
             raise BookAlreadyPublicatedException
         data_to_update = BookPATCH(is_publicated=True)
-        updated_data = await self.db.books.edit(
+        await self.db.books.edit(
             data=data_to_update, is_patch=True, book_id=book_id
         )
         await self.db.commit()
-        return updated_data

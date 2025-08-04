@@ -296,7 +296,7 @@ publicate_book_responses = {
         "description": "Книга успешно опубликована",
         "content": {
             "application/json": {
-                "example": {"id": 1, "title": "Название книги", "is_publicated": True}
+                "example": {"status": "OK"}
             }
         },
     },

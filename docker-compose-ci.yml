@@ -1,0 +1,63 @@
+services:
+  lume_back_service:
+    depends_on:
+      - lume_db
+      - lume_cache
+      - lume_celery_worker
+      - lume_celery_beat 
+    container_name: lume_back
+    ports:
+      - "7777:8000"
+    networks:
+      - LumeNetwork
+    image: lume-api-image:latest
+
+  lume_db:
+    container_name: lume_db
+    image: postgres:16 
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - LumeNetwork
+
+  lume_cache:
+    container_name: lume_cache
+    image: redis:7.4.2
+    ports:
+    - "6379:6379"
+    networks:
+      - LumeNetwork
+
+
+  lume_celery_worker:
+    container_name: lume_celery_worker
+    volumes:
+      - analytics:/app/${STATEMENT_DIR_PATH}
+    image: lume-api-image:latest
+    networks:
+      - LumeNetwork
+    command: "celery --app=src.tasks.celery_app:celery_app worker -l INFO --pool=solo" 
+  
+  lume_celery_beat:
+    container_name: lume_celery_beat
+    volumes:
+      - analytics:/app/${STATEMENT_DIR_PATH}
+    image: lume-api-image:latest
+    networks:
+      - LumeNetwork
+    command: "celery --app=src.tasks.celery_app:celery_app beat -l INFO"
+
+
+volumes:
+  db_data:
+  analytics:
+
+networks:
+  LumeNetwork:
+    driver: bridge

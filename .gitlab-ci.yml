@@ -37,4 +37,3 @@ deploy-job:
   script:
     - docker compose up --build -d
     - docker exec lume_nginx nginx -s reload 
-

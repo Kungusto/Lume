@@ -46,7 +46,7 @@ cache = get_cache_manager()
 
 @router.post(
     path="/register",
-    summary="Регистрация пользователей",
+    summary="Регистрация пользователей 🔑",
     description="Регистрирует пользователей и авторов",
     responses=register_responses,
     response_model=User,

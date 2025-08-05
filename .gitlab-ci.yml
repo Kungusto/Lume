@@ -17,6 +17,6 @@ deploy-job:
     - cat "$ENV_PROD" > .env-prod  # Создаём .env-prod из переменной ENV_PROD
     - export $(cat .env-prod | xargs)  # Экспортируем переменные в окружение
   script:
-    - ls -la  # Для отладки
-    - cat .env-prod  # Для отладки
     - docker compose up -d
+    - docker exec lume_nginx nginx -s reload 
+

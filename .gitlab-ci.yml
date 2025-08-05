@@ -24,7 +24,6 @@ Format:
   script: 
   - docker run --rm --network LumeNetwork lume-api-image ruff format --check
 
-
 Tests:
   stage: test
   script: 

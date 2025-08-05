@@ -30,7 +30,7 @@ Migrations:
   before_script:
     - cp ${ENV_PROD} .env-prod
   script: 
-  - echo "$ENV_PROD"
+  - echo ${ENV_PROD}
   - docker run --rm --network LumeNetwork --env-file .env-prod lume-api-image  alembic upgrade head
 
 

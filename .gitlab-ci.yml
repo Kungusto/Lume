@@ -5,9 +5,9 @@ stages:
 build-job:       
   stage: build
   before_script:
-    - echo "$ENV" > .env
-    - echo "$ENV_TEST" > .env-test
-    - echo "$ENV_PROD" > .env-prod
+    - cp ${ENV} .env
+    - cp ${ENV_TEST} .env-test
+    - cp ${ENV_PROD} .env-prod
   script:
     - docker build -t lume-api-image .
 

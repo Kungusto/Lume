@@ -1,5 +1,8 @@
 stages:          
   - build
+  - lint_format
+  - migration
+  - test
   - deploy
 
 build-job:       
@@ -10,6 +13,28 @@ build-job:
     - cp ${ENV_PROD} .env-prod
   script:
     - docker build -t lume-api-image .
+
+Lint: 
+  stage: lint_format
+  script: 
+  - docker run --rm --network LumeNetwork lume-api-image ruff check 
+
+Format:
+  stage: lint_format
+  script: 
+  - docker run --rm --network LumeNetwork lume-api-image ruff format --check
+
+
+Migrations:
+  stage: migration
+  script: 
+  - docker run --rm --network LumeNetwork lume-api-image alembic upgrade head
+
+
+Tests:
+  stage: test
+  script: 
+  - docker run --rm --network LumeNetwork lume-api-image pytest tests/unit -v
 
 deploy-job:
   stage: deploy  

@@ -294,11 +294,7 @@ edit_content_responses = {
 publicate_book_responses = {
     200: {
         "description": "Книга успешно опубликована",
-        "content": {
-            "application/json": {
-                "example": {"status": "OK"}
-            }
-        },
+        "content": {"application/json": {"example": {"status": "OK"}}},
     },
     403: {
         "description": "Недостаточно прав для публикации книги",

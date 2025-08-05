@@ -97,13 +97,9 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=50), nullable=False),
         sa.Column("surname", sa.String(), nullable=False),
         sa.Column("nickname", sa.String(length=30), nullable=False),
-        sa.Column(
-            "last_activity", sa.TIMESTAMP(timezone=True), nullable=False
-        ),
+        sa.Column("last_activity", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("hashed_password", sa.String(), nullable=False),
-        sa.Column(
-            "registation_date", sa.TIMESTAMP(timezone=True), nullable=False
-        ),
+        sa.Column("registation_date", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("user_id"),
         sa.UniqueConstraint("email"),
         sa.UniqueConstraint("nickname"),
@@ -114,9 +110,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("ban_until", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("comment", sa.String(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["Users.user_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["Users.user_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("ban_id"),
     )
     op.create_table(
@@ -126,9 +120,7 @@ def upgrade() -> None:
         sa.Column("reason_id", sa.Integer(), nullable=False),
         sa.Column("comment", sa.String(), nullable=True),
         sa.Column("is_checked", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(
             ["reason_id"], ["Book_reasons.reason_id"], ondelete="CASCADE"
         ),
@@ -139,12 +131,8 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("author_id", sa.Integer(), nullable=False),
         sa.Column("book_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["author_id"], ["Users.user_id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["author_id"], ["Users.user_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -152,9 +140,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("book_id", sa.Integer(), nullable=False),
         sa.Column("genre_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(
             ["genre_id"],
             ["Genres.genre_id"],
@@ -166,9 +152,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("book_id", sa.Integer(), nullable=False),
         sa.Column("title_tag", sa.String(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -177,9 +161,7 @@ def upgrade() -> None:
         sa.Column("book_id", sa.Integer(), nullable=False),
         sa.Column("page_number", sa.Integer(), nullable=False),
         sa.Column("content", sa.String(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("page_id"),
     )
     op.create_table(
@@ -187,20 +169,12 @@ def upgrade() -> None:
         sa.Column("review_id", sa.Integer(), nullable=False),
         sa.Column("rating", sa.Integer(), nullable=False),
         sa.Column("text", sa.String(length=150), nullable=False),
-        sa.Column(
-            "publication_date", sa.TIMESTAMP(timezone=True), nullable=False
-        ),
+        sa.Column("publication_date", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("book_id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.CheckConstraint(
-            "rating >= 1 AND rating <= 5", name="rating_range_check"
-        ),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["Users.user_id"], ondelete="CASCADE"
-        ),
+        sa.CheckConstraint("rating >= 1 AND rating <= 5", name="rating_range_check"),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["user_id"], ["Users.user_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("review_id"),
     )
     op.create_table(
@@ -210,12 +184,8 @@ def upgrade() -> None:
         sa.Column("book_id", sa.Integer(), nullable=False),
         sa.Column("started_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("last_seen_page", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["book_id"], ["Books.book_id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["Users.user_id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["book_id"], ["Books.book_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["user_id"], ["Users.user_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
 

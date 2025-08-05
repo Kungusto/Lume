@@ -8,19 +8,13 @@ from alembic import context
 from src.config import settings
 
 from src.database import Base
-from src.models.users import UsersORM
-from src.models.books import BooksORM, GenresORM, BooksTagsORM, BooksGenresORM
-from src.models.books_authors import BooksAuthorsORM
-from src.models.reviews import ReviewsORM
-from src.models.reports import BanORM, ReasonsORM, ReportsORM
-from src.models.user_reads import UserBooksReadORM
 
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option('sqlalchemy.url', f"{settings.DB_URL}?async_fallback=True")
+config.set_main_option("sqlalchemy.url", f"{settings.DB_URL}?async_fallback=True")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -77,9 +71,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

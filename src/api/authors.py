@@ -33,7 +33,6 @@ from src.api.dependencies import (
     ShouldCheckOwnerDep,
 )
 from src.schemas.books import (
-    Book,
     BookAddWithAuthorsTagsGenres,
     BookPATCHWithRels,
 )

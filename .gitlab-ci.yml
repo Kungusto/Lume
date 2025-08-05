@@ -25,15 +25,6 @@ Format:
   - docker run --rm --network LumeNetwork lume-api-image ruff format --check
 
 
-Migrations:
-  stage: migration
-  before_script:
-    - cp ${ENV_PROD} .env-prod
-  script: 
-  - cat ${ENV_PROD}
-  - docker run --rm --network LumeNetwork --env-file .env-prod lume-api-image  alembic upgrade head
-
-
 Tests:
   stage: test
   script: 

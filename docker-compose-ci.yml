@@ -60,4 +60,4 @@ volumes:
 
 networks:
   LumeNetwork:
-    driver: bridge
+    external: true

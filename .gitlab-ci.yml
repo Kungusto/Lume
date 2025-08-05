@@ -13,6 +13,7 @@ build-job:
 
 deploy-job:
   stage: deploy  
+  before_script:
     - echo "$ENV_PROD" > .env-prod  # Создаём .env-prod из переменной ENV_PROD
     - export $(cat .env-prod | xargs)  # Экспортируем переменные в окружение
   script:

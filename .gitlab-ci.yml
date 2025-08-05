@@ -1,7 +1,6 @@
 stages:          
   - build
   - lint_format
-  - migration
   - test
   - deploy
 
@@ -35,5 +34,5 @@ deploy-job:
     - cat "$ENV_PROD" > .env-prod  # Создаём .env-prod из переменной ENV_PROD
     - export $(cat .env-prod | xargs)  # Экспортируем переменные в окружение
   script:
-    - docker compose up -f docker-compose-ci.yml --build -d
+    - docker compose -f docker-compose-ci.yml up --build -d
     - docker exec lume_nginx nginx -s reload 

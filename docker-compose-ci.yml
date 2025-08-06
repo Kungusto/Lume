@@ -11,29 +11,7 @@ services:
       - "7777:8000"
     networks:
       - LumeNetwork
-
-  lume_db:
-    container_name: lume_db
-    image: postgres:16 
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
-    networks:
-      - LumeNetwork
-
-  lume_cache:
-    container_name: lume_cache
-    image: redis:7.4.2
-    ports:
-    - "6379:6379"
-    networks:
-      - LumeNetwork
-
+      
   lume_celery_worker:
     container_name: lume_celery_worker
     volumes:

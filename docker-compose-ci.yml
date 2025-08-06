@@ -37,7 +37,7 @@ services:
   lume_celery_worker:
     container_name: lume_celery_worker
     volumes:
-      - analytics:/app/src/analytics/data
+      - analytics:/app/"${STATEMENT_DIR_PATH}"
     image: lume-api-image:latest
     networks:
       - LumeNetwork
@@ -46,7 +46,7 @@ services:
   lume_celery_beat:
     container_name: lume_celery_beat
     volumes:
-      - analytics:/app/src/analytics/data
+      - analytics:/app/"${STATEMENT_DIR_PATH}"
     image: lume-api-image:latest
     networks:
       - LumeNetwork

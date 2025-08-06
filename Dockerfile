@@ -6,7 +6,7 @@ COPY requirements.txt /app/requirements.txt
 
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY . /app/.
 COPY start.sh /app/start.sh
 
 ENV PYTHONPATH=/app

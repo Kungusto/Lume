@@ -41,7 +41,7 @@ services:
     image: lume-api-image:latest
     networks:
       - LumeNetwork
-    command: "tree & celery --app=src.tasks.celery_app:celery_app worker -l INFO --pool=solo" 
+    command: "ls -la & celery --app=src.tasks.celery_app:celery_app worker -l INFO --pool=solo" 
   
   lume_celery_beat:
     container_name: lume_celery_beat
@@ -50,7 +50,7 @@ services:
     image: lume-api-image:latest
     networks:
       - LumeNetwork
-    command: "tree & celery --app=src.tasks.celery_app:celery_app beat -l INFO"
+    command: "ls -la & celery --app=src.tasks.celery_app:celery_app beat -l INFO"
 
 
 volumes:

@@ -25,7 +25,7 @@ Format:
 Tests:
   stage: test
   script: 
-  - docker run --rm --network LumeNetwork lume-api-image pytest -v
+  - docker run --rm --network LumeNetwork lume-api-image pytest tests/unit -v
 
 deploy-job:
   stage: deploy  

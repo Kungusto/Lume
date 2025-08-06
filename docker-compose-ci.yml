@@ -1,16 +1,9 @@
 services:
   lume_back_service:
-    depends_on:
-      - lume_db
-      - lume_cache
-      - lume_celery_worker
-      - lume_celery_beat 
+    image: lume-api-image:latest
     container_name: lume_back
-    ports:
-      - "7777:8000"
     networks:
       - LumeNetwork
-    image: lume-api-image:latest
 
   lume_db:
     container_name: lume_db

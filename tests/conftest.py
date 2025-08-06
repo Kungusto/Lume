@@ -87,6 +87,7 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+
 @pytest.fixture(scope="session", autouse=True)
 async def seed_genres(setup_database):
     logging.debug("Заполняю бд жанрами")

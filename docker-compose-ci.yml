@@ -34,7 +34,6 @@ services:
     networks:
       - LumeNetwork
 
-
   lume_celery_worker:
     container_name: lume_celery_worker
     volumes:

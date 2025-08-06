@@ -87,7 +87,6 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-
 @pytest.fixture(scope="session", autouse=True)
 async def seed_genres(setup_database):
     logging.debug("Заполняю бд жанрами")
@@ -189,6 +188,8 @@ async def check_content_for_tests():
 @pytest.fixture(scope="session", autouse=True)
 async def setup_s3(s3_session):
     assert settings.MODE == "TEST"
+    # Проверка путей генерации отчетов
+    assert settings.STATEMENT_DIR_PATH == "tests/analytics/data"
     assert settings.S3_BUCKET_NAME.endswith("test")
     file_names = await s3_session.books.list_objects_by_prefix("")
     await s3_session.books.delete_bulk(*file_names)

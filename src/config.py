@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     # Аналитика
     STATEMENT_DIR_PATH: str = "/src/analytics/data"  #  !!! БЕЗ СЛЕША В НАЧАЛЕ !!!
+    # !!! В ТЕСТАХ ДОЛЖЕН БЫТЬ УКАЗАН ПУТЬ: "tests/analytics/data" !!!
 
     # Асинхронное подключение
     @property

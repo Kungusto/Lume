@@ -4,6 +4,8 @@ services:
       - lume_celery_worker
       - lume_celery_beat 
     container_name: lume_back
+    volumes:
+      - analytics:/app/src/analytics/data
     image: lume-api-image:latest
     ports:
       - "7777:8000"

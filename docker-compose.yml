@@ -1,8 +1,6 @@
 services:
   lume_back_service:
     depends_on:
-      - lume_db
-      - lume_cache
       - lume_celery_worker
       - lume_celery_beat 
     container_name: lume_back

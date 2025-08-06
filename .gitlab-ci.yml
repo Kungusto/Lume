@@ -1,6 +1,7 @@
 stages:          
   - build
   - lint_format
+  - migrations
   - test
   - deploy
 
@@ -22,6 +23,13 @@ Format:
   script: 
   - docker run --rm --network LumeNetwork lume-api-image ruff format --check
 
+
+Migrations:
+  stage: migrations
+  script: 
+  - docker run --rm --network LumeNetwork lume-api-image alembic upgrade head
+
+
 Tests:
   stage: test
   script: 
@@ -29,7 +37,6 @@ Tests:
 
 deploy-job:
   stage: deploy  
-  before_script:
   script:
     - docker compose -f docker-compose-ci.yml up --build -d
     - docker exec lume_nginx nginx -s reload 

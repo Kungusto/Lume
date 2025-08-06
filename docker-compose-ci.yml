@@ -37,20 +37,20 @@ services:
   lume_celery_worker:
     container_name: lume_celery_worker
     volumes:
-      - analytics:/app/${STATEMENT_DIR_PATH}
+      - analytics:/app/src/analytics/data
     image: lume-api-image:latest
     networks:
       - LumeNetwork
-    command: "ls -la & celery --app=src.tasks.celery_app:celery_app worker -l INFO --pool=solo" 
+    command: "celery --app=src.tasks.celery_app:celery_app worker -l INFO --pool=solo" 
   
   lume_celery_beat:
     container_name: lume_celery_beat
     volumes:
-      - analytics:/app/${STATEMENT_DIR_PATH}
+      - analytics:/app/src/analytics/data
     image: lume-api-image:latest
     networks:
       - LumeNetwork
-    command: "ls -la & celery --app=src.tasks.celery_app:celery_app beat -l INFO"
+    command: "celery --app=src.tasks.celery_app:celery_app beat -l INFO"
 
 
 volumes:

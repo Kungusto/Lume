@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str
 
     # Аналитика
-    STATEMENT_DIR_PATH: str = "/src/analytics/data" #  !!! БЕЗ СЛЕША В НАЧАЛЕ !!!
+    STATEMENT_DIR_PATH: str = "/src/analytics/data"  #  !!! БЕЗ СЛЕША В НАЧАЛЕ !!!
 
     # Асинхронное подключение
     @property

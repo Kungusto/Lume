@@ -6,7 +6,6 @@ from src.enums.users import AllUsersRolesEnum
 from src.enums.books import LanguagesEnum, RenderStatus
 from src.schemas.users import User, UserPublicData
 from src.schemas.reviews import Review
-from src.enums.books import RenderStatus
 
 
 class Page(BaseModel):
@@ -202,9 +201,8 @@ class FullDataAboutBook(BookData):
     count_readers: int
 
 
-class BookRenderStatus(BaseModel): 
+class BookRenderStatus(BaseModel):
     render_status: RenderStatus | None
-
 
 
 # Авторы

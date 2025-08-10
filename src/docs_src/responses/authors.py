@@ -339,11 +339,7 @@ publicate_book_responses = {
 get_publication_status_responses = {
     200: {
         "description": "Статус публикации успешно получен",
-        "content": {
-            "application/json": {
-                "example": {"render_status": "rendered"}
-            }
-        }
+        "content": {"application/json": {"example": {"render_status": "rendered"}}},
     },
     404: {
         "description": "Книга не найдена",

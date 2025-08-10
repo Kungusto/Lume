@@ -188,7 +188,7 @@ class BooksRepository(BaseRepository):
             )
             for book, avg_rating, readers in results
         ]
-    
+
     async def get_render_status(self, book_id: int):
         query = select(self.model).filter_by(book_id=book_id)
         model = await self.session.execute(query)
@@ -197,6 +197,7 @@ class BooksRepository(BaseRepository):
         except NoResultFound as ex:
             raise BookNotFoundException from ex
         return BookRenderStatus.model_validate(result, from_attributes=True)
+
 
 class TagRepository(BaseRepository):
     model = BooksTagsORM

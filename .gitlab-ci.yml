@@ -27,6 +27,7 @@ Format:
 Migrations:
   stage: migrations
   script: 
+  - cat .env
   - docker run --rm --network LumeNetwork lume-api-image alembic upgrade head
 
 

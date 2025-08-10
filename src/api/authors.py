@@ -49,6 +49,7 @@ from src.docs_src.responses.authors import (
     get_my_books_responses,
     publicate_book_responses,
     put_cover_responses,
+    get_publication_status_responses,
 )
 from src.constants.files import AllowedExtensions
 
@@ -306,3 +307,19 @@ async def publicate_book(
     except BookAlreadyPublicatedException as ex:
         raise BookAlreadyPublicatedHTTPException from ex
     return {"status": "OK"}
+
+
+@router.get(
+    path="/{book_id}/publication_status",
+    summary="Посмотреть статус публикации книги",
+    description="Статусы публикации: uploaded, rendering, ready, failed",
+    responses=get_publication_status_responses,
+)
+async def get_status_publicate_book(
+    db: DBDep,
+    book_id: int = Path(le=2**31),
+):
+    try:
+        return await db.books.get_render_status(book_id=book_id)
+    except BookNotFoundException as ex:
+        raise BookNotFoundHTTPException from ex

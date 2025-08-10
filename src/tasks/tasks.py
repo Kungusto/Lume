@@ -26,6 +26,7 @@ def render_book(book_id: int):
             .values(render_status="RENDERING")
         )
         db.session.execute(update_render_status_stmt)
+        db.commit()
 
         with get_sync_session() as s3:
             try:

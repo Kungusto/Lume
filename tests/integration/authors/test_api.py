@@ -340,3 +340,11 @@ async def test_edit_non_existing_book(authorized_client_with_new_book):
         url="author/cover/99999", files={"file": (filename, file)}
     )
     assert response_add_cover.status_code == 403
+
+
+async def test_get_render_status(authorized_client_with_new_book):
+    author_client, book = authorized_client_with_new_book
+    response_get_status = await author_client.get(
+        f"/author/{book.book_id}/publication_status"
+    )
+    assert response_get_status.status_code == 200

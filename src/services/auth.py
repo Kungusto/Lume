@@ -55,7 +55,7 @@ class AuthService(BaseService):
 
     def decode_token(self, token: str) -> dict:
         """Декодирование токена"""
-        return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
+        return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=settings.JWT_ALGORITHM)
 
     def check_permissions(self, role: AllUsersRolesEnum, permission_level: int):
         """Проверяем права на совершение данной операции"""
